@@ -10,3 +10,7 @@ pydantic-settings>=2.4
 smartapi-python>=1.5.5
 pyotp>=2.9
 logzero>=1.7
+smartapi-python>=1.5.5
+pyotp
+logzero
+websocket-client
