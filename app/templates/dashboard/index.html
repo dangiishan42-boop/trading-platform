@@ -522,6 +522,34 @@
       line-height: 1.5;
     }
 
+    .shortcut-stack {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .shortcut-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .shortcut-chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .shortcut-chip.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-color: #93c5fd;
+    }
+
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1063,8 +1091,13 @@
                       <input id="angel-exchange" type="text" value="NSE" placeholder="e.g. NSE" />
                     </div>
                     <div class="field">
+                      <label for="angel-symbol-search">Symbol</label>
+                      <input id="angel-symbol-search" type="text" list="angel-symbol-options" placeholder="e.g. RELIANCE" />
+                      <datalist id="angel-symbol-options"></datalist>
+                    </div>
+                    <div class="field">
                       <label for="angel-symbol-token">Symbol Token</label>
-                      <input id="angel-symbol-token" type="text" placeholder="e.g. 3045" />
+                      <input id="angel-symbol-token" type="text" placeholder="Auto-filled from symbol or enter manually" />
                     </div>
                     <div class="field">
                       <label for="angel-interval">Interval</label>
@@ -1085,6 +1118,20 @@
                     <div class="field">
                       <label for="angel-to-date">To Date</label>
                       <input id="angel-to-date" type="datetime-local" />
+                    </div>
+                  </div>
+
+                  <div id="angel-symbol-selection" class="inline-note">Type a symbol like RELIANCE, TCS, INFY, or enter a token manually.</div>
+
+                  <div class="shortcut-stack">
+                    <div class="field">
+                      <label>Interval Presets</label>
+                      <div id="angel-interval-presets" class="shortcut-row"></div>
+                    </div>
+                    <div class="field">
+                      <label>Date Shortcuts</label>
+                      <div id="angel-date-shortcuts" class="shortcut-row"></div>
+                      <div id="angel-range-selection" class="inline-note">Selected range will appear here.</div>
                     </div>
                   </div>
 
@@ -1451,7 +1498,36 @@
       selectedComparisonIds: new Set(),
       selectedDataset: null,
       selectedConfig: null,
+      angelDateShortcutDays: null,
+      angelDateShortcutLabel: null,
     };
+
+    const ANGEL_SYMBOL_CONFIG = Object.freeze({
+      symbolToToken: Object.freeze({
+        RELIANCE: "2885",
+        TCS: "11536",
+        INFY: "1594",
+        HDFCBANK: "1333",
+        ICICIBANK: "4963",
+        SBIN: "3045",
+        AXISBANK: "5900",
+        LT: "11483",
+        ITC: "1660",
+        HINDUNILVR: "1394",
+        BAJFINANCE: "317",
+        WIPRO: "3787",
+      }),
+    });
+
+    const ANGEL_FETCH_UI_CONFIG = Object.freeze({
+      intervalPresets: ["ONE_MINUTE", "FIVE_MINUTE", "FIFTEEN_MINUTE", "ONE_HOUR", "ONE_DAY"],
+      dateShortcuts: [
+        { label: "Last 1 Day", days: 1 },
+        { label: "Last 5 Days", days: 5 },
+        { label: "Last 30 Days", days: 30 },
+        { label: "Last 90 Days", days: 90 },
+      ],
+    });
 
     function byId(id) {
       return document.getElementById(id);
@@ -1492,6 +1568,30 @@
       el.innerHTML = `<div class="notice-${type}">${message}</div>`;
     }
 
+    function normalizeAngelSymbol(value) {
+      return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+    }
+
+    function getAngelKnownSymbols() {
+      return Object.keys(ANGEL_SYMBOL_CONFIG.symbolToToken);
+    }
+
+    function getAngelMappedToken(symbol) {
+      return ANGEL_SYMBOL_CONFIG.symbolToToken[normalizeAngelSymbol(symbol)] || null;
+    }
+
+    function populateAngelSymbolOptions() {
+      const dataList = byId("angel-symbol-options");
+      if (!dataList) return;
+
+      dataList.innerHTML = "";
+      getAngelKnownSymbols().forEach((symbol) => {
+        const option = document.createElement("option");
+        option.value = symbol;
+        dataList.appendChild(option);
+      });
+    }
+
     function formatDateRange(minDate, maxDate) {
       return `${minDate ? formatDate(minDate) : "--"} -> ${maxDate ? formatDate(maxDate) : "--"}`;
     }
@@ -1529,6 +1629,89 @@
       return local.toISOString().slice(0, 16);
     }
 
+    function renderAngelIntervalPresets() {
+      const container = byId("angel-interval-presets");
+      if (!container) return;
+
+      container.innerHTML = "";
+      ANGEL_FETCH_UI_CONFIG.intervalPresets.forEach((interval) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "shortcut-chip";
+        button.dataset.angelIntervalPreset = interval;
+        button.textContent = interval;
+        button.addEventListener("click", () => {
+          byId("angel-interval").value = interval;
+          refreshAngelIntervalPresetState();
+        });
+        container.appendChild(button);
+      });
+    }
+
+    function refreshAngelIntervalPresetState() {
+      const activeInterval = byId("angel-interval")?.value || "";
+      document.querySelectorAll("[data-angel-interval-preset]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.angelIntervalPreset === activeInterval);
+      });
+    }
+
+    function renderAngelDateShortcuts() {
+      const container = byId("angel-date-shortcuts");
+      if (!container) return;
+
+      container.innerHTML = "";
+      ANGEL_FETCH_UI_CONFIG.dateShortcuts.forEach(({ label, days }) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "shortcut-chip";
+        button.dataset.angelRangeDays = String(days);
+        button.textContent = label;
+        button.addEventListener("click", () => applyAngelDateShortcut(days, label));
+        container.appendChild(button);
+      });
+    }
+
+    function refreshAngelDateShortcutState() {
+      document.querySelectorAll("[data-angel-range-days]").forEach((button) => {
+        button.classList.toggle("active", Number(button.dataset.angelRangeDays) === state.angelDateShortcutDays);
+      });
+    }
+
+    function refreshAngelRangeSelection() {
+      const selected = byId("angel-range-selection");
+      const fromValue = byId("angel-from-date")?.value;
+      const toValue = byId("angel-to-date")?.value;
+      if (!selected) return;
+
+      if (!fromValue || !toValue) {
+        selected.textContent = "Selected range will appear here.";
+        return;
+      }
+
+      const label = state.angelDateShortcutLabel || "Custom Range";
+      selected.innerHTML = `Selected range: <strong>${label}</strong> | From <strong>${formatDate(fromValue)}</strong> to <strong>${formatDate(toValue)}</strong>`;
+    }
+
+    function applyAngelDateShortcut(days, label) {
+      const now = new Date();
+      now.setSeconds(0, 0);
+      const fromDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+
+      byId("angel-to-date").value = formatDateTimeLocalValue(now);
+      byId("angel-from-date").value = formatDateTimeLocalValue(fromDate);
+      state.angelDateShortcutDays = days;
+      state.angelDateShortcutLabel = label;
+      refreshAngelDateShortcutState();
+      refreshAngelRangeSelection();
+    }
+
+    function handleAngelDateManualEdit() {
+      state.angelDateShortcutDays = null;
+      state.angelDateShortcutLabel = "Custom Range";
+      refreshAngelDateShortcutState();
+      refreshAngelRangeSelection();
+    }
+
     function initializeAngelFetchDefaults() {
       const fromInput = byId("angel-from-date");
       const toInput = byId("angel-to-date");
@@ -1537,16 +1720,69 @@
         intervalInput.value = "ONE_MINUTE";
       }
 
-      const now = new Date();
-      now.setSeconds(0, 0);
-      const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+      const hasDates = Boolean(fromInput?.value && toInput?.value);
+      if (!hasDates) {
+        applyAngelDateShortcut(1, "Last 1 Day");
+      } else {
+        state.angelDateShortcutDays = null;
+        state.angelDateShortcutLabel = "Custom Range";
+      }
 
-      if (toInput && !toInput.value) {
-        toInput.value = formatDateTimeLocalValue(now);
+      refreshAngelIntervalPresetState();
+      refreshAngelDateShortcutState();
+      refreshAngelRangeSelection();
+    }
+
+    function refreshAngelSymbolSelection() {
+      const symbol = normalizeAngelSymbol(byId("angel-symbol-search")?.value);
+      const token = byId("angel-symbol-token")?.value.trim();
+      const selected = byId("angel-symbol-selection");
+      if (!selected) return;
+
+      const mappedToken = getAngelMappedToken(symbol);
+
+      if (mappedToken) {
+        if (token && token !== mappedToken) {
+          selected.innerHTML = `Mapped token found: <strong>${symbol}</strong> -> <strong>${mappedToken}</strong>. Using manual token override: <strong>${token}</strong>.`;
+        } else {
+          selected.innerHTML = `Mapped token found: <strong>${symbol}</strong> -> <strong>${mappedToken}</strong>. This token will be used for fetch.`;
+        }
+        return;
       }
-      if (fromInput && !fromInput.value) {
-        fromInput.value = formatDateTimeLocalValue(oneDayAgo);
+
+      if (symbol && token) {
+        selected.innerHTML = `No local token mapping found for <strong>${symbol}</strong>. Using manual token: <strong>${token}</strong>.`;
+        return;
       }
+
+      if (symbol) {
+        selected.innerHTML = `No local token mapping found for <strong>${symbol}</strong>. Enter the symbol token manually to continue.`;
+        return;
+      }
+
+      if (token) {
+        selected.innerHTML = `Manual token mode: <strong>${token}</strong> will be used for fetch.`;
+        return;
+      }
+
+      selected.textContent = `Known local symbols: ${getAngelKnownSymbols().join(", ")}. You can also enter a token manually.`;
+    }
+
+    function applyAngelSymbolLookup() {
+      const symbolInput = byId("angel-symbol-search");
+      const tokenInput = byId("angel-symbol-token");
+      if (!symbolInput || !tokenInput) return null;
+
+      const symbol = normalizeAngelSymbol(symbolInput.value);
+      symbolInput.value = symbol;
+
+      const mappedToken = getAngelMappedToken(symbol);
+      if (mappedToken) {
+        tokenInput.value = mappedToken;
+      }
+
+      refreshAngelSymbolSelection();
+      return mappedToken;
     }
 
     function updateOverviewCards() {
@@ -2208,6 +2444,9 @@
 
     async function fetchAngelData(event) {
       event.preventDefault();
+      applyAngelSymbolLookup();
+
+      const selectedSymbol = normalizeAngelSymbol(byId("angel-symbol-search").value);
 
       const payload = {
         exchange: byId("angel-exchange").value.trim(),
@@ -2217,8 +2456,21 @@
         todate: byId("angel-to-date").value,
       };
 
-      if (!payload.exchange || !payload.symbol_token || !payload.interval || !payload.fromdate || !payload.todate) {
-        setNotice("angel-fetch-status", "Please fill exchange, symbol token, interval, from date, and to date.", "danger");
+      if (!payload.exchange || !payload.interval || !payload.fromdate || !payload.todate) {
+        setNotice("angel-fetch-status", "Please fill exchange, interval, from date, and to date.", "danger");
+        return;
+      }
+
+      if (!payload.symbol_token) {
+        if (selectedSymbol) {
+          setNotice(
+            "angel-fetch-status",
+            `${selectedSymbol} is not in the local symbol map yet. Enter the symbol token manually to continue.`,
+            "danger"
+          );
+        } else {
+          setNotice("angel-fetch-status", "Please enter a symbol or a symbol token before fetching.", "danger");
+        }
         return;
       }
 
@@ -2277,6 +2529,12 @@
 
       byId("upload-form").addEventListener("submit", uploadCsv);
       byId("angel-fetch-form").addEventListener("submit", fetchAngelData);
+      byId("angel-symbol-search").addEventListener("input", applyAngelSymbolLookup);
+      byId("angel-symbol-search").addEventListener("change", applyAngelSymbolLookup);
+      byId("angel-symbol-token").addEventListener("input", refreshAngelSymbolSelection);
+      byId("angel-interval").addEventListener("change", refreshAngelIntervalPresetState);
+      byId("angel-from-date").addEventListener("input", handleAngelDateManualEdit);
+      byId("angel-to-date").addEventListener("input", handleAngelDateManualEdit);
       byId("backtest-form").addEventListener("submit", runBacktest);
       byId("save-config-btn").addEventListener("click", saveCurrentConfiguration);
       byId("refresh-datasets-btn").addEventListener("click", loadDatasets);
@@ -2293,7 +2551,11 @@
         renderComparison();
       });
 
+      populateAngelSymbolOptions();
+      renderAngelIntervalPresets();
+      renderAngelDateShortcuts();
       initializeAngelFetchDefaults();
+      refreshAngelSymbolSelection();
       updateSizingFields();
       updateChartFrame("equity-chart-frame", "equity-chart-empty", "");
       updateChartFrame("drawdown-chart-frame", "drawdown-chart-empty", "");
