@@ -1239,8 +1239,11 @@
                       <select id="timeframe">
                         <option value="1D">1D</option>
                         <option value="1H">1H</option>
+                        <option value="30m">30m</option>
                         <option value="15m">15m</option>
                         <option value="5m">5m</option>
+                        <option value="3m">3m</option>
+                        <option value="1m">1m</option>
                       </select>
                     </div>
                   </div>
@@ -1520,6 +1523,7 @@
     });
 
     const ANGEL_FETCH_UI_CONFIG = Object.freeze({
+      storageKey: "trading-platform.angel-fetch-form",
       intervalPresets: ["ONE_MINUTE", "FIVE_MINUTE", "FIFTEEN_MINUTE", "ONE_HOUR", "ONE_DAY"],
       dateShortcuts: [
         { label: "Last 1 Day", days: 1 },
@@ -1527,6 +1531,15 @@
         { label: "Last 30 Days", days: 30 },
         { label: "Last 90 Days", days: 90 },
       ],
+      timeframeMap: Object.freeze({
+        ONE_MINUTE: "1m",
+        THREE_MINUTE: "3m",
+        FIVE_MINUTE: "5m",
+        FIFTEEN_MINUTE: "15m",
+        THIRTY_MINUTE: "30m",
+        ONE_HOUR: "1H",
+        ONE_DAY: "1D",
+      }),
     });
 
     function byId(id) {
@@ -1540,6 +1553,7 @@
     }
 
     function formatCurrency(value) {
+      if (value === null || value === undefined || value === "") return "--";
       const num = Number(value);
       if (Number.isNaN(num)) return "--";
       return num.toFixed(2);
@@ -1607,6 +1621,26 @@
       };
     }
 
+    function getEndingEquity(result) {
+      const equity = Number(result?.metrics?.ending_equity);
+      return Number.isFinite(equity) ? equity : null;
+    }
+
+    function getNetProfit(result) {
+      const direct = Number(result?.metrics?.net_profit);
+      if (Number.isFinite(direct)) {
+        return direct;
+      }
+
+      const endingEquity = getEndingEquity(result);
+      const initialCapital = Number(result?.initial_capital);
+      if (Number.isFinite(endingEquity) && Number.isFinite(initialCapital)) {
+        return endingEquity - initialCapital;
+      }
+
+      return null;
+    }
+
     function activateDataset(data, sourceLabel = "Uploaded CSV") {
       const meta = getDatasetMeta(data);
       byId("file-name").value = meta.storedFileName;
@@ -1622,6 +1656,82 @@
       }
       updateOverviewCards();
       return meta;
+    }
+
+    function applyBacktestSymbol(symbol) {
+      const normalized = normalizeAngelSymbol(symbol);
+      if (!normalized) return "";
+      byId("symbol").value = normalized;
+      return normalized;
+    }
+
+    function applyBacktestTimeframe(angelInterval) {
+      const mappedTimeframe = ANGEL_FETCH_UI_CONFIG.timeframeMap[String(angelInterval || "").trim()] || "";
+      if (!mappedTimeframe) return "";
+
+      const timeframeSelect = byId("timeframe");
+      if (!timeframeSelect) return mappedTimeframe;
+
+      const hasOption = Array.from(timeframeSelect.options).some((option) => option.value === mappedTimeframe);
+      if (!hasOption) {
+        const option = document.createElement("option");
+        option.value = mappedTimeframe;
+        option.textContent = mappedTimeframe;
+        timeframeSelect.appendChild(option);
+      }
+
+      timeframeSelect.value = mappedTimeframe;
+      return mappedTimeframe;
+    }
+
+    function getAngelFetchFormValues() {
+      return {
+        exchange: byId("angel-exchange")?.value.trim() || "",
+        symbolText: byId("angel-symbol-search")?.value.trim() || "",
+        symbolToken: byId("angel-symbol-token")?.value.trim() || "",
+        interval: byId("angel-interval")?.value || "",
+        fromDate: byId("angel-from-date")?.value || "",
+        toDate: byId("angel-to-date")?.value || "",
+      };
+    }
+
+    function persistAngelFetchFormState() {
+      try {
+        window.localStorage.setItem(
+          ANGEL_FETCH_UI_CONFIG.storageKey,
+          JSON.stringify(getAngelFetchFormValues())
+        );
+      } catch (error) {
+        console.warn("Unable to persist Angel fetch form state", error);
+      }
+    }
+
+    function restoreAngelFetchFormState() {
+      try {
+        const raw = window.localStorage.getItem(ANGEL_FETCH_UI_CONFIG.storageKey);
+        if (!raw) return false;
+
+        const saved = JSON.parse(raw);
+        if (!saved || typeof saved !== "object") return false;
+
+        if (saved.exchange) byId("angel-exchange").value = String(saved.exchange).trim();
+        if (saved.symbolText) byId("angel-symbol-search").value = String(saved.symbolText).trim();
+        if (saved.symbolToken) byId("angel-symbol-token").value = String(saved.symbolToken).trim();
+        if (saved.interval) byId("angel-interval").value = String(saved.interval).trim();
+        if (saved.fromDate) byId("angel-from-date").value = String(saved.fromDate);
+        if (saved.toDate) byId("angel-to-date").value = String(saved.toDate);
+
+        state.angelDateShortcutDays = null;
+        state.angelDateShortcutLabel = "Custom Range";
+        refreshAngelIntervalPresetState();
+        refreshAngelDateShortcutState();
+        refreshAngelRangeSelection();
+        refreshAngelSymbolSelection();
+        return true;
+      } catch (error) {
+        console.warn("Unable to restore Angel fetch form state", error);
+        return false;
+      }
     }
 
     function formatDateTimeLocalValue(date) {
@@ -1798,10 +1908,11 @@
       byId("overview-strategy-sub").textContent = byId("strategy-description").textContent || "Choose a strategy.";
 
       if (state.latestResult?.metrics) {
+        const overviewNetProfit = getNetProfit(state.latestResult);
         byId("overview-return").textContent = formatPercent(state.latestResult.metrics.total_return_pct);
         byId("overview-return").className = `overview-value ${Number(state.latestResult.metrics.total_return_pct) >= 0 ? "positive" : "negative"}`;
         byId("overview-return-sub").textContent =
-          `${formatCurrency((state.latestResult.ending_equity || 0) - (state.latestResult.initial_capital || 0))} net | ${state.latestResult.trades?.length || 0} trades`;
+          `${formatCurrency(overviewNetProfit)} net | ${state.latestResult.trades?.length || 0} trades`;
       } else {
         byId("overview-return").textContent = "--";
         byId("overview-return").className = "overview-value";
@@ -1985,13 +2096,14 @@
     function updateResults(result) {
       const metrics = result?.metrics || {};
       const totalReturn = Number(metrics.total_return_pct);
-      const netProfit = Number((result?.ending_equity || 0) - (result?.initial_capital || 0));
+      const endingEquity = getEndingEquity(result);
+      const netProfit = getNetProfit(result);
 
       byId("metric-return").textContent = formatPercent(metrics.total_return_pct);
       byId("metric-return").className = `metric-value ${totalReturn >= 0 ? "positive" : "negative"}`;
 
       byId("metric-profit").textContent = formatCurrency(netProfit);
-      byId("metric-profit").className = `metric-value ${netProfit >= 0 ? "positive" : "negative"}`;
+      byId("metric-profit").className = `metric-value ${(netProfit ?? 0) >= 0 ? "positive" : "negative"}`;
 
       byId("metric-trades").textContent = result?.trades?.length ?? metrics.total_trades ?? "--";
       byId("metric-win-rate").textContent = formatPercent(metrics.win_rate_pct);
@@ -1999,7 +2111,7 @@
       byId("metric-brokerage").textContent = formatCurrency(metrics.total_brokerage ?? 0);
       byId("metric-slippage").textContent = formatCurrency(metrics.total_slippage ?? 0);
 
-      byId("metric-return-sub").textContent = `Ending equity: ${formatCurrency(result?.ending_equity)}`;
+      byId("metric-return-sub").textContent = `Ending equity: ${formatCurrency(endingEquity)}`;
 
       byId("results-summary").textContent =
         `Strategy: ${result?.strategy_name || "--"} | Symbol: ${result?.symbol || "--"} | ` +
@@ -2493,14 +2605,16 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || "Angel One fetch failed");
 
-        const meta = activateDataset(data, "Fetched Dataset");
+        const meta = activateDataset(data, "Uploaded CSV");
+        const appliedSymbol = applyBacktestSymbol(selectedSymbol);
+        const appliedTimeframe = applyBacktestTimeframe(payload.interval);
+        persistAngelFetchFormState();
+        await loadDatasets();
         setNotice(
           "angel-fetch-status",
-          `Angel data fetched successfully. Stored as <strong>${meta.storedFileName}</strong> with ${meta.rowCount} rows.`,
+          `Angel data fetched and selected for backtest. Dataset <strong>${meta.storedFileName}</strong> is active, symbol <strong>${appliedSymbol || byId("symbol").value.trim() || "DEMO"}</strong> has been filled, and timeframe <strong>${appliedTimeframe || byId("timeframe").value || "--"}</strong> has been set in the backtest form.`,
           "success"
         );
-
-        await loadDatasets();
       } catch (error) {
         setNotice("angel-fetch-status", error.message, "danger");
       } finally {
@@ -2554,6 +2668,7 @@
       populateAngelSymbolOptions();
       renderAngelIntervalPresets();
       renderAngelDateShortcuts();
+      restoreAngelFetchFormState();
       initializeAngelFetchDefaults();
       refreshAngelSymbolSelection();
       updateSizingFields();
