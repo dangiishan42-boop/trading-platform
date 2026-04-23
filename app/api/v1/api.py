@@ -1,0 +1,16 @@
+from fastapi import APIRouter
+from app.api.v1.endpoints import (
+    auth, dashboard, data_upload, data_preview, indicators, strategies,
+    strategy_builder, backtest_run, backtest_history, results, reports,
+    charts, portfolio, watchlist, risk, optimization, settings, users
+)
+
+router = APIRouter()
+for child in [
+    auth.router, dashboard.router, data_upload.router, data_preview.router,
+    indicators.router, strategies.router, strategy_builder.router,
+    backtest_run.router, backtest_history.router, results.router,
+    reports.router, charts.router, portfolio.router, watchlist.router,
+    risk.router, optimization.router, settings.router, users.router
+]:
+    router.include_router(child)

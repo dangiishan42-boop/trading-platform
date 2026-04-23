@@ -1,0 +1,9 @@
+[project]
+name = "trading-platform"
+version = "0.1.0"
+description = "Scalable trading backtesting platform"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

@@ -1,0 +1,17 @@
+.git
+.pytest_cache
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.production
+logs
+htmlcov
+dist
+build
+data/raw
+data/processed
+*.db
+*.sqlite3

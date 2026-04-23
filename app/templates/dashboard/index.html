@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        :root {
+            --bg: #edf3f8;
+            --bg-accent: #dce8f4;
+            --panel: #ffffff;
+            --panel-muted: #f6f8fb;
+            --panel-soft: #f8fbff;
+            --text: #0f172a;
+            --subtle: #5c6676;
+            --line: #d7e0ea;
+            --line-strong: #c5d1de;
+            --primary: #0d63a5;
+            --primary-strong: #0e3d63;
+            --primary-soft: #eaf4ff;
+            --success: #0f9f6e;
+            --success-soft: #e8f7f1;
+            --danger: #d05a64;
+            --danger-soft: #feeff2;
+            --warning: #b98320;
+            --warning-soft: #fff6e6;
+            --shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+            --shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.05);
+            --radius: 22px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(13, 99, 165, 0.16), transparent 28%),
+                linear-gradient(180deg, #f8fbff 0%, var(--bg) 54%, #e9f0f6 100%);
+        }
+
+        .page {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 28px 20px 48px;
+        }
+
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 18px;
+            padding: 30px 32px;
+            border-radius: 30px;
+            background:
+                radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 22%),
+                linear-gradient(135deg, var(--primary-strong) 0%, #144d78 62%, #102b43 100%);
+            color: #fff;
+            box-shadow: 0 28px 56px rgba(14, 61, 99, 0.2);
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2.2rem, 4vw, 3.35rem);
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 760px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .hero-eyebrow {
+            background: rgba(255, 255, 255, 0.14);
+            color: rgba(255, 255, 255, 0.86);
+            border-color: rgba(255, 255, 255, 0.18);
+            margin-bottom: 14px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .hero-actions a,
+        .button,
+        button {
+            border: 0;
+            border-radius: 14px;
+            background: var(--primary);
+            color: #fff;
+            font: inherit;
+            font-weight: 600;
+            padding: 12px 18px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+            box-shadow: 0 12px 24px rgba(13, 99, 165, 0.2);
+        }
+
+        .hero-actions a.secondary,
+        .button.secondary,
+        button.secondary {
+            background: #fff;
+            color: var(--text);
+            border: 1px solid var(--line);
+            box-shadow: none;
+        }
+
+        .hero-actions a {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: none;
+        }
+
+        .hero-actions a.secondary {
+            background: #fff;
+            border-color: #fff;
+        }
+
+        .hero-actions a:hover,
+        .button:hover,
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .overview-card {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(215, 224, 234, 0.92);
+            border-radius: 20px;
+            padding: 18px 20px;
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(8px);
+        }
+
+        .overview-label {
+            margin: 0 0 10px;
+            color: var(--subtle);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .overview-value {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        .overview-meta {
+            margin: 8px 0 0;
+            color: var(--subtle);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .overview-value.positive {
+            color: var(--success);
+        }
+
+        .overview-value.negative {
+            color: var(--danger);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 340px minmax(0, 1fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .stack {
+            display: grid;
+            gap: 22px;
+        }
+
+        .sidebar-stack {
+            position: sticky;
+            top: 20px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid rgba(215, 224, 234, 0.9);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+
+        .panel h2,
+        .panel h3 {
+            margin: 0;
+        }
+
+        .panel h2 {
+            font-size: 1.28rem;
+            letter-spacing: -0.02em;
+        }
+
+        .panel h3 {
+            font-size: 1rem;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .panel-title-group {
+            display: grid;
+            gap: 8px;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: var(--primary-soft);
+            border: 1px solid rgba(13, 99, 165, 0.12);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .panel p.section-copy {
+            margin: 0;
+            color: var(--subtle);
+            line-height: 1.6;
+            max-width: 72ch;
+        }
+
+        .status {
+            display: none;
+            margin-top: 14px;
+            padding: 13px 14px;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .status.visible {
+            display: block;
+        }
+
+        .status.info {
+            background: var(--primary-soft);
+            color: var(--primary);
+            border-color: rgba(13, 99, 165, 0.12);
+        }
+
+        .status.success {
+            background: var(--success-soft);
+            color: var(--success);
+            border-color: rgba(15, 159, 110, 0.14);
+        }
+
+        .status.error {
+            background: var(--danger-soft);
+            color: var(--danger);
+            border-color: rgba(208, 90, 100, 0.14);
+        }
+
+        form {
+            display: grid;
+            gap: 18px;
+        }
+
+        .form-group {
+            display: grid;
+            gap: 14px;
+            padding: 18px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: var(--panel-muted);
+        }
+
+        .form-group-head {
+            display: grid;
+            gap: 6px;
+        }
+
+        .group-kicker {
+            color: var(--primary);
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .group-title {
+            margin: 0;
+            font-size: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        .field.is-hidden {
+            display: none;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--line-strong);
+            background: #fff;
+            color: var(--text);
+            font: inherit;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: rgba(13, 99, 165, 0.45);
+            box-shadow: 0 0 0 4px rgba(13, 99, 165, 0.1);
+        }
+
+        .helper {
+            margin: 0;
+            color: var(--subtle);
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .inline-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .source-switch {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .source-switch label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+            font-weight: 600;
+        }
+
+        .source-switch input {
+            width: auto;
+            margin: 0;
+            accent-color: var(--primary);
+        }
+
+        .strategy-card {
+            padding: 18px;
+            border-radius: 18px;
+            background:
+                linear-gradient(180deg, rgba(234, 244, 255, 0.95) 0%, rgba(248, 251, 255, 0.95) 100%);
+            border: 1px solid var(--line);
+        }
+
+        .strategy-card h3 {
+            margin-bottom: 6px;
+            font-size: 1.18rem;
+        }
+
+        .strategy-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--line);
+            color: var(--subtle);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .metric {
+            background: var(--panel-muted);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 18px;
+            min-height: 120px;
+            display: grid;
+            align-content: start;
+            gap: 8px;
+        }
+
+        .metric.metric-featured {
+            background: linear-gradient(135deg, var(--primary-strong) 0%, var(--primary) 100%);
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .metric.metric-accent {
+            background: linear-gradient(180deg, #f3fbf8 0%, #ffffff 100%);
+            border-color: rgba(15, 159, 110, 0.18);
+        }
+
+        .metric.metric-danger {
+            background: linear-gradient(180deg, var(--danger-soft) 0%, #ffffff 100%);
+            border-color: rgba(208, 90, 100, 0.18);
+        }
+
+        .metric-label {
+            color: var(--subtle);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .metric-featured .metric-label,
+        .metric-featured .metric-value {
+            color: #fff;
+        }
+
+        .metric-value.positive {
+            color: var(--success);
+        }
+
+        .metric-value.negative {
+            color: var(--danger);
+        }
+
+        .metric-value.drawdown {
+            color: var(--danger);
+        }
+
+        .preview-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin: 14px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .preview-list li {
+            display: grid;
+            gap: 6px;
+            padding: 14px;
+            border-radius: 16px;
+            background: var(--panel-soft);
+            border: 1px solid var(--line);
+            font-size: 0.9rem;
+        }
+
+        .preview-list li span {
+            color: var(--subtle);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .preview-list li strong {
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .dataset-shell {
+            display: grid;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .dataset-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .dataset-item {
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: var(--panel-muted);
+        }
+
+        .dataset-item.selected {
+            border-color: rgba(13, 99, 165, 0.35);
+            box-shadow: inset 0 0 0 1px rgba(13, 99, 165, 0.18);
+            background: #fff;
+        }
+
+        .dataset-title {
+            margin: 0;
+            font-size: 0.96rem;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .dataset-caption {
+            color: var(--subtle);
+            font-size: 0.82rem;
+            word-break: break-word;
+        }
+
+        .dataset-meta {
+            display: grid;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .dataset-meta li {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--subtle);
+            font-size: 0.86rem;
+        }
+
+        .dataset-empty {
+            padding: 18px;
+            border: 1px dashed var(--line);
+            border-radius: 16px;
+            background: #fff;
+            color: var(--subtle);
+            text-align: center;
+        }
+
+        .dataset-shell.has-datasets .dataset-empty {
+            display: none;
+        }
+
+        .dataset-shell:not(.has-datasets) .dataset-list {
+            display: none;
+        }
+
+        .strategy-config-shell {
+            display: grid;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .strategy-config-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .strategy-config-card {
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: var(--panel-muted);
+        }
+
+        .strategy-config-card.selected {
+            border-color: rgba(13, 99, 165, 0.35);
+            box-shadow: inset 0 0 0 1px rgba(13, 99, 165, 0.18);
+            background: #fff;
+        }
+
+        .strategy-config-title {
+            margin: 0;
+            font-size: 0.96rem;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .strategy-config-caption,
+        .strategy-config-params {
+            color: var(--subtle);
+            font-size: 0.84rem;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .strategy-config-meta {
+            display: grid;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .strategy-config-meta li {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--subtle);
+            font-size: 0.86rem;
+        }
+
+        .strategy-config-empty {
+            padding: 18px;
+            border: 1px dashed var(--line);
+            border-radius: 16px;
+            background: #fff;
+            color: var(--subtle);
+            text-align: center;
+        }
+
+        .strategy-config-shell.has-configs .strategy-config-empty {
+            display: none;
+        }
+
+        .strategy-config-shell:not(.has-configs) .strategy-config-list {
+            display: none;
+        }
+
+        .parameters-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .results-note {
+            margin: 0;
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: var(--panel-muted);
+            color: var(--subtle);
+            line-height: 1.7;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .chart-shell {
+            display: grid;
+            gap: 12px;
+            margin-top: 0;
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: var(--panel-muted);
+        }
+
+        .chart-shell h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .chart-empty {
+            min-height: 180px;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            text-align: center;
+            color: var(--subtle);
+            background: #fff;
+            border: 1px dashed var(--line);
+            border-radius: 16px;
+        }
+
+        .chart-shell:not(.empty) .chart-empty {
+            display: none;
+        }
+
+        .chart-shell.empty .chart-frame {
+            display: none;
+        }
+
+        .chart-frame {
+            width: 100%;
+            height: 380px;
+            border: 0;
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .trades-shell {
+            display: grid;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .trades-shell h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .trade-table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .trade-table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+        }
+
+        .trade-table th,
+        .trade-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .trade-table th {
+            color: var(--subtle);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: #f7fafc;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .trade-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .trade-table tbody tr:nth-child(even) td {
+            background: #fbfdff;
+        }
+
+        .trade-table tbody tr:hover td {
+            background: var(--primary-soft);
+        }
+
+        .trade-table td.trade-number {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .trade-value-positive {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .trade-value-negative {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .trades-empty {
+            padding: 18px;
+            border: 1px dashed var(--line);
+            border-radius: 16px;
+            background: #fff;
+            color: var(--subtle);
+            text-align: center;
+        }
+
+        .trades-shell.has-trades .trades-empty {
+            display: none;
+        }
+
+        .trades-shell:not(.has-trades) .trade-table-wrap {
+            display: none;
+        }
+
+        .history-shell {
+            display: grid;
+            gap: 12px;
+            margin-top: 0;
+        }
+
+        .history-shell h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .history-shell.has-history .trades-empty {
+            display: none;
+        }
+
+        .history-shell:not(.has-history) .trade-table-wrap {
+            display: none;
+        }
+
+        .comparison-shell {
+            display: grid;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--line);
+        }
+
+        .comparison-shell h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .comparison-shell.has-comparison .trades-empty {
+            display: none;
+        }
+
+        .comparison-shell:not(.has-comparison) .trade-table-wrap {
+            display: none;
+        }
+
+        .compare-cell {
+            width: 56px;
+            text-align: center;
+        }
+
+        .compare-toggle {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .muted {
+            color: var(--subtle);
+        }
+
+        .status-group {
+            display: grid;
+            gap: 12px;
+        }
+
+        .panel-section-spacer {
+            margin-top: 22px;
+        }
+
+        .panel-subcopy {
+            color: var(--subtle);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 980px) {
+            .overview-grid,
+            .metrics,
+            .chart-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .sidebar-stack {
+                position: static;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .field-grid,
+            .preview-list,
+            .overview-grid,
+            .metrics,
+            .parameters-grid,
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page {
+                padding: 22px 14px 36px;
+            }
+
+            .panel {
+                padding: 18px;
+            }
+
+            .hero {
+                padding: 24px 20px;
+                border-radius: 24px;
+            }
+
+            .panel-header {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="hero">
+            <div>
+                <span class="eyebrow hero-eyebrow">Trading Workspace</span>
+                <h1>{{ title }}</h1>
+                <p>
+                    Upload market data, select and save strategy setups, run realistic backtests, and review
+                    performance from one clean research dashboard.
+                </p>
+            </div>
+            <div class="hero-actions">
+                <a href="/docs" class="secondary">Open API Docs</a>
+                <a href="/api/v1/strategies/available">Strategy API</a>
+            </div>
+        </header>
+
+        <section class="overview-grid">
+            <article class="overview-card">
+                <p class="overview-label">Data Source</p>
+                <p class="overview-value" id="overview-source-value">Sample Data</p>
+                <p class="overview-meta" id="overview-source-meta">Using the built-in sample dataset for the next run.</p>
+            </article>
+            <article class="overview-card">
+                <p class="overview-label">Active Strategy</p>
+                <p class="overview-value" id="overview-strategy-value">--</p>
+                <p class="overview-meta" id="overview-strategy-meta">Choose a strategy to see its details and parameters.</p>
+            </article>
+            <article class="overview-card">
+                <p class="overview-label">Latest Return</p>
+                <p class="overview-value" id="overview-result-value">--</p>
+                <p class="overview-meta" id="overview-result-meta">Run a backtest to populate the latest performance snapshot.</p>
+            </article>
+            <article class="overview-card">
+                <p class="overview-label">Recent Backtests</p>
+                <p class="overview-value" id="overview-history-value">0 Saved</p>
+                <p class="overview-meta" id="overview-history-meta">The latest 10 stored backtests will appear here.</p>
+            </article>
+        </section>
+
+        <div class="layout">
+            <aside class="stack sidebar-stack">
+                <section class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <span class="eyebrow">Data</span>
+                            <h2>Upload & Datasets</h2>
+                            <p class="section-copy">
+                                Import OHLCV CSV files, review the cleaned dataset summary, and quickly reuse
+                                previously uploaded files.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form id="upload-form">
+                        <div class="field">
+                            <label for="data-file">CSV File</label>
+                            <input id="data-file" name="file" type="file" accept=".csv,text/csv" required>
+                        </div>
+                        <div class="inline-actions">
+                            <button type="submit">Upload Data</button>
+                            <span class="helper">Use sample data if you do not want to upload yet.</span>
+                        </div>
+                    </form>
+
+                    <div id="upload-status" class="status info"></div>
+
+                    <ul class="preview-list" id="upload-meta">
+                        <li><span>Current Source</span><strong id="current-source">Sample Data</strong></li>
+                        <li><span>Uploaded File</span><strong id="uploaded-file">None</strong></li>
+                        <li><span>Rows</span><strong id="uploaded-rows">--</strong></li>
+                        <li><span>Date Range</span><strong id="uploaded-range">--</strong></li>
+                    </ul>
+
+                    <div class="dataset-shell" id="dataset-shell">
+                        <div>
+                            <h3>Saved Uploads</h3>
+                            <p class="helper">Reuse a previously uploaded dataset for backtests without uploading again.</p>
+                        </div>
+                        <div class="dataset-empty" id="dataset-empty">
+                            Uploaded datasets will appear here.
+                        </div>
+                        <div class="dataset-list" id="dataset-list"></div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <span class="eyebrow">Strategy</span>
+                            <h2>Selection & Saved Setups</h2>
+                            <p class="section-copy">
+                                Choose a strategy from the registry, inspect its metadata, and reuse saved
+                                parameter configurations.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="strategy-select">Strategy</label>
+                        <select id="strategy-select" name="strategy_name">
+                            {% for strategy in strategies %}
+                            <option value="{{ strategy.slug }}">{{ strategy.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="strategy-card">
+                        <h3 id="strategy-name">--</h3>
+                        <p class="helper" id="strategy-description">Select a strategy to see details.</p>
+                        <div class="strategy-meta" id="strategy-meta"></div>
+                    </div>
+
+                    <div class="strategy-config-shell" id="strategy-config-shell">
+                        <div>
+                            <h3>Saved Configurations</h3>
+                            <p class="helper">Save the current strategy parameters and reuse them anytime.</p>
+                        </div>
+                        <div class="field">
+                            <label for="strategy-config-name">Configuration Name</label>
+                            <input
+                                id="strategy-config-name"
+                                type="text"
+                                placeholder="Strategy setup"
+                            >
+                        </div>
+                        <div class="inline-actions">
+                            <button type="button" id="save-strategy-config">Save Current Configuration</button>
+                        </div>
+                        <div id="strategy-config-status" class="status info"></div>
+                        <div class="strategy-config-empty" id="strategy-config-empty">
+                            Saved strategy configurations will appear here.
+                        </div>
+                        <div class="strategy-config-list" id="strategy-config-list"></div>
+                    </div>
+                </section>
+            </aside>
+
+            <div class="stack">
+                <section class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <span class="eyebrow">Run Setup</span>
+                            <h2>Backtest Configuration</h2>
+                            <p class="section-copy">
+                                Organize market context, execution settings, risk controls, and sizing inputs before
+                                sending the run to the existing backtest endpoint.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form id="backtest-form">
+                        <div class="form-group">
+                            <div class="form-group-head">
+                                <span class="group-kicker">Context</span>
+                                <h3 class="group-title">Market & Dataset</h3>
+                                <p class="helper">Choose the data source, instrument, and timeframe for the next run.</p>
+                            </div>
+
+                            <div class="field full">
+                                <label>Data Source</label>
+                                <div class="source-switch">
+                                    <label><input type="radio" name="source" value="sample" checked> Sample Data</label>
+                                    <label><input type="radio" name="source" value="upload"> Uploaded CSV</label>
+                                </div>
+                            </div>
+
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label for="symbol">Symbol</label>
+                                    <input id="symbol" name="symbol" type="text" value="DEMO">
+                                </div>
+                                <div class="field">
+                                    <label for="timeframe">Timeframe</label>
+                                    <input id="timeframe" name="timeframe" type="text" value="1D">
+                                </div>
+                                <div class="field">
+                                    <label for="initial-capital">Initial Capital</label>
+                                    <input id="initial-capital" name="initial_capital" type="number" min="1" step="1" value="100000">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-group-head">
+                                <span class="group-kicker">Execution</span>
+                                <h3 class="group-title">Costs & Risk Controls</h3>
+                                <p class="helper">Set brokerage, slippage, and optional stop loss or take profit levels.</p>
+                            </div>
+
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label for="commission-pct">Commission %</label>
+                                    <input id="commission-pct" name="commission_pct" type="number" min="0" step="0.01" value="0.1">
+                                </div>
+                                <div class="field">
+                                    <label for="slippage-pct">Slippage %</label>
+                                    <input id="slippage-pct" name="slippage_pct" type="number" min="0" step="0.01" value="0.05">
+                                </div>
+                                <div class="field">
+                                    <label for="stop-loss-pct">Stop Loss %</label>
+                                    <input id="stop-loss-pct" name="stop_loss_pct" type="number" min="0.01" step="0.01" placeholder="Optional">
+                                </div>
+                                <div class="field">
+                                    <label for="take-profit-pct">Take Profit %</label>
+                                    <input id="take-profit-pct" name="take_profit_pct" type="number" min="0.01" step="0.01" placeholder="Optional">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-group-head">
+                                <span class="group-kicker">Sizing</span>
+                                <h3 class="group-title">Position Sizing</h3>
+                                <p class="helper">Keep quantity sizing explicit with fixed quantity, fixed capital, or percent-of-equity modes.</p>
+                            </div>
+
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label for="position-sizing-mode">Position Sizing</label>
+                                    <select id="position-sizing-mode" name="position_sizing_mode">
+                                        <option value="percent_equity" selected>Percent of Equity</option>
+                                        <option value="fixed_capital">Fixed Capital Per Trade</option>
+                                        <option value="fixed_quantity">Fixed Quantity</option>
+                                    </select>
+                                </div>
+                                <div class="field" id="equity-pct-field">
+                                    <label for="equity-pct-per-trade">Equity % Per Trade</label>
+                                    <input id="equity-pct-per-trade" name="equity_pct_per_trade" type="number" min="0.01" max="100" step="0.01" value="100">
+                                </div>
+                                <div class="field is-hidden" id="capital-per-trade-field">
+                                    <label for="capital-per-trade">Capital Per Trade</label>
+                                    <input id="capital-per-trade" name="capital_per_trade" type="number" min="1" step="0.01" value="10000">
+                                </div>
+                                <div class="field is-hidden" id="fixed-quantity-field">
+                                    <label for="fixed-quantity">Fixed Quantity</label>
+                                    <input id="fixed-quantity" name="fixed_quantity" type="number" min="1" step="1" value="1">
+                                </div>
+                            </div>
+
+                            <p class="helper" id="position-sizing-helper">
+                                Use 100% of current equity per trade to match the existing full-capital behavior.
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-group-head">
+                                <span class="group-kicker">Parameters</span>
+                                <h3 class="group-title">Strategy Inputs</h3>
+                                <p class="helper">Parameters are generated from the selected strategy schema.</p>
+                            </div>
+
+                            <div class="field full">
+                                <label>Strategy Parameters</label>
+                                <div id="strategy-parameters" class="parameters-grid"></div>
+                            </div>
+                        </div>
+
+                        <div class="inline-actions">
+                            <button type="submit">Run Backtest</button>
+                            <button type="button" class="secondary" id="reset-parameters">Reset Parameters</button>
+                        </div>
+                    </form>
+
+                    <div id="backtest-status" class="status info"></div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <span class="eyebrow">Results</span>
+                            <h2>Latest Backtest</h2>
+                            <p class="section-copy">
+                                Review performance highlights, equity and drawdown charts, and the full trade list
+                                from the most recent run.
+                            </p>
+                        </div>
+                        <div class="panel-actions">
+                            <button type="button" class="secondary" id="export-results" disabled>Export Latest Result CSV</button>
+                        </div>
+                    </div>
+
+                    <div class="metrics">
+                        <div class="metric metric-featured">
+                            <div class="metric-label">Total Return</div>
+                            <div class="metric-value" id="metric-return">--</div>
+                        </div>
+                        <div class="metric metric-accent">
+                            <div class="metric-label">Win Rate</div>
+                            <div class="metric-value" id="metric-win-rate">--</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Trades Count</div>
+                            <div class="metric-value" id="metric-trades">--</div>
+                        </div>
+                        <div class="metric metric-danger">
+                            <div class="metric-label">Max Drawdown</div>
+                            <div class="metric-value drawdown" id="metric-drawdown">--</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Brokerage</div>
+                            <div class="metric-value" id="metric-brokerage">--</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Slippage</div>
+                            <div class="metric-value" id="metric-slippage">--</div>
+                        </div>
+                    </div>
+
+                    <p class="results-note" id="results-note">
+                        Run a backtest to populate this summary. The backend response is used directly, so this section
+                        stays in sync with the API.
+                    </p>
+
+                    <div id="export-status" class="status info"></div>
+
+                    <div class="chart-grid">
+                        <div class="chart-shell empty" id="equity-chart-shell">
+                            <div>
+                                <h3>Equity Curve</h3>
+                                <p class="helper">Rendered from the backend-provided Plotly chart.</p>
+                            </div>
+                            <div class="chart-empty" id="equity-chart-empty">
+                                Run a backtest to generate the equity curve chart.
+                            </div>
+                            <iframe
+                                id="equity-chart-frame"
+                                class="chart-frame"
+                                title="Equity curve chart"
+                            ></iframe>
+                        </div>
+
+                        <div class="chart-shell empty" id="drawdown-chart-shell">
+                            <div>
+                                <h3>Drawdown</h3>
+                                <p class="helper">Shows how far equity falls from the running peak during the backtest.</p>
+                            </div>
+                            <div class="chart-empty">
+                                Run a backtest to generate the drawdown chart.
+                            </div>
+                            <iframe
+                                id="drawdown-chart-frame"
+                                class="chart-frame"
+                                title="Drawdown chart"
+                            ></iframe>
+                        </div>
+                    </div>
+
+                    <div class="trades-shell" id="trades-shell">
+                        <div>
+                            <h3>Trade List</h3>
+                            <p class="helper">Completed trades from the latest backtest run.</p>
+                        </div>
+                        <div class="trades-empty" id="trade-list-empty">
+                            Run a backtest to view the trade list.
+                        </div>
+                        <div class="trade-table-wrap">
+                            <table class="trade-table">
+                                <thead>
+                                    <tr>
+                                        <th>Entry Date</th>
+                                        <th>Exit Date</th>
+                                        <th>Exit Reason</th>
+                                        <th>Sizing</th>
+                                        <th>Entry Price</th>
+                                        <th>Exit Price</th>
+                                        <th>Quantity</th>
+                                        <th>Capital Used</th>
+                                        <th>PnL</th>
+                                        <th>Return %</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trade-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <span class="eyebrow">History</span>
+                            <h2>Saved Runs & Comparison</h2>
+                            <p class="section-copy">
+                                Review the latest stored backtests, compare runs side by side, and keep recent
+                                research visible in one place.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="history-shell" id="history-shell">
+                        <div>
+                            <h3>Recent Backtest History</h3>
+                            <p class="helper">Latest saved backtest runs from the database.</p>
+                        </div>
+                        <div class="trades-empty" id="history-empty">
+                            Recent backtests will appear here.
+                        </div>
+                        <div class="trade-table-wrap">
+                            <table class="trade-table">
+                                <thead>
+                                    <tr>
+                                        <th class="compare-cell">Compare</th>
+                                        <th>Created</th>
+                                        <th>Strategy</th>
+                                        <th>Symbol</th>
+                                        <th>Timeframe</th>
+                                        <th>Initial Capital</th>
+                                        <th>Commission %</th>
+                                        <th>Total Return</th>
+                                        <th>Win Rate</th>
+                                        <th>Max Drawdown</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="comparison-shell" id="comparison-shell">
+                        <div>
+                            <h3>Backtest Comparison</h3>
+                            <p class="helper" id="comparison-helper">
+                                Select 2 to 5 runs from recent history to compare total return, win rate,
+                                max drawdown, and initial capital.
+                            </p>
+                        </div>
+                        <div class="panel-actions">
+                            <button type="button" class="secondary" id="clear-comparison">Clear Selection</button>
+                        </div>
+                        <div id="comparison-status" class="status info"></div>
+                        <div class="trades-empty" id="comparison-empty">
+                            Select at least 2 recent backtest runs to see the comparison table.
+                        </div>
+                        <div class="trade-table-wrap">
+                            <table class="trade-table">
+                                <thead>
+                                    <tr>
+                                        <th>Created</th>
+                                        <th>Strategy</th>
+                                        <th>Symbol</th>
+                                        <th>Timeframe</th>
+                                        <th>Initial Capital</th>
+                                        <th>Total Return</th>
+                                        <th>Win Rate</th>
+                                        <th>Max Drawdown</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comparison-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const strategies = {{ strategies | tojson }};
+
+        const uploadForm = document.getElementById("upload-form");
+        const uploadStatus = document.getElementById("upload-status");
+        const backtestForm = document.getElementById("backtest-form");
+        const backtestStatus = document.getElementById("backtest-status");
+        const exportResultsButton = document.getElementById("export-results");
+        const exportStatus = document.getElementById("export-status");
+        const strategySelect = document.getElementById("strategy-select");
+        const parameterContainer = document.getElementById("strategy-parameters");
+        const strategyName = document.getElementById("strategy-name");
+        const strategyDescription = document.getElementById("strategy-description");
+        const strategyMeta = document.getElementById("strategy-meta");
+        const resetParametersButton = document.getElementById("reset-parameters");
+        const equityChartShell = document.getElementById("equity-chart-shell");
+        const equityChartFrame = document.getElementById("equity-chart-frame");
+        const drawdownChartShell = document.getElementById("drawdown-chart-shell");
+        const drawdownChartFrame = document.getElementById("drawdown-chart-frame");
+        const tradesShell = document.getElementById("trades-shell");
+        const tradeTableBody = document.getElementById("trade-table-body");
+        const tradeListEmpty = document.getElementById("trade-list-empty");
+        const historyShell = document.getElementById("history-shell");
+        const historyTableBody = document.getElementById("history-table-body");
+        const historyEmpty = document.getElementById("history-empty");
+        const comparisonShell = document.getElementById("comparison-shell");
+        const comparisonTableBody = document.getElementById("comparison-table-body");
+        const comparisonEmpty = document.getElementById("comparison-empty");
+        const comparisonStatus = document.getElementById("comparison-status");
+        const clearComparisonButton = document.getElementById("clear-comparison");
+        const datasetShell = document.getElementById("dataset-shell");
+        const datasetList = document.getElementById("dataset-list");
+        const datasetEmpty = document.getElementById("dataset-empty");
+        const strategyConfigShell = document.getElementById("strategy-config-shell");
+        const strategyConfigList = document.getElementById("strategy-config-list");
+        const strategyConfigEmpty = document.getElementById("strategy-config-empty");
+        const strategyConfigNameInput = document.getElementById("strategy-config-name");
+        const strategyConfigStatus = document.getElementById("strategy-config-status");
+        const saveStrategyConfigButton = document.getElementById("save-strategy-config");
+        const positionSizingModeSelect = document.getElementById("position-sizing-mode");
+        const equityPctField = document.getElementById("equity-pct-field");
+        const capitalPerTradeField = document.getElementById("capital-per-trade-field");
+        const fixedQuantityField = document.getElementById("fixed-quantity-field");
+        const positionSizingHelper = document.getElementById("position-sizing-helper");
+        const overviewSourceValue = document.getElementById("overview-source-value");
+        const overviewSourceMeta = document.getElementById("overview-source-meta");
+        const overviewStrategyValue = document.getElementById("overview-strategy-value");
+        const overviewStrategyMeta = document.getElementById("overview-strategy-meta");
+        const overviewResultValue = document.getElementById("overview-result-value");
+        const overviewResultMeta = document.getElementById("overview-result-meta");
+        const overviewHistoryValue = document.getElementById("overview-history-value");
+        const overviewHistoryMeta = document.getElementById("overview-history-meta");
+
+        let uploadedFileName = null;
+        let savedDatasets = [];
+        let savedStrategyConfigurations = [];
+        let selectedStrategyConfigId = null;
+        let recentBacktestHistory = [];
+        let selectedComparisonIds = [];
+        let latestBacktestResult = null;
+
+        function setStatus(element, message, tone = "info") {
+            element.textContent = message;
+            element.className = `status ${tone} visible`;
+        }
+
+        function clearStatus(element) {
+            element.textContent = "";
+            element.className = "status info";
+        }
+
+        function getCurrentStrategy() {
+            return strategies.find((strategy) => strategy.slug === strategySelect.value) || strategies[0];
+        }
+
+        function humanizeKey(value) {
+            return value
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, (char) => char.toUpperCase());
+        }
+
+        function parameterInputType(schema) {
+            if (schema.type === "integer" || schema.type === "number") {
+                return "number";
+            }
+            return "text";
+        }
+
+        function renderStrategyDetails() {
+            const strategy = getCurrentStrategy();
+            strategyName.textContent = strategy.name;
+            strategyDescription.textContent = strategy.description || "No description available.";
+            overviewStrategyValue.textContent = strategy.name;
+            overviewStrategyMeta.textContent =
+                strategy.description || `${Object.keys(strategy.default_parameters || {}).length} configurable parameters available.`;
+
+            const meta = [];
+            meta.push(`<span class="pill">Slug: ${strategy.slug}</span>`);
+            meta.push(`<span class="pill">${Object.keys(strategy.default_parameters || {}).length} parameters</span>`);
+            if (strategy.aliases && strategy.aliases.length) {
+                meta.push(`<span class="pill">Aliases: ${strategy.aliases.join(", ")}</span>`);
+            }
+            strategyMeta.innerHTML = meta.join("");
+        }
+
+        function updateStrategyConfigurationPlaceholder() {
+            strategyConfigNameInput.placeholder = `${getCurrentStrategy().name} Setup`;
+        }
+
+        function renderParameterFields() {
+            const strategy = getCurrentStrategy();
+            const schemaProperties = (strategy.parameter_schema && strategy.parameter_schema.properties) || {};
+            const defaults = strategy.default_parameters || {};
+
+            parameterContainer.innerHTML = "";
+
+            Object.entries(defaults).forEach(([key, value]) => {
+                const schema = schemaProperties[key] || {};
+                const wrapper = document.createElement("div");
+                wrapper.className = "field";
+
+                const label = document.createElement("label");
+                label.setAttribute("for", `param-${key}`);
+                label.textContent = schema.title || humanizeKey(key);
+
+                const input = document.createElement("input");
+                input.id = `param-${key}`;
+                input.name = key;
+                input.type = parameterInputType(schema);
+                input.dataset.param = "true";
+
+                if (schema.type === "integer") {
+                    input.step = "1";
+                    input.value = Number(value);
+                } else if (schema.type === "number") {
+                    input.step = "any";
+                    input.value = Number(value);
+                } else {
+                    input.value = value;
+                }
+
+                if (schema.minimum !== undefined) {
+                    input.min = schema.minimum;
+                }
+                if (schema.maximum !== undefined) {
+                    input.max = schema.maximum;
+                }
+
+                wrapper.appendChild(label);
+                wrapper.appendChild(input);
+                parameterContainer.appendChild(wrapper);
+            });
+        }
+
+        function renderStrategyPanel() {
+            renderStrategyDetails();
+            renderParameterFields();
+            updateStrategyConfigurationPlaceholder();
+        }
+
+        function updateUploadMeta(preview, storedFileName, displayFileName = null) {
+            const sourceLabel = storedFileName ? "Uploaded CSV" : "Sample Data";
+            document.getElementById("current-source").textContent = sourceLabel;
+            document.getElementById("uploaded-file").textContent = displayFileName || storedFileName || "None";
+            document.getElementById("uploaded-rows").textContent = preview ? preview.total_rows : "--";
+            document.getElementById("uploaded-range").textContent = preview && preview.min_date && preview.max_date
+                ? `${formatDateLabel(preview.min_date)} -> ${formatDateLabel(preview.max_date)}`
+                : "--";
+            overviewSourceValue.textContent = sourceLabel;
+
+            if (storedFileName && preview) {
+                const dateRange = preview.min_date && preview.max_date
+                    ? `${formatDateLabel(preview.min_date)} -> ${formatDateLabel(preview.max_date)}`
+                    : "Date range unavailable";
+                overviewSourceMeta.textContent = `${displayFileName || storedFileName} | ${preview.total_rows} rows | ${dateRange}`;
+                return;
+            }
+
+            overviewSourceMeta.textContent = "Using the built-in sample dataset for the next run.";
+        }
+
+        function buildChartDocument(chartHtml) {
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: #ffffff;
+        }
+
+        body {
+            font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body > div,
+        .plotly-graph-div,
+        .js-plotly-plot {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    ${chartHtml}
+</body>
+</html>`;
+        }
+
+        function updateChartFrame(chartShell, chartFrame, chartHtml) {
+            const hasChart = typeof chartHtml === "string" && chartHtml.trim().length > 0;
+
+            chartShell.classList.toggle("empty", !hasChart);
+
+            if (!hasChart) {
+                chartFrame.srcdoc = "";
+                return;
+            }
+
+            chartFrame.srcdoc = buildChartDocument(chartHtml);
+        }
+
+        function updateEquityChart(chartHtml) {
+            updateChartFrame(equityChartShell, equityChartFrame, chartHtml);
+        }
+
+        function updateDrawdownChart(chartHtml) {
+            updateChartFrame(drawdownChartShell, drawdownChartFrame, chartHtml);
+        }
+
+        function formatDateLabel(value) {
+            if (!value) {
+                return "--";
+            }
+            return String(value).replace("T", " ").replace("Z", "");
+        }
+
+        function formatNumber(value) {
+            return Number(value).toFixed(2);
+        }
+
+        function applySignedValueState(element, value) {
+            element.classList.remove("positive", "negative");
+
+            if (value > 0) {
+                element.classList.add("positive");
+                return;
+            }
+
+            if (value < 0) {
+                element.classList.add("negative");
+            }
+        }
+
+        function parseOptionalNumber(value, integer = false) {
+            if (value === null || value === undefined || value === "") {
+                return null;
+            }
+
+            return integer ? parseInt(value, 10) : Number(value);
+        }
+
+        function formatPositionSizingMode(mode) {
+            const labels = {
+                fixed_quantity: "Fixed Quantity",
+                fixed_capital: "Fixed Capital",
+                percent_equity: "Percent Equity"
+            };
+            return labels[mode] || humanizeKey(mode || "position_sizing");
+        }
+
+        function formatPositionSizingSummary(result) {
+            const mode = result.position_sizing_mode;
+
+            if (mode === "fixed_quantity") {
+                return `${formatPositionSizingMode(mode)} (${result.fixed_quantity ?? "--"} units per trade)`;
+            }
+
+            if (mode === "fixed_capital") {
+                return `${formatPositionSizingMode(mode)} (${formatNumber(result.capital_per_trade ?? 0)} capital per trade)`;
+            }
+
+            return `${formatPositionSizingMode(mode)} (${formatNumber(result.equity_pct_per_trade ?? 100)}% of equity per trade)`;
+        }
+
+        function formatExitReason(reason) {
+            const labels = {
+                signal: "Signal",
+                stop_loss: "Stop Loss",
+                take_profit: "Take Profit",
+                end_of_data: "End of Data"
+            };
+            return labels[reason] || humanizeKey(reason || "signal");
+        }
+
+        function formatRiskManagementSummary(result) {
+            const stopLoss = result.stop_loss_pct !== null && result.stop_loss_pct !== undefined
+                ? `${formatNumber(result.stop_loss_pct)}%`
+                : "Off";
+            const takeProfit = result.take_profit_pct !== null && result.take_profit_pct !== undefined
+                ? `${formatNumber(result.take_profit_pct)}%`
+                : "Off";
+            return `SL: ${stopLoss} | TP: ${takeProfit}`;
+        }
+
+        function updatePositionSizingFields() {
+            const mode = positionSizingModeSelect.value;
+
+            equityPctField.classList.toggle("is-hidden", mode !== "percent_equity");
+            capitalPerTradeField.classList.toggle("is-hidden", mode !== "fixed_capital");
+            fixedQuantityField.classList.toggle("is-hidden", mode !== "fixed_quantity");
+
+            if (mode === "fixed_quantity") {
+                positionSizingHelper.textContent = "Use a fixed number of units per trade. Trades are skipped if the requested quantity cannot be funded.";
+                return;
+            }
+
+            if (mode === "fixed_capital") {
+                positionSizingHelper.textContent = "Cap each entry by a fixed capital budget. Quantity is calculated from fill price, brokerage, and slippage.";
+                return;
+            }
+
+            positionSizingHelper.textContent = "Use a percentage of current equity per trade to match the existing full-capital behavior when set to 100%.";
+        }
+
+        function updateExportAvailability() {
+            exportResultsButton.disabled = !latestBacktestResult;
+        }
+
+        function buildExportPayload(result) {
+            return {
+                strategy_name: result.strategy_name,
+                symbol: result.symbol,
+                timeframe: result.timeframe,
+                commission_pct: result.commission_pct,
+                slippage_pct: result.slippage_pct,
+                stop_loss_pct: result.stop_loss_pct,
+                take_profit_pct: result.take_profit_pct,
+                position_sizing_mode: result.position_sizing_mode,
+                fixed_quantity: result.fixed_quantity,
+                capital_per_trade: result.capital_per_trade,
+                equity_pct_per_trade: result.equity_pct_per_trade,
+                metrics: result.metrics,
+                trades: result.trades
+            };
+        }
+
+        function exportFileNameFromHeader(headerValue) {
+            if (!headerValue) {
+                return "backtest_result.csv";
+            }
+
+            const match = headerValue.match(/filename=\"?([^\";]+)\"?/i);
+            return match && match[1] ? match[1] : "backtest_result.csv";
+        }
+
+        function parseParametersJson(value) {
+            try {
+                const parsed = JSON.parse(value || "{}");
+                return typeof parsed === "object" && parsed !== null ? parsed : {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function summarizeParameters(parameters) {
+            const entries = Object.entries(parameters || {});
+            if (!entries.length) {
+                return "No saved parameters.";
+            }
+
+            const preview = entries.slice(0, 4).map(([key, value]) => `${humanizeKey(key)}: ${value}`);
+            const suffix = entries.length > 4 ? " | ..." : "";
+            return `${preview.join(" | ")}${suffix}`;
+        }
+
+        function applyParameterValues(parameters) {
+            Object.entries(parameters || {}).forEach(([key, value]) => {
+                const input = document.getElementById(`param-${key}`);
+                if (!input) {
+                    return;
+                }
+                input.value = value;
+            });
+        }
+
+        function renderSavedStrategyConfigurations(configurations) {
+            savedStrategyConfigurations = Array.isArray(configurations) ? configurations : [];
+            strategyConfigList.innerHTML = "";
+
+            if (!savedStrategyConfigurations.length) {
+                strategyConfigEmpty.textContent = "Saved strategy configurations will appear here.";
+                strategyConfigShell.classList.remove("has-configs");
+                return;
+            }
+
+            savedStrategyConfigurations.forEach((configuration) => {
+                const parameters = parseParametersJson(configuration.parameters_json);
+                const card = document.createElement("div");
+                const isSelected = configuration.id === selectedStrategyConfigId;
+                card.className = `strategy-config-card${isSelected ? " selected" : ""}`;
+
+                const title = document.createElement("p");
+                title.className = "strategy-config-title";
+                title.textContent = configuration.display_name;
+
+                const caption = document.createElement("div");
+                caption.className = "strategy-config-caption";
+                caption.textContent = `Strategy: ${configuration.strategy_name}`;
+
+                const params = document.createElement("div");
+                params.className = "strategy-config-params";
+                params.textContent = summarizeParameters(parameters);
+
+                const meta = document.createElement("ul");
+                meta.className = "strategy-config-meta";
+
+                const metaRows = [
+                    ["Saved", formatDateLabel(configuration.created_at)],
+                    ["Parameters", String(Object.keys(parameters).length)]
+                ];
+
+                metaRows.forEach(([label, value]) => {
+                    const item = document.createElement("li");
+                    const labelNode = document.createElement("span");
+                    const valueNode = document.createElement("strong");
+                    labelNode.textContent = label;
+                    valueNode.textContent = value;
+                    item.appendChild(labelNode);
+                    item.appendChild(valueNode);
+                    meta.appendChild(item);
+                });
+
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = isSelected ? "secondary" : "";
+                button.textContent = isSelected ? "Configuration Selected" : "Use Configuration";
+                button.addEventListener("click", () => applySavedStrategyConfiguration(configuration));
+
+                card.appendChild(title);
+                card.appendChild(caption);
+                card.appendChild(params);
+                card.appendChild(meta);
+                card.appendChild(button);
+                strategyConfigList.appendChild(card);
+            });
+
+            strategyConfigShell.classList.add("has-configs");
+        }
+
+        async function loadSavedStrategyConfigurations() {
+            try {
+                const response = await fetch("/api/v1/strategies/configurations?limit=10");
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(payload.detail || "Unable to load saved strategy configurations");
+                }
+
+                renderSavedStrategyConfigurations(payload);
+            } catch (error) {
+                strategyConfigList.innerHTML = "";
+                strategyConfigEmpty.textContent = "Unable to load saved strategy configurations right now.";
+                strategyConfigShell.classList.remove("has-configs");
+            }
+        }
+
+        function applySavedStrategyConfiguration(configuration, statusTone = "info") {
+            const matchingStrategy = strategies.find((strategy) => strategy.slug === configuration.strategy_name);
+
+            if (!matchingStrategy) {
+                setStatus(
+                    strategyConfigStatus,
+                    `Strategy ${configuration.strategy_name} is not available in this dashboard.`,
+                    "error"
+                );
+                return;
+            }
+
+            selectedStrategyConfigId = configuration.id;
+            strategySelect.value = matchingStrategy.slug;
+            renderStrategyPanel();
+            applyParameterValues(parseParametersJson(configuration.parameters_json));
+            strategyConfigNameInput.value = configuration.display_name;
+            renderSavedStrategyConfigurations(savedStrategyConfigurations);
+            clearStatus(backtestStatus);
+            setStatus(
+                strategyConfigStatus,
+                `Loaded saved configuration ${configuration.display_name}.`,
+                statusTone
+            );
+        }
+
+        function datasetPreview(dataset) {
+            return {
+                total_rows: dataset.row_count,
+                min_date: dataset.min_date,
+                max_date: dataset.max_date
+            };
+        }
+
+        function selectUploadedDataset(dataset, statusTone = "info") {
+            uploadedFileName = dataset.stored_file_name;
+            document.querySelector("input[name='source'][value='upload']").checked = true;
+            updateUploadMeta(datasetPreview(dataset), dataset.stored_file_name, dataset.original_file_name);
+            renderUploadedDatasets(savedDatasets);
+            clearStatus(backtestStatus);
+            setStatus(
+                uploadStatus,
+                `Selected saved dataset ${dataset.original_file_name} for backtesting.`,
+                statusTone
+            );
+        }
+
+        function renderUploadedDatasets(datasets) {
+            savedDatasets = Array.isArray(datasets) ? datasets : [];
+            datasetList.innerHTML = "";
+
+            if (!savedDatasets.length) {
+                datasetEmpty.textContent = "Uploaded datasets will appear here.";
+                datasetShell.classList.remove("has-datasets");
+                return;
+            }
+
+            savedDatasets.forEach((dataset) => {
+                const card = document.createElement("div");
+                const isSelected = dataset.stored_file_name === uploadedFileName;
+                card.className = `dataset-item${isSelected ? " selected" : ""}`;
+
+                const title = document.createElement("p");
+                title.className = "dataset-title";
+                title.textContent = dataset.original_file_name;
+
+                const caption = document.createElement("div");
+                caption.className = "dataset-caption";
+                caption.textContent = `Stored as ${dataset.stored_file_name}`;
+
+                const meta = document.createElement("ul");
+                meta.className = "dataset-meta";
+
+                const metaRows = [
+                    ["Rows", String(dataset.row_count)],
+                    [
+                        "Date Range",
+                        dataset.min_date && dataset.max_date
+                            ? `${formatDateLabel(dataset.min_date)} -> ${formatDateLabel(dataset.max_date)}`
+                            : "--"
+                    ],
+                    ["Uploaded", formatDateLabel(dataset.uploaded_at)]
+                ];
+
+                metaRows.forEach(([label, value]) => {
+                    const item = document.createElement("li");
+                    const labelNode = document.createElement("span");
+                    const valueNode = document.createElement("strong");
+                    labelNode.textContent = label;
+                    valueNode.textContent = value;
+                    item.appendChild(labelNode);
+                    item.appendChild(valueNode);
+                    meta.appendChild(item);
+                });
+
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = isSelected ? "secondary" : "";
+                button.textContent = isSelected ? "Selected For Backtest" : "Use For Backtest";
+                button.addEventListener("click", () => selectUploadedDataset(dataset));
+
+                card.appendChild(title);
+                card.appendChild(caption);
+                card.appendChild(meta);
+                card.appendChild(button);
+                datasetList.appendChild(card);
+            });
+
+            datasetShell.classList.add("has-datasets");
+        }
+
+        async function loadUploadedDatasets() {
+            try {
+                const response = await fetch("/api/v1/data/uploads?limit=10");
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(payload.detail || "Unable to load uploaded datasets");
+                }
+
+                renderUploadedDatasets(payload);
+            } catch (error) {
+                datasetList.innerHTML = "";
+                datasetEmpty.textContent = "Unable to load uploaded datasets right now.";
+                datasetShell.classList.remove("has-datasets");
+            }
+        }
+
+        function updateTradeList(trades) {
+            const rows = Array.isArray(trades) ? trades : [];
+            tradeTableBody.innerHTML = "";
+
+            if (!rows.length) {
+                tradeListEmpty.textContent = "No trades were generated for this backtest run.";
+                tradesShell.classList.remove("has-trades");
+                return;
+            }
+
+            rows.forEach((trade) => {
+                const pnlClass = Number(trade.pnl) >= 0 ? "trade-value-positive" : "trade-value-negative";
+                const returnClass = Number(trade.return_pct) >= 0 ? "trade-value-positive" : "trade-value-negative";
+                const row = document.createElement("tr");
+                const cells = [
+                    { value: formatDateLabel(trade.entry_time) },
+                    { value: formatDateLabel(trade.exit_time) },
+                    { value: formatExitReason(trade.exit_reason) },
+                    { value: formatPositionSizingMode(trade.position_sizing_mode) },
+                    { value: formatNumber(trade.entry_price), className: "trade-number" },
+                    { value: formatNumber(trade.exit_price), className: "trade-number" },
+                    { value: String(trade.quantity), className: "trade-number" },
+                    { value: formatNumber(trade.capital_used), className: "trade-number" },
+                    { value: formatNumber(trade.pnl), className: `trade-number ${pnlClass}` },
+                    { value: `${formatNumber(trade.return_pct)}%`, className: `trade-number ${returnClass}` }
+                ];
+
+                cells.forEach((cellData) => {
+                    const cell = document.createElement("td");
+                    cell.textContent = cellData.value;
+                    if (cellData.className) {
+                        cell.className = cellData.className;
+                    }
+                    row.appendChild(cell);
+                });
+
+                tradeTableBody.appendChild(row);
+            });
+            tradesShell.classList.add("has-trades");
+        }
+
+        function selectedComparisonEntries() {
+            return recentBacktestHistory.filter((entry) => selectedComparisonIds.includes(entry.id));
+        }
+
+        function renderBacktestComparison() {
+            const rows = selectedComparisonEntries();
+            comparisonTableBody.innerHTML = "";
+
+            if (rows.length < 2) {
+                comparisonEmpty.textContent = "Select at least 2 recent backtest runs to see the comparison table.";
+                comparisonShell.classList.remove("has-comparison");
+                return;
+            }
+
+            rows.forEach((entry) => {
+                const returnClass = Number(entry.total_return_pct) >= 0 ? "trade-value-positive" : "trade-value-negative";
+                const row = document.createElement("tr");
+                const cells = [
+                    { value: formatDateLabel(entry.created_at) },
+                    { value: entry.strategy_name || "--" },
+                    { value: entry.symbol || "--" },
+                    { value: entry.timeframe || "--" },
+                    { value: formatNumber(entry.initial_capital), className: "trade-number" },
+                    { value: `${formatNumber(entry.total_return_pct)}%`, className: `trade-number ${returnClass}` },
+                    { value: `${formatNumber(entry.win_rate_pct)}%`, className: "trade-number" },
+                    { value: `${formatNumber(entry.max_drawdown_pct)}%`, className: "trade-number trade-value-negative" }
+                ];
+
+                cells.forEach((cellData) => {
+                    const cell = document.createElement("td");
+                    cell.textContent = cellData.value;
+                    if (cellData.className) {
+                        cell.className = cellData.className;
+                    }
+                    row.appendChild(cell);
+                });
+
+                comparisonTableBody.appendChild(row);
+            });
+
+            comparisonShell.classList.add("has-comparison");
+        }
+
+        function syncComparisonSelection() {
+            selectedComparisonIds = selectedComparisonIds.filter((id) => recentBacktestHistory.some((entry) => entry.id === id));
+            renderBacktestComparison();
+            clearStatus(comparisonStatus);
+        }
+
+        function toggleComparisonSelection(entryId, isChecked) {
+            if (isChecked) {
+                if (selectedComparisonIds.includes(entryId)) {
+                    return;
+                }
+
+                if (selectedComparisonIds.length >= 5) {
+                    setStatus(comparisonStatus, "You can compare up to 5 runs at a time.", "error");
+                    renderBacktestHistoryRows();
+                    return;
+                }
+
+                selectedComparisonIds = [...selectedComparisonIds, entryId];
+                setStatus(
+                    comparisonStatus,
+                    `${selectedComparisonIds.length} run${selectedComparisonIds.length === 1 ? "" : "s"} selected for comparison.`,
+                    "info"
+                );
+            } else {
+                selectedComparisonIds = selectedComparisonIds.filter((id) => id !== entryId);
+                if (selectedComparisonIds.length) {
+                    setStatus(
+                        comparisonStatus,
+                        `${selectedComparisonIds.length} run${selectedComparisonIds.length === 1 ? "" : "s"} selected for comparison.`,
+                        "info"
+                    );
+                } else {
+                    clearStatus(comparisonStatus);
+                }
+            }
+
+            renderBacktestHistoryRows();
+            renderBacktestComparison();
+        }
+
+        function renderBacktestHistoryRows() {
+            historyTableBody.innerHTML = "";
+
+            recentBacktestHistory.forEach((entry) => {
+                const returnClass = Number(entry.total_return_pct) >= 0 ? "trade-value-positive" : "trade-value-negative";
+                const row = document.createElement("tr");
+                const compareCell = document.createElement("td");
+                compareCell.className = "compare-cell";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.className = "compare-toggle";
+                checkbox.checked = selectedComparisonIds.includes(entry.id);
+                checkbox.addEventListener("change", () => toggleComparisonSelection(entry.id, checkbox.checked));
+                compareCell.appendChild(checkbox);
+                row.appendChild(compareCell);
+
+                const cells = [
+                    { value: formatDateLabel(entry.created_at) },
+                    { value: entry.strategy_name || "--" },
+                    { value: entry.symbol || "--" },
+                    { value: entry.timeframe || "--" },
+                    { value: formatNumber(entry.initial_capital), className: "trade-number" },
+                    { value: `${formatNumber(entry.commission_pct)}%`, className: "trade-number" },
+                    { value: `${formatNumber(entry.total_return_pct)}%`, className: `trade-number ${returnClass}` },
+                    { value: `${formatNumber(entry.win_rate_pct)}%`, className: "trade-number" },
+                    { value: `${formatNumber(entry.max_drawdown_pct)}%`, className: "trade-number trade-value-negative" }
+                ];
+
+                cells.forEach((cellData) => {
+                    const cell = document.createElement("td");
+                    cell.textContent = cellData.value;
+                    if (cellData.className) {
+                        cell.className = cellData.className;
+                    }
+                    row.appendChild(cell);
+                });
+
+                historyTableBody.appendChild(row);
+            });
+        }
+
+        function updateBacktestHistory(entries) {
+            recentBacktestHistory = Array.isArray(entries) ? entries : [];
+
+            if (!recentBacktestHistory.length) {
+                historyEmpty.textContent = "Recent backtests will appear here.";
+                historyShell.classList.remove("has-history");
+                selectedComparisonIds = [];
+                renderBacktestComparison();
+                clearStatus(comparisonStatus);
+                overviewHistoryValue.textContent = "0 Saved";
+                overviewHistoryMeta.textContent = "The latest 10 stored backtests will appear here.";
+                return;
+            }
+
+            syncComparisonSelection();
+            renderBacktestHistoryRows();
+            historyShell.classList.add("has-history");
+            overviewHistoryValue.textContent = `${recentBacktestHistory.length} Saved`;
+            overviewHistoryMeta.textContent =
+                `Latest: ${recentBacktestHistory[0].strategy_name} on ${formatDateLabel(recentBacktestHistory[0].created_at)}`;
+        }
+
+        async function loadBacktestHistory() {
+            try {
+                const response = await fetch("/api/v1/backtest/history?limit=10");
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(payload.detail || "Unable to load backtest history");
+                }
+
+                updateBacktestHistory(payload);
+            } catch (error) {
+                historyTableBody.innerHTML = "";
+                historyEmpty.textContent = "Unable to load recent backtests right now.";
+                historyShell.classList.remove("has-history");
+                overviewHistoryValue.textContent = "--";
+                overviewHistoryMeta.textContent = "Unable to load recent backtests right now.";
+            }
+        }
+
+        function updateResults(result) {
+            const metrics = result.metrics;
+            const totalReturn = Number(metrics.total_return_pct);
+            const totalReturnText = `${totalReturn.toFixed(2)}%`;
+            document.getElementById("metric-return").textContent = totalReturnText;
+            applySignedValueState(document.getElementById("metric-return"), totalReturn);
+            document.getElementById("metric-win-rate").textContent = `${Number(metrics.win_rate_pct).toFixed(2)}%`;
+            document.getElementById("metric-trades").textContent = String(metrics.total_trades);
+            document.getElementById("metric-drawdown").textContent = `${Number(metrics.max_drawdown_pct).toFixed(2)}%`;
+            document.getElementById("metric-brokerage").textContent = formatNumber(metrics.total_brokerage);
+            document.getElementById("metric-slippage").textContent = formatNumber(metrics.total_slippage);
+            overviewResultValue.textContent = totalReturnText;
+            applySignedValueState(overviewResultValue, totalReturn);
+            overviewResultMeta.textContent =
+                `${formatNumber(metrics.net_profit)} net | ${metrics.total_trades} trades | ${formatNumber(metrics.max_drawdown_pct)}% max drawdown`;
+            document.getElementById("results-note").textContent =
+                `Ending equity: ${formatNumber(metrics.ending_equity)} | Net profit: ${formatNumber(metrics.net_profit)} | Sizing: ${formatPositionSizingSummary(result)} | Risk: ${formatRiskManagementSummary(result)} | Commission: ${formatNumber(result.commission_pct)}% | Slippage: ${formatNumber(result.slippage_pct)}% | Total costs: ${formatNumber(metrics.total_costs)}`;
+            updateEquityChart(result.chart_html);
+            updateDrawdownChart(result.drawdown_chart_html);
+            updateTradeList(result.trades);
+        }
+
+        function collectParameters() {
+            const values = {};
+            parameterContainer.querySelectorAll("[data-param='true']").forEach((input) => {
+                if (input.type === "number") {
+                    values[input.name] = input.step === "1" ? parseInt(input.value, 10) : parseFloat(input.value);
+                } else {
+                    values[input.name] = input.value;
+                }
+            });
+            return values;
+        }
+
+        uploadForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            clearStatus(uploadStatus);
+
+            const formData = new FormData(uploadForm);
+
+            try {
+                setStatus(uploadStatus, "Uploading and validating data...", "info");
+                const response = await fetch("/api/v1/data/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.detail || "Upload failed");
+                }
+
+                uploadedFileName = payload.file_name;
+                document.querySelector("input[name='source'][value='upload']").checked = true;
+                updateUploadMeta(payload.preview, payload.file_name, payload.original_file_name);
+                await loadUploadedDatasets();
+                setStatus(
+                    uploadStatus,
+                    `Upload complete. Stored as ${payload.file_name} with ${payload.preview.total_rows} cleaned rows.`,
+                    "success"
+                );
+            } catch (error) {
+                setStatus(uploadStatus, error.message || "Upload failed", "error");
+            }
+        });
+
+        exportResultsButton.addEventListener("click", async () => {
+            if (!latestBacktestResult) {
+                setStatus(exportStatus, "Run a backtest first to export the latest result.", "error");
+                return;
+            }
+
+            try {
+                setStatus(exportStatus, "Preparing CSV export...", "info");
+                const response = await fetch("/api/v1/results/export-csv", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(buildExportPayload(latestBacktestResult))
+                });
+
+                if (!response.ok) {
+                    let detail = "Unable to export results";
+                    try {
+                        const payload = await response.json();
+                        detail = payload.detail || detail;
+                    } catch (error) {
+                        detail = response.statusText || detail;
+                    }
+                    throw new Error(detail);
+                }
+
+                const blob = await response.blob();
+                const fileName = exportFileNameFromHeader(response.headers.get("Content-Disposition"));
+                const downloadUrl = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = downloadUrl;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(downloadUrl);
+
+                setStatus(exportStatus, `Exported latest result as ${fileName}.`, "success");
+            } catch (error) {
+                setStatus(exportStatus, error.message || "Unable to export results", "error");
+            }
+        });
+
+        saveStrategyConfigButton.addEventListener("click", async () => {
+            clearStatus(strategyConfigStatus);
+
+            const strategy = getCurrentStrategy();
+            const displayName = strategyConfigNameInput.value.trim() || `${strategy.name} Setup`;
+            const payload = {
+                strategy_name: strategy.slug,
+                display_name: displayName,
+                parameters: collectParameters()
+            };
+
+            try {
+                setStatus(strategyConfigStatus, "Saving strategy configuration...", "info");
+                const response = await fetch("/api/v1/strategies/configurations", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.detail || "Unable to save strategy configuration");
+                }
+
+                selectedStrategyConfigId = result.id;
+                strategyConfigNameInput.value = result.display_name;
+                await loadSavedStrategyConfigurations();
+                setStatus(
+                    strategyConfigStatus,
+                    `Saved configuration ${result.display_name}.`,
+                    "success"
+                );
+            } catch (error) {
+                setStatus(strategyConfigStatus, error.message || "Unable to save strategy configuration", "error");
+            }
+        });
+
+        backtestForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            clearStatus(backtestStatus);
+
+            const formData = new FormData(backtestForm);
+            const source = formData.get("source");
+            const positionSizingMode = formData.get("position_sizing_mode");
+
+            if (source === "upload" && !uploadedFileName) {
+                setStatus(backtestStatus, "Upload a CSV first or switch back to sample data.", "error");
+                return;
+            }
+
+            const payload = {
+                source,
+                file_name: source === "upload" ? uploadedFileName : null,
+                symbol: formData.get("symbol"),
+                timeframe: formData.get("timeframe"),
+                strategy_name: strategySelect.value,
+                initial_capital: Number(formData.get("initial_capital")),
+                commission_pct: Number(formData.get("commission_pct")),
+                slippage_pct: Number(formData.get("slippage_pct")),
+                stop_loss_pct: parseOptionalNumber(formData.get("stop_loss_pct")),
+                take_profit_pct: parseOptionalNumber(formData.get("take_profit_pct")),
+                position_sizing_mode: positionSizingMode,
+                fixed_quantity: positionSizingMode === "fixed_quantity" ? parseOptionalNumber(formData.get("fixed_quantity"), true) : null,
+                capital_per_trade: positionSizingMode === "fixed_capital" ? parseOptionalNumber(formData.get("capital_per_trade")) : null,
+                equity_pct_per_trade: positionSizingMode === "percent_equity" ? parseOptionalNumber(formData.get("equity_pct_per_trade")) : null,
+                parameters: collectParameters()
+            };
+
+            try {
+                setStatus(backtestStatus, "Running backtest...", "info");
+                const response = await fetch("/api/v1/backtest/run", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.detail || "Backtest failed");
+                }
+
+                latestBacktestResult = result;
+                updateExportAvailability();
+                clearStatus(exportStatus);
+                updateResults(result);
+                await loadBacktestHistory();
+                setStatus(
+                    backtestStatus,
+                    `Backtest complete for ${result.strategy_name} on ${result.symbol}.`,
+                    "success"
+                );
+            } catch (error) {
+                setStatus(backtestStatus, error.message || "Backtest failed", "error");
+            }
+        });
+
+        resetParametersButton.addEventListener("click", () => {
+            selectedStrategyConfigId = null;
+            strategyConfigNameInput.value = "";
+            renderParameterFields();
+            updateStrategyConfigurationPlaceholder();
+            renderSavedStrategyConfigurations(savedStrategyConfigurations);
+            clearStatus(backtestStatus);
+            clearStatus(strategyConfigStatus);
+        });
+
+        clearComparisonButton.addEventListener("click", () => {
+            selectedComparisonIds = [];
+            renderBacktestHistoryRows();
+            renderBacktestComparison();
+            clearStatus(comparisonStatus);
+        });
+
+        strategySelect.addEventListener("change", () => {
+            selectedStrategyConfigId = null;
+            strategyConfigNameInput.value = "";
+            renderStrategyPanel();
+            renderSavedStrategyConfigurations(savedStrategyConfigurations);
+            clearStatus(backtestStatus);
+            clearStatus(strategyConfigStatus);
+        });
+
+        positionSizingModeSelect.addEventListener("change", updatePositionSizingFields);
+
+        renderStrategyPanel();
+        updatePositionSizingFields();
+        updateUploadMeta(null, null);
+        updateExportAvailability();
+        loadUploadedDatasets();
+        loadSavedStrategyConfigurations();
+        loadBacktestHistory();
+    </script>
+</body>
+</html>
