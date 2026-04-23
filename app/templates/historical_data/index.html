@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --panel-2: #f8fbff;
+      --text: #172033;
+      --muted: #64748b;
+      --line: #dbe4f0;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-soft: #eaf2ff;
+      --success: #16a34a;
+      --success-soft: #eaf8ef;
+      --danger: #dc2626;
+      --danger-soft: #fff1f2;
+      --warning-soft: #fff8e6;
+      --shadow: 0 14px 38px rgba(15, 23, 42, 0.08);
+      --sidebar: 280px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #0f2a59 0%, #0c1f44 100%);
+      color: #fff;
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.16);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .nav-item {
+      display: block;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.92);
+      background: rgba(255,255,255,0.04);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .nav-item.active {
+      background: rgba(255,255,255,0.14);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.88);
+    }
+
+    .content {
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .page-shell {
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #12396b 0%, #0a65b5 100%);
+      color: #fff;
+      border-radius: 24px;
+      padding: 28px 28px 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 36px;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: rgba(255,255,255,0.88);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      min-width: 0;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .panel-soft {
+      background: var(--panel-2);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section-title h2,
+    .section-title h3 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -0.03em;
+    }
+
+    .section-title p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .mini-title {
+      margin: 0 0 6px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .form-grid-2,
+    .form-grid-3 {
+      display: grid;
+      gap: 16px;
+    }
+
+    .form-grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .form-grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .field {
+      min-width: 0;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    input, select, button {
+      font: inherit;
+    }
+
+    input, select {
+      width: 100%;
+      min-width: 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: #eef3fb;
+      color: var(--text);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--line);
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .notice-success,
+    .notice-danger,
+    .notice-warning {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .notice-success {
+      background: var(--success-soft);
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+
+    .notice-danger {
+      background: var(--danger-soft);
+      border: 1px solid #fecdd3;
+      color: #b42318;
+    }
+
+    .notice-warning {
+      background: var(--warning-soft);
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .summary-card {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .summary-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .summary-value {
+      font-size: 18px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .inline-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 12px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      margin-top: 14px;
+      max-height: 640px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f8fbff;
+      color: var(--muted);
+      text-align: left;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #edf2f7;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    tbody tr:hover {
+      background: #f9fbff;
+    }
+
+    .table-empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .positive {
+      color: var(--success);
+    }
+
+    .negative {
+      color: var(--danger);
+    }
+
+    @media (max-width: 1320px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+
+      .summary-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .content {
+        padding: 14px;
+      }
+
+      .hero {
+        flex-direction: column;
+      }
+
+      .hero h1 {
+        font-size: 30px;
+      }
+
+      .form-grid-2,
+      .form-grid-3,
+      .summary-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-badge">TB</div>
+        <div class="brand-text">
+          <div>Trading</div>
+          <div>Backtesting Platform</div>
+        </div>
+      </div>
+
+      <div class="nav-list">
+        <a class="nav-item" href="/">Dashboard</a>
+        <a class="nav-item active" href="/historical-data">Historical Data</a>
+        <a class="nav-item" href="/docs" target="_blank">API Docs</a>
+      </div>
+
+      <div class="sidebar-footer">
+        <div><strong>Historical View</strong></div>
+        <div style="margin-top: 8px;">Fetch raw OHLCV candles using the Angel flow and inspect them in one clean table.</div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="page-shell">
+        <section class="hero">
+          <div>
+            <h1>Historical Data</h1>
+            <p>
+              Select a symbol, exchange, date range, and interval to review raw market candles with change metrics.
+              The page uses the existing Angel data flow and keeps manual token fallback available.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <a href="/"><button class="btn-secondary" type="button">Back To Dashboard</button></a>
+            <a href="/docs" target="_blank"><button class="btn-primary" type="button">Open API Docs</button></a>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <div>
+              <div class="badge">Market Data</div>
+              <h2 style="margin-top:10px;">Fetch Historical OHLCV</h2>
+              <p>Choose a known symbol or enter a token manually, then load candles into the table below.</p>
+            </div>
+          </div>
+
+          <form id="historical-data-form">
+            <div class="panel panel-soft" style="padding:16px; margin-bottom:16px;">
+              <div class="mini-title">Request Settings</div>
+              <div class="form-grid-3">
+                <div class="field">
+                  <label for="historical-exchange">Exchange</label>
+                  <input id="historical-exchange" type="text" value="NSE" placeholder="e.g. NSE" />
+                </div>
+                <div class="field">
+                  <label for="historical-symbol-search">Symbol / Share Name</label>
+                  <input id="historical-symbol-search" type="text" list="historical-symbol-options" placeholder="e.g. RELIANCE" />
+                  <datalist id="historical-symbol-options"></datalist>
+                </div>
+                <div class="field">
+                  <label for="historical-symbol-token">Symbol Token</label>
+                  <input id="historical-symbol-token" type="text" placeholder="Auto-filled from symbol or enter manually" />
+                </div>
+                <div class="field">
+                  <label for="historical-interval">Interval</label>
+                  <select id="historical-interval">
+                    <option value="5m">5m</option>
+                    <option value="15m">15m</option>
+                    <option value="30m">30m</option>
+                    <option value="1H">1H</option>
+                    <option value="3H">3H</option>
+                    <option value="4H">4H</option>
+                    <option value="1D">1D</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="historical-from-date">From Date</label>
+                  <input id="historical-from-date" type="datetime-local" />
+                </div>
+                <div class="field">
+                  <label for="historical-to-date">To Date</label>
+                  <input id="historical-to-date" type="datetime-local" />
+                </div>
+              </div>
+
+              <div id="historical-symbol-selection" class="inline-note">
+                Type a symbol like RELIANCE, TCS, INFY, or enter a token manually.
+              </div>
+              <div class="inline-note">
+                `3H` and `4H` are derived from the existing Angel `1H` candle flow when needed.
+              </div>
+
+              <div class="btn-row">
+                <button class="btn-primary" type="submit" id="historical-fetch-btn">Load Historical Data</button>
+                <button class="btn-ghost" type="button" id="historical-reset-btn">Reset</button>
+              </div>
+            </div>
+          </form>
+
+          <div id="historical-status"></div>
+
+          <div class="summary-strip">
+            <div class="summary-card">
+              <div class="summary-label">Symbol</div>
+              <div class="summary-value" id="historical-summary-symbol">--</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Interval</div>
+              <div class="summary-value" id="historical-summary-interval">--</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Rows</div>
+              <div class="summary-value" id="historical-summary-rows">0</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Range</div>
+              <div class="summary-value" id="historical-summary-range">--</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <div>
+              <div class="badge">Table</div>
+              <h2 style="margin-top:10px;">Historical Candles</h2>
+              <p>Scroll through raw OHLCV rows with close-to-close change and change percentage.</p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="historical-table">
+              <thead>
+                <tr>
+                  <th>Date/Time</th>
+                  <th>Open</th>
+                  <th>High</th>
+                  <th>Low</th>
+                  <th>Close</th>
+                  <th>Volume</th>
+                  <th>Change</th>
+                  <th>Change %</th>
+                </tr>
+              </thead>
+              <tbody id="historical-table-body"></tbody>
+            </table>
+            <div id="historical-table-empty" class="table-empty">No historical data loaded yet.</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const ANGEL_SYMBOL_MAP = Object.freeze({{ angel_symbol_map | tojson }});
+
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    function setNotice(targetId, message, type = "success") {
+      const el = byId(targetId);
+      if (!el) return;
+      if (!message) {
+        el.innerHTML = "";
+        return;
+      }
+      el.innerHTML = `<div class="notice-${type}">${message}</div>`;
+    }
+
+    function normalizeSymbol(value) {
+      return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+    }
+
+    function getKnownSymbols() {
+      return Object.keys(ANGEL_SYMBOL_MAP);
+    }
+
+    function getMappedToken(symbol) {
+      return ANGEL_SYMBOL_MAP[normalizeSymbol(symbol)] || null;
+    }
+
+    function populateSymbolOptions() {
+      const dataList = byId("historical-symbol-options");
+      if (!dataList) return;
+
+      dataList.innerHTML = "";
+      getKnownSymbols().forEach((symbol) => {
+        const option = document.createElement("option");
+        option.value = symbol;
+        dataList.appendChild(option);
+      });
+    }
+
+    function refreshSymbolSelection() {
+      const symbol = normalizeSymbol(byId("historical-symbol-search")?.value);
+      const token = byId("historical-symbol-token")?.value.trim();
+      const selected = byId("historical-symbol-selection");
+      if (!selected) return;
+
+      const mappedToken = getMappedToken(symbol);
+      if (mappedToken) {
+        if (token && token !== mappedToken) {
+          selected.innerHTML = `Mapped token found: <strong>${symbol}</strong> -> <strong>${mappedToken}</strong>. Using manual token override: <strong>${token}</strong>.`;
+        } else {
+          selected.innerHTML = `Mapped token found: <strong>${symbol}</strong> -> <strong>${mappedToken}</strong>. This token will be used for the historical query.`;
+        }
+        return;
+      }
+
+      if (symbol && token) {
+        selected.innerHTML = `No local token mapping found for <strong>${symbol}</strong>. Using manual token: <strong>${token}</strong>.`;
+        return;
+      }
+
+      if (symbol) {
+        selected.innerHTML = `No local token mapping found for <strong>${symbol}</strong>. Enter the symbol token manually to continue.`;
+        return;
+      }
+
+      if (token) {
+        selected.innerHTML = `Manual token mode: <strong>${token}</strong> will be used for the historical query.`;
+        return;
+      }
+
+      selected.textContent = `Known local symbols: ${getKnownSymbols().join(", ")}. You can also enter a token manually.`;
+    }
+
+    function applySymbolLookup() {
+      const symbolInput = byId("historical-symbol-search");
+      const tokenInput = byId("historical-symbol-token");
+      if (!symbolInput || !tokenInput) return null;
+
+      const symbol = normalizeSymbol(symbolInput.value);
+      symbolInput.value = symbol;
+
+      const mappedToken = getMappedToken(symbol);
+      if (mappedToken) {
+        tokenInput.value = mappedToken;
+      }
+
+      refreshSymbolSelection();
+      return mappedToken;
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "--";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString();
+    }
+
+    function formatNumber(value, digits = 2) {
+      const num = Number(value);
+      if (Number.isNaN(num)) return "--";
+      return num.toFixed(digits);
+    }
+
+    function formatVolume(value) {
+      const num = Number(value);
+      if (Number.isNaN(num)) return "--";
+      if (Number.isInteger(num)) {
+        return String(num);
+      }
+      return num.toFixed(2);
+    }
+
+    function formatPercent(value) {
+      const num = Number(value);
+      if (Number.isNaN(num)) return "--";
+      return `${num.toFixed(2)}%`;
+    }
+
+    function getRangeLabel(rows) {
+      if (!Array.isArray(rows) || !rows.length) return "--";
+      return `${formatDateTime(rows[0].datetime)} -> ${formatDateTime(rows[rows.length - 1].datetime)}`;
+    }
+
+    function resetSummary() {
+      byId("historical-summary-symbol").textContent = "--";
+      byId("historical-summary-interval").textContent = "--";
+      byId("historical-summary-rows").textContent = "0";
+      byId("historical-summary-range").textContent = "--";
+    }
+
+    function renderHistoricalRows(rows, payload = null) {
+      const tbody = byId("historical-table-body");
+      const empty = byId("historical-table-empty");
+      tbody.innerHTML = "";
+
+      if (!Array.isArray(rows) || !rows.length) {
+        empty.style.display = "block";
+        resetSummary();
+        return;
+      }
+
+      empty.style.display = "none";
+
+      rows.forEach((row) => {
+        const change = Number(row.change);
+        const changePct = Number(row.change_pct);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${formatDateTime(row.datetime)}</td>
+          <td>${formatNumber(row.open)}</td>
+          <td>${formatNumber(row.high)}</td>
+          <td>${formatNumber(row.low)}</td>
+          <td>${formatNumber(row.close)}</td>
+          <td>${formatVolume(row.volume)}</td>
+          <td class="${Number.isNaN(change) ? "" : change >= 0 ? "positive" : "negative"}">${formatNumber(row.change)}</td>
+          <td class="${Number.isNaN(changePct) ? "" : changePct >= 0 ? "positive" : "negative"}">${formatPercent(row.change_pct)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      byId("historical-summary-symbol").textContent = payload?.symbol || "--";
+      byId("historical-summary-interval").textContent = payload?.interval || "--";
+      byId("historical-summary-rows").textContent = String(payload?.row_count ?? rows.length);
+      byId("historical-summary-range").textContent = getRangeLabel(rows);
+    }
+
+    function formatDateTimeLocalValue(date) {
+      const local = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+      return local.toISOString().slice(0, 16);
+    }
+
+    function initializeDateDefaults() {
+      const now = new Date();
+      now.setSeconds(0, 0);
+      const fromDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+      byId("historical-to-date").value = formatDateTimeLocalValue(now);
+      byId("historical-from-date").value = formatDateTimeLocalValue(fromDate);
+    }
+
+    function buildHistoricalPayload() {
+      const exchange = byId("historical-exchange").value.trim();
+      const symbol = normalizeSymbol(byId("historical-symbol-search").value);
+      const symbolToken = byId("historical-symbol-token").value.trim();
+      const interval = byId("historical-interval").value;
+      const fromdate = byId("historical-from-date").value;
+      const todate = byId("historical-to-date").value;
+
+      if (!exchange || !interval || !fromdate || !todate) {
+        throw new Error("Please fill exchange, interval, from date, and to date.");
+      }
+
+      if (!symbol && !symbolToken) {
+        throw new Error("Please choose a symbol or enter a manual symbol token.");
+      }
+
+      if (new Date(todate).getTime() <= new Date(fromdate).getTime()) {
+        throw new Error("To date must be later than from date.");
+      }
+
+      return {
+        exchange,
+        symbol,
+        symbol_token: symbolToken || null,
+        interval,
+        fromdate,
+        todate,
+      };
+    }
+
+    async function fetchHistoricalData(event) {
+      event.preventDefault();
+      applySymbolLookup();
+
+      let payload;
+      try {
+        payload = buildHistoricalPayload();
+      } catch (error) {
+        setNotice("historical-status", error.message || "Invalid request.", "danger");
+        return;
+      }
+
+      const fetchButton = byId("historical-fetch-btn");
+      fetchButton.disabled = true;
+      fetchButton.textContent = "Loading...";
+      setNotice("historical-status", "Fetching historical data...", "warning");
+
+      try {
+        const res = await fetch("/api/v1/data/historical", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Historical data fetch failed");
+
+        renderHistoricalRows(data.rows || [], data);
+        setNotice(
+          "historical-status",
+          `Loaded ${data.row_count} row${data.row_count === 1 ? "" : "s"} for <strong>${data.symbol}</strong> on <strong>${data.interval}</strong>.`,
+          "success"
+        );
+      } catch (error) {
+        renderHistoricalRows([]);
+        setNotice("historical-status", error.message || "Historical data fetch failed", "danger");
+      } finally {
+        fetchButton.disabled = false;
+        fetchButton.textContent = "Load Historical Data";
+      }
+    }
+
+    function resetHistoricalForm() {
+      byId("historical-exchange").value = "NSE";
+      byId("historical-symbol-search").value = "";
+      byId("historical-symbol-token").value = "";
+      byId("historical-interval").value = "5m";
+      initializeDateDefaults();
+      refreshSymbolSelection();
+      renderHistoricalRows([]);
+      setNotice("historical-status", "", "success");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      populateSymbolOptions();
+      initializeDateDefaults();
+      refreshSymbolSelection();
+      resetSummary();
+
+      byId("historical-data-form").addEventListener("submit", fetchHistoricalData);
+      byId("historical-symbol-search").addEventListener("input", applySymbolLookup);
+      byId("historical-symbol-search").addEventListener("change", applySymbolLookup);
+      byId("historical-symbol-token").addEventListener("input", refreshSymbolSelection);
+      byId("historical-reset-btn").addEventListener("click", resetHistoricalForm);
+    });
+  </script>
+</body>
+</html>

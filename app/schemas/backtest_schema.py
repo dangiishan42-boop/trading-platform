@@ -24,6 +24,19 @@ class BacktestRunRequest(BaseModel):
     equity_pct_per_trade: float | None = Field(default=None, gt=0, le=100)
     parameters: dict[str, Any] = Field(default_factory=dict)
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_position_sizing_fields(cls, value: Any):
+        if not isinstance(value, dict):
+            return value
+
+        normalized = dict(value)
+        if normalized.get("equity_pct_per_trade") is None and normalized.get("percent_of_equity") is not None:
+            normalized["equity_pct_per_trade"] = normalized["percent_of_equity"]
+        if normalized.get("capital_per_trade") is None and normalized.get("fixed_capital_per_trade") is not None:
+            normalized["capital_per_trade"] = normalized["fixed_capital_per_trade"]
+        return normalized
+
     @field_validator("source", "symbol", "timeframe", "strategy_name", mode="before")
     @classmethod
     def normalize_string_fields(cls, value: Any) -> str:

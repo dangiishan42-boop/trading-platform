@@ -317,6 +317,11 @@
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
     }
 
+    .input-invalid {
+      border-color: #fca5a5 !important;
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
+    }
+
     .radio-row {
       display: flex;
       flex-wrap: wrap;
@@ -993,6 +998,7 @@
 
       <div class="nav-list">
         <div class="nav-item">Dashboard</div>
+        <a href="/historical-data" style="text-decoration:none;"><div class="nav-item">Historical Data</div></a>
         <div class="nav-item">Upload Data</div>
         <div class="nav-item">Backtest</div>
         <div class="nav-item">Results</div>
@@ -1022,6 +1028,9 @@
           <div class="hero-actions">
             <a href="/docs" target="_blank" style="text-decoration:none;">
               <button class="btn-secondary">Open API Docs</button>
+            </a>
+            <a href="/historical-data" style="text-decoration:none;">
+              <button class="btn-secondary" type="button">Historical Data</button>
             </a>
             <button class="btn-primary" type="button" onclick="document.getElementById('run-section').scrollIntoView({ behavior: 'smooth' })">
               Run Backtest
@@ -1335,6 +1344,54 @@
             <section class="panel">
               <div class="section-title">
                 <div>
+                  <div class="badge">Optimizer</div>
+                  <h2 style="margin-top:10px;">Optimization Results</h2>
+                  <p>Review optimized parameter sets and apply one to the backtest form without running it yet.</p>
+                </div>
+              </div>
+
+              <div class="panel panel-soft" style="padding:16px; margin-bottom:16px;">
+                <div class="mini-title">Optimization Parameter Ranges</div>
+                <div class="muted" style="margin-bottom:10px;">Enter comma-separated values for each optimizer field. These values are used only for optimization.</div>
+                <div id="optimizer-range-hint" class="inline-note" style="margin-top:0; margin-bottom:14px;">Enter comma-separated values like 5,10,15.</div>
+                <div class="form-grid-3" id="optimizer-parameters-grid"></div>
+                <div id="optimizer-range-status"></div>
+              </div>
+
+              <div class="compare-tools">
+                <div class="muted">Use the optimizer ranges together with the current backtest settings, then prefill the form from a result.</div>
+                <div class="btn-row" style="margin:0;">
+                  <button class="btn-primary btn-small" type="button" id="run-optimization-btn">Run Optimization</button>
+                  <button class="btn-secondary btn-small" type="button" id="apply-top-optimizer-result-btn" disabled>Apply Top Result</button>
+                  <button class="btn-ghost btn-small" type="button" id="export-optimization-results-btn" disabled>Export Optimization Results CSV</button>
+                </div>
+              </div>
+
+              <div id="optimizer-status" class="footer-note">No optimization results available yet.</div>
+
+              <div class="table-wrap">
+                <table id="optimizer-results-table">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Strategy</th>
+                      <th>Score</th>
+                      <th>Total Return</th>
+                      <th>Win Rate</th>
+                      <th>Max Drawdown</th>
+                      <th>Parameters</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="optimizer-results-table-body"></tbody>
+                </table>
+                <div id="optimizer-results-empty" class="table-empty">No optimization results yet.</div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="section-title">
+                <div>
                   <div class="badge">Results</div>
                   <h2 style="margin-top:10px;">Latest Backtest Results</h2>
                   <div class="badge">PRO Dashboard</div>
@@ -1497,6 +1554,9 @@
       latestResult: null,
       latestTrades: [],
       history: [],
+      optimizationResults: [],
+      optimizationLoading: false,
+      optimizationEmptyMessage: "No optimization results yet.",
       datasets: [],
       selectedComparisonIds: new Set(),
       selectedDataset: null,
@@ -1542,6 +1602,15 @@
       }),
     });
 
+    const OPTIMIZER_PARAMETER_EXAMPLES = Object.freeze({
+      fast_period: "5,10,15",
+      slow_period: "20,30,50",
+      rsi_period: "7,14,21",
+      oversold: "20,30,40",
+      overbought: "60,70,80",
+      lookback: "10,20,30",
+    });
+
     function byId(id) {
       return document.getElementById(id);
     }
@@ -1580,6 +1649,517 @@
         return;
       }
       el.innerHTML = `<div class="notice-${type}">${message}</div>`;
+    }
+
+    function getNestedValue(source, path) {
+      return String(path || "")
+        .split(".")
+        .reduce((value, key) => (value && value[key] !== undefined ? value[key] : undefined), source);
+    }
+
+    function pickFirstDefined(source, paths = []) {
+      for (const path of paths) {
+        const value = getNestedValue(source, path);
+        if (value !== undefined && value !== null && value !== "") {
+          return value;
+        }
+      }
+      return null;
+    }
+
+    function normalizeParameterObject(rawParameters) {
+      if (rawParameters && typeof rawParameters === "object" && !Array.isArray(rawParameters)) {
+        return rawParameters;
+      }
+
+      if (typeof rawParameters !== "string") {
+        return {};
+      }
+
+      try {
+        const parsed = JSON.parse(rawParameters);
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+      } catch (error) {
+        console.warn("Unable to parse strategy parameters", error);
+        return {};
+      }
+    }
+
+    function resolveStrategySlug(identifier) {
+      const normalized = String(identifier || "").trim().toLowerCase();
+      if (!normalized) return "";
+
+      if (state.strategyMap.has(normalized)) {
+        return normalized;
+      }
+
+      const match = state.strategies.find((strategy) => {
+        const identifiers = [strategy.slug, strategy.name, ...(strategy.aliases || [])];
+        return identifiers.some((candidate) => String(candidate || "").trim().toLowerCase() === normalized);
+      });
+      return match?.slug || "";
+    }
+
+    function getStrategyDisplayName(identifier) {
+      const slug = resolveStrategySlug(identifier);
+      return state.strategyMap.get(slug)?.name || String(identifier || "--");
+    }
+
+    function applyStrategyParametersToBacktestForm(strategyIdentifier, rawParameters, noticeTargetId, successMessage) {
+      const strategySlug = resolveStrategySlug(strategyIdentifier);
+      if (!strategySlug) {
+        setNotice(noticeTargetId, "Unable to match that strategy to the backtest form.", "danger");
+        return false;
+      }
+
+      byId("strategy-name").value = strategySlug;
+      renderStrategyParameters(normalizeParameterObject(rawParameters));
+      updateOverviewCards();
+      setNotice(noticeTargetId, successMessage, "success");
+      return true;
+    }
+
+    function getOptimizationStrategyIdentifier(result) {
+      return pickFirstDefined(result, ["strategy_name", "strategy_slug", "strategy", "strategy_id"]);
+    }
+
+    function getOptimizationParameters(result) {
+      const parameterValue = pickFirstDefined(result, [
+        "parameters",
+        "params",
+        "best_parameters",
+        "best_params",
+        "parameter_values",
+        "parameter_set",
+        "config.parameters",
+      ]);
+      return normalizeParameterObject(parameterValue);
+    }
+
+    function formatOptimizerRangeInputValue(value) {
+      if (Array.isArray(value)) {
+        return value.join(",");
+      }
+      if (value === null || value === undefined || value === "") {
+        return "";
+      }
+      return String(value);
+    }
+
+    function clearOptimizerRangeValidation() {
+      setNotice("optimizer-range-status", "", "success");
+      document.querySelectorAll("[data-optimizer-param-key]").forEach((input) => {
+        input.classList.remove("input-invalid");
+        input.removeAttribute("aria-invalid");
+      });
+    }
+
+    function getOptimizerRangeHint(strategy) {
+      const properties = strategy?.parameter_schema?.properties || {};
+      const exampleParts = Object.keys(properties)
+        .filter((key) => OPTIMIZER_PARAMETER_EXAMPLES[key])
+        .map((key) => `${properties[key]?.title || key}: ${OPTIMIZER_PARAMETER_EXAMPLES[key]}`);
+
+      if (exampleParts.length) {
+        return `Enter comma-separated values. Examples: ${exampleParts.join(" | ")}.`;
+      }
+
+      return "Enter comma-separated values like 5,10,15.";
+    }
+
+    function renderOptimizerParameterRanges(preloaded = null) {
+      const slug = byId("strategy-name").value;
+      const strategy = state.strategyMap.get(slug);
+      const grid = byId("optimizer-parameters-grid");
+      const hint = byId("optimizer-range-hint");
+
+      if (!grid || !hint) {
+        return;
+      }
+
+      grid.innerHTML = "";
+
+      if (!strategy) {
+        hint.textContent = "Select a strategy to enter optimizer ranges.";
+        clearOptimizerRangeValidation();
+        return;
+      }
+
+      const params = normalizeParameterObject(preloaded) || strategy.default_parameters || {};
+      const properties = strategy.parameter_schema?.properties || {};
+      hint.textContent = getOptimizerRangeHint(strategy);
+
+      Object.entries(properties).forEach(([key, schema]) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "field";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", `optimizer-param-${key}`);
+        label.textContent = `${schema.title || key} Values`;
+
+        const input = document.createElement("input");
+        input.id = `optimizer-param-${key}`;
+        input.type = "text";
+        input.dataset.optimizerParamKey = key;
+        input.autocomplete = "off";
+        input.placeholder = OPTIMIZER_PARAMETER_EXAMPLES[key] || "e.g. 5,10,15";
+        input.value = formatOptimizerRangeInputValue(params[key] ?? schema.default ?? "");
+        input.addEventListener("input", () => {
+          input.classList.remove("input-invalid");
+          input.removeAttribute("aria-invalid");
+        });
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+        grid.appendChild(wrapper);
+      });
+
+      clearOptimizerRangeValidation();
+    }
+
+    function setOptimizationStatus(message, type = null) {
+      const status = byId("optimizer-status");
+      if (!status) return;
+      if (!message) {
+        status.innerHTML = "";
+        return;
+      }
+      if (type) {
+        setNotice("optimizer-status", message, type);
+        return;
+      }
+      status.textContent = message;
+    }
+
+    function setOptimizationEmptyMessage(message) {
+      state.optimizationEmptyMessage = message || "No optimization results yet.";
+      const empty = byId("optimizer-results-empty");
+      if (empty) {
+        empty.textContent = state.optimizationEmptyMessage;
+      }
+    }
+
+    function setOptimizationLoading(isLoading) {
+      state.optimizationLoading = Boolean(isLoading);
+
+      const runButton = byId("run-optimization-btn");
+      if (runButton) {
+        runButton.disabled = state.optimizationLoading;
+        runButton.textContent = state.optimizationLoading ? "Running..." : "Run Optimization";
+      }
+
+      document.querySelectorAll("[data-optimizer-param-key]").forEach((input) => {
+        input.disabled = state.optimizationLoading;
+      });
+
+      const topActionButton = byId("apply-top-optimizer-result-btn");
+      if (topActionButton) {
+        topActionButton.disabled = state.optimizationLoading || getSortedOptimizationResults().length === 0;
+      }
+
+      const exportButton = byId("export-optimization-results-btn");
+      if (exportButton) {
+        exportButton.disabled = state.optimizationLoading || getSortedOptimizationResults().length === 0;
+      }
+    }
+
+    function compareOptimizationResults(left, right) {
+      const leftRank = Number(pickFirstDefined(left, ["rank", "position", "order"]));
+      const rightRank = Number(pickFirstDefined(right, ["rank", "position", "order"]));
+      const hasLeftRank = Number.isFinite(leftRank);
+      const hasRightRank = Number.isFinite(rightRank);
+
+      if (hasLeftRank && hasRightRank && leftRank !== rightRank) {
+        return leftRank - rightRank;
+      }
+      if (hasLeftRank !== hasRightRank) {
+        return hasLeftRank ? -1 : 1;
+      }
+
+      const leftScore = Number(pickFirstDefined(left, ["score", "objective_score", "fitness", "total_return_pct", "metrics.total_return_pct"]));
+      const rightScore = Number(pickFirstDefined(right, ["score", "objective_score", "fitness", "total_return_pct", "metrics.total_return_pct"]));
+      const hasLeftScore = Number.isFinite(leftScore);
+      const hasRightScore = Number.isFinite(rightScore);
+
+      if (hasLeftScore && hasRightScore && leftScore !== rightScore) {
+        return rightScore - leftScore;
+      }
+      if (hasLeftScore !== hasRightScore) {
+        return hasLeftScore ? -1 : 1;
+      }
+
+      return 0;
+    }
+
+    function getSortedOptimizationResults() {
+      return [...state.optimizationResults].sort(compareOptimizationResults);
+    }
+
+    function formatOptimizationScore(value) {
+      const num = Number(value);
+      if (Number.isNaN(num)) return "--";
+      return num.toFixed(4);
+    }
+
+    function formatOptimizationParameters(parameters) {
+      const entries = Object.entries(normalizeParameterObject(parameters));
+      if (!entries.length) return "--";
+      return entries
+        .map(([key, value]) => {
+          const displayValue =
+            value && typeof value === "object"
+              ? JSON.stringify(value)
+              : value;
+          return `${key}: ${displayValue}`;
+        })
+        .join(", ");
+    }
+
+    function escapeCsvValue(value) {
+      if (value === null || value === undefined) {
+        return "";
+      }
+
+      const textValue =
+        typeof value === "object"
+          ? JSON.stringify(value)
+          : String(value);
+
+      if (/[",\r\n]/.test(textValue)) {
+        return `"${textValue.replace(/"/g, "\"\"")}"`;
+      }
+
+      return textValue;
+    }
+
+    function buildOptimizationResultsCsv() {
+      const orderedResults = getSortedOptimizationResults();
+      const headers = [
+        "rank",
+        "strategy_name",
+        "parameters",
+        "total_return_pct",
+        "win_rate_pct",
+        "max_drawdown_pct",
+        "total_trades",
+        "net_profit",
+      ];
+
+      const rows = orderedResults.map((result, index) => [
+        pickFirstDefined(result, ["rank", "position", "order"]) ?? index + 1,
+        getOptimizationStrategyIdentifier(result) || "",
+        getOptimizationParameters(result),
+        pickFirstDefined(result, ["total_return_pct", "return_pct", "metrics.total_return_pct"]) ?? "",
+        pickFirstDefined(result, ["win_rate_pct", "metrics.win_rate_pct"]) ?? "",
+        pickFirstDefined(result, ["max_drawdown_pct", "metrics.max_drawdown_pct"]) ?? "",
+        pickFirstDefined(result, ["total_trades", "metrics.total_trades"]) ?? "",
+        pickFirstDefined(result, ["net_profit", "metrics.net_profit"]) ?? "",
+      ]);
+
+      return [
+        headers.map(escapeCsvValue).join(","),
+        ...rows.map((row) => row.map(escapeCsvValue).join(",")),
+      ].join("\r\n");
+    }
+
+    function getOptimizationResultsExportFilename() {
+      const strategyIdentifier = getOptimizationStrategyIdentifier(getSortedOptimizationResults()[0]) || "optimization";
+      const safeStrategy = String(strategyIdentifier).trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "_") || "optimization";
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      return `${safeStrategy}_optimization_results_${timestamp}.csv`;
+    }
+
+    function exportOptimizationResultsCsv() {
+      const orderedResults = getSortedOptimizationResults();
+      if (!orderedResults.length) {
+        setOptimizationStatus("No optimization results available to export.", "warning");
+        return;
+      }
+
+      const csvContent = buildOptimizationResultsCsv();
+      const blob = new Blob([`\uFEFF${csvContent}`], { type: "text/csv;charset=utf-8;" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = getOptimizationResultsExportFilename();
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setOptimizationStatus("Optimization results CSV downloaded.", "success");
+    }
+
+    function parseOptimizerRangeValues(rawValue, schema, label) {
+      const values = String(rawValue || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      if (!values.length) {
+        throw new Error(`${label} requires at least one comma-separated value.`);
+      }
+
+      const schemaType = schema?.type;
+      const minimum = schema?.minimum;
+      const maximum = schema?.maximum;
+      const normalizedValues = [];
+
+      values.forEach((token) => {
+        let parsedValue = token;
+
+        if (schemaType === "integer" || schemaType === "number") {
+          parsedValue = Number(token);
+          if (!Number.isFinite(parsedValue)) {
+            throw new Error(`${label} values must be numeric.`);
+          }
+          if (schemaType === "integer" && !Number.isInteger(parsedValue)) {
+            throw new Error(`${label} values must be whole numbers.`);
+          }
+          if (minimum !== undefined && parsedValue < Number(minimum)) {
+            throw new Error(`${label} values must be at least ${minimum}.`);
+          }
+          if (maximum !== undefined && parsedValue > Number(maximum)) {
+            throw new Error(`${label} values must be at most ${maximum}.`);
+          }
+        }
+
+        if (!normalizedValues.some((existing) => existing === parsedValue)) {
+          normalizedValues.push(parsedValue);
+        }
+      });
+
+      return normalizedValues;
+    }
+
+    function getOptimizationParameterRanges() {
+      const strategy = state.strategyMap.get(byId("strategy-name").value);
+      const properties = strategy?.parameter_schema?.properties || {};
+      const parameters = {};
+      const errors = [];
+
+      clearOptimizerRangeValidation();
+
+      Object.entries(properties).forEach(([key, schema]) => {
+        const input = document.querySelector(`[data-optimizer-param-key="${key}"]`);
+        if (!input) return;
+
+        try {
+          parameters[key] = parseOptimizerRangeValues(input.value, schema, schema.title || key);
+        } catch (error) {
+          input.classList.add("input-invalid");
+          input.setAttribute("aria-invalid", "true");
+          errors.push(error.message);
+        }
+      });
+
+      if (errors.length) {
+        throw new Error(errors.join(" "));
+      }
+
+      return parameters;
+    }
+
+    function applyOptimizationResult(result) {
+      return applyStrategyParametersToBacktestForm(
+        getOptimizationStrategyIdentifier(result),
+        getOptimizationParameters(result),
+        "optimizer-status",
+        "Optimization parameters applied to backtest form"
+      );
+    }
+
+    function applyTopOptimizationResult() {
+      const [topResult] = getSortedOptimizationResults();
+      if (!topResult) {
+        setNotice("optimizer-status", "No optimization results available yet.", "warning");
+        return;
+      }
+      applyOptimizationResult(topResult);
+    }
+
+    function renderOptimizationResults(results = state.optimizationResults) {
+      state.optimizationResults = Array.isArray(results)
+        ? results
+        : Array.isArray(results?.results)
+          ? results.results
+          : [];
+
+      const tbody = byId("optimizer-results-table-body");
+      const empty = byId("optimizer-results-empty");
+      const topActionButton = byId("apply-top-optimizer-result-btn");
+      const exportButton = byId("export-optimization-results-btn");
+
+      if (!tbody || !empty || !topActionButton || !exportButton) {
+        return;
+      }
+
+      tbody.innerHTML = "";
+      const orderedResults = getSortedOptimizationResults();
+      const hasResults = orderedResults.length > 0;
+
+      empty.textContent = state.optimizationEmptyMessage || "No optimization results yet.";
+      empty.style.display = hasResults ? "none" : "block";
+      topActionButton.disabled = state.optimizationLoading || !hasResults;
+      exportButton.disabled = state.optimizationLoading || !hasResults;
+
+      if (!hasResults) {
+        return;
+      }
+
+      orderedResults.forEach((result, index) => {
+        const tr = document.createElement("tr");
+
+        const rankCell = document.createElement("td");
+        rankCell.textContent = String(pickFirstDefined(result, ["rank", "position", "order"]) ?? index + 1);
+
+        const strategyCell = document.createElement("td");
+        strategyCell.textContent = getStrategyDisplayName(getOptimizationStrategyIdentifier(result));
+
+        const scoreCell = document.createElement("td");
+        scoreCell.textContent = formatOptimizationScore(
+          pickFirstDefined(result, ["score", "objective_score", "fitness", "total_return_pct", "metrics.total_return_pct"])
+        );
+
+        const returnCell = document.createElement("td");
+        const totalReturn = pickFirstDefined(result, ["total_return_pct", "return_pct", "metrics.total_return_pct"]);
+        returnCell.textContent = formatPercent(totalReturn);
+        const returnNumber = Number(totalReturn);
+        if (!Number.isNaN(returnNumber)) {
+          returnCell.className = returnNumber >= 0 ? "positive" : "negative";
+        }
+
+        const winRateCell = document.createElement("td");
+        winRateCell.textContent = formatPercent(pickFirstDefined(result, ["win_rate_pct", "metrics.win_rate_pct"]));
+
+        const drawdownCell = document.createElement("td");
+        drawdownCell.textContent = formatPercent(pickFirstDefined(result, ["max_drawdown_pct", "metrics.max_drawdown_pct"]));
+
+        const parametersCell = document.createElement("td");
+        parametersCell.style.whiteSpace = "normal";
+        parametersCell.textContent = formatOptimizationParameters(getOptimizationParameters(result));
+
+        const actionCell = document.createElement("td");
+        const applyButton = document.createElement("button");
+        applyButton.className = "btn-secondary btn-small";
+        applyButton.type = "button";
+        applyButton.textContent = "Apply Params";
+        applyButton.addEventListener("click", () => applyOptimizationResult(result));
+        actionCell.appendChild(applyButton);
+
+        tr.appendChild(rankCell);
+        tr.appendChild(strategyCell);
+        tr.appendChild(scoreCell);
+        tr.appendChild(returnCell);
+        tr.appendChild(winRateCell);
+        tr.appendChild(drawdownCell);
+        tr.appendChild(parametersCell);
+        tr.appendChild(actionCell);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setOptimizationResults(results) {
+      renderOptimizationResults(results);
     }
 
     function normalizeAngelSymbol(value) {
@@ -1945,6 +2525,7 @@
       });
 
       renderStrategyParameters();
+      renderOptimizationResults();
       updateOverviewCards();
     }
 
@@ -1994,6 +2575,7 @@
         grid.appendChild(wrapper);
       });
 
+      renderOptimizerParameterRanges(params);
       updateOverviewCards();
     }
 
@@ -2016,9 +2598,10 @@
       return params;
     }
 
-    function getBacktestPayload() {
+    function getRunPayload() {
       const selectedSource = document.querySelector('input[name="source"]:checked')?.value || "sample";
       const source = selectedSource === "upload" ? "upload" : "sample";
+      const positionSizingMode = byId("position-sizing-mode").value;
 
       return {
         source,
@@ -2031,11 +2614,32 @@
         slippage_pct: Number(byId("slippage-pct").value || 0),
         stop_loss_pct: byId("stop-loss-pct").value ? Number(byId("stop-loss-pct").value) : null,
         take_profit_pct: byId("take-profit-pct").value ? Number(byId("take-profit-pct").value) : null,
-        position_sizing_mode: byId("position-sizing-mode").value,
-        percent_of_equity: byId("percent-equity").value ? Number(byId("percent-equity").value) : null,
-        fixed_capital_per_trade: byId("fixed-capital").value ? Number(byId("fixed-capital").value) : null,
-        fixed_quantity: byId("fixed-quantity").value ? Number(byId("fixed-quantity").value) : null,
+        position_sizing_mode: positionSizingMode,
+        equity_pct_per_trade:
+          positionSizingMode === "percent_equity" && byId("percent-equity").value
+            ? Number(byId("percent-equity").value)
+            : null,
+        capital_per_trade:
+          positionSizingMode === "fixed_capital" && byId("fixed-capital").value
+            ? Number(byId("fixed-capital").value)
+            : null,
+        fixed_quantity:
+          positionSizingMode === "fixed_quantity" && byId("fixed-quantity").value
+            ? Number(byId("fixed-quantity").value)
+            : null,
         parameters: getStrategyParametersFromForm(),
+      };
+    }
+
+    function getBacktestPayload() {
+      return getRunPayload();
+    }
+
+    function getOptimizationPayload() {
+      return {
+        ...getRunPayload(),
+        parameters: getOptimizationParameterRanges(),
+        max_results: 20,
       };
     }
 
@@ -2194,10 +2798,13 @@
       list.querySelectorAll("[data-use-config]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const config = JSON.parse(btn.dataset.useConfig.replace(/&apos;/g, "'"));
-          byId("strategy-name").value = config.strategy_name;
-          renderStrategyParameters(config.parameters_json || config.parameters || {});
+          applyStrategyParametersToBacktestForm(
+            config.strategy_name,
+            config.parameters_json || config.parameters || {},
+            "config-status",
+            `Loaded configuration: ${config.display_name}`
+          );
           state.selectedConfig = config.display_name;
-          setNotice("config-status", `Loaded configuration: ${config.display_name}`, "success");
         });
       });
     }
@@ -2389,6 +2996,62 @@
         await loadConfigs();
       } catch (error) {
         setNotice("config-status", error.message, "danger");
+      }
+    }
+
+    async function runOptimization() {
+      let payload;
+
+      try {
+        payload = getOptimizationPayload();
+        clearOptimizerRangeValidation();
+      } catch (error) {
+        setNotice("optimizer-range-status", error.message || "Invalid optimizer ranges.", "danger");
+        setOptimizationStatus("Fix the optimizer parameter ranges and try again.", "warning");
+        return;
+      }
+
+      setOptimizationLoading(true);
+      setOptimizationEmptyMessage("Optimization is running...");
+      setOptimizationResults([]);
+      setNotice("optimizer-range-status", "", "success");
+      setOptimizationStatus("Running optimization with the current optimizer ranges...", "warning");
+
+      try {
+        const res = await fetch("/api/v1/optimization/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Optimization failed");
+
+        const results = Array.isArray(data?.results) ? data.results : [];
+        if (!results.length) {
+          setOptimizationEmptyMessage("No optimization results returned for the current configuration.");
+          setOptimizationResults([]);
+          setOptimizationStatus("Optimization completed, but no results were returned.", "warning");
+          return;
+        }
+
+        setOptimizationEmptyMessage("No optimization results yet.");
+        setOptimizationResults(results);
+
+        const evaluatedCount = Number(data?.evaluated_count);
+        const evaluatedSuffix = Number.isFinite(evaluatedCount)
+          ? ` Evaluated ${evaluatedCount} candidate${evaluatedCount === 1 ? "" : "s"}.`
+          : "";
+        setOptimizationStatus(
+          `${results.length} optimization result${results.length === 1 ? "" : "s"} loaded.${evaluatedSuffix}`,
+          "success"
+        );
+      } catch (error) {
+        setOptimizationEmptyMessage("Optimization failed. Update the inputs and try again.");
+        setOptimizationResults([]);
+        setOptimizationStatus(error.message || "Optimization failed", "danger");
+      } finally {
+        setOptimizationLoading(false);
       }
     }
 
@@ -2641,6 +3304,10 @@
         console.error(error);
       }
 
+      setOptimizationEmptyMessage("No optimization results yet.");
+      renderOptimizationResults();
+      setOptimizationStatus("No optimization results available yet.");
+
       byId("upload-form").addEventListener("submit", uploadCsv);
       byId("angel-fetch-form").addEventListener("submit", fetchAngelData);
       byId("angel-symbol-search").addEventListener("input", applyAngelSymbolLookup);
@@ -2655,7 +3322,10 @@
       byId("refresh-configs-btn").addEventListener("click", loadConfigs);
       byId("refresh-history-btn").addEventListener("click", loadHistory);
       byId("export-result-btn").addEventListener("click", exportLatestResult);
+      byId("run-optimization-btn").addEventListener("click", runOptimization);
+      byId("export-optimization-results-btn").addEventListener("click", exportOptimizationResultsCsv);
       byId("reset-form-btn").addEventListener("click", resetForm);
+      byId("apply-top-optimizer-result-btn").addEventListener("click", applyTopOptimizationResult);
       byId("saved-dataset-select").addEventListener("change", applySelectedDatasetFromDropdown);
       byId("strategy-name").addEventListener("change", () => renderStrategyParameters());
       byId("position-sizing-mode").addEventListener("change", updateSizingFields);

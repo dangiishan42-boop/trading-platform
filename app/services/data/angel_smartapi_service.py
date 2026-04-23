@@ -25,6 +25,15 @@ class AngelSmartApiService:
         self.loader = loader or DataLoaderService()
 
     def fetch_dataset(self, request: AngelDataFetchRequest) -> DataUploadResponse:
+        frame = self.fetch_frame(request)
+        original_file_name = self._build_original_file_name(request)
+        return self.loader.save_dataframe_upload(
+            original_file_name,
+            frame,
+            message="Angel One data fetched successfully",
+        )
+
+    def fetch_frame(self, request: AngelDataFetchRequest) -> pd.DataFrame:
         credentials = self._get_credentials()
         client = self._build_client(credentials.api_key)
         try:
@@ -33,13 +42,7 @@ class AngelSmartApiService:
             frame = self._normalize_candles(response)
         finally:
             self._terminate_session(client, credentials.client_id)
-
-        original_file_name = self._build_original_file_name(request)
-        return self.loader.save_dataframe_upload(
-            original_file_name,
-            frame,
-            message="Angel One data fetched successfully",
-        )
+        return frame
 
     def _get_credentials(self) -> AngelCredentials:
         missing = [
