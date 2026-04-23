@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     trusted_hosts: list[str] | None = None
     max_upload_size_mb: int = Field(default=10, ge=1, le=100)
     allowed_upload_content_types: list[str] | None = None
+    angel_api_key: str | None = None
+    angel_client_id: str | None = None
+    angel_mpin: str | None = None
+    angel_totp_secret: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",
@@ -86,6 +90,14 @@ class Settings(BaseSettings):
         if isinstance(value, (list, tuple, set)):
             return [str(item).strip() for item in value if str(item).strip()]
         raise ValueError("value must be a comma-separated string or list")
+
+    @field_validator("angel_api_key", "angel_client_id", "angel_mpin", "angel_totp_secret", mode="before")
+    @classmethod
+    def normalize_optional_secret_fields(cls, value: Any) -> str | None:
+        if value is None:
+            return None
+        normalized = str(value).strip()
+        return normalized or None
 
     @field_validator("host", mode="before")
     @classmethod

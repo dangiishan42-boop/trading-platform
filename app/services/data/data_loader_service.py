@@ -231,6 +231,42 @@ class DataLoaderService:
         self._validate_upload_bytes(content)
 
         frame, summary = self._prepare_frame(self._read_csv(BytesIO(content)))
+        return self._store_prepared_upload(
+            original_file_name=original_file_name,
+            content=content,
+            frame=frame,
+            summary=summary,
+            message="File uploaded successfully",
+        )
+
+    def save_dataframe_upload(
+        self,
+        file_name: str,
+        frame: pd.DataFrame,
+        *,
+        message: str = "File uploaded successfully",
+    ) -> DataUploadResponse:
+        original_file_name = self._safe_upload_name(file_name)
+        normalized_frame, summary = self._prepare_frame(frame)
+        content = normalized_frame.to_csv(index=False).encode("utf-8")
+        self._validate_upload_bytes(content)
+        return self._store_prepared_upload(
+            original_file_name=original_file_name,
+            content=content,
+            frame=normalized_frame,
+            summary=summary,
+            message=message,
+        )
+
+    def _store_prepared_upload(
+        self,
+        *,
+        original_file_name: str,
+        content: bytes,
+        frame: pd.DataFrame,
+        summary: DataCleaningSummary,
+        message: str,
+    ) -> DataUploadResponse:
 
         RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
         stored_name = self._generated_upload_name(original_file_name)
@@ -238,7 +274,7 @@ class DataLoaderService:
         self._store_upload(destination, content)
 
         return DataUploadResponse(
-            message="File uploaded successfully",
+            message=message,
             file_name=stored_name,
             original_file_name=original_file_name,
             path=str(destination),

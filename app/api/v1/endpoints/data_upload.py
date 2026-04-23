@@ -6,7 +6,13 @@ from sqlmodel import Session
 from app.api.dependencies import get_session
 from app.database.repositories.data_repository import DataRepository
 from app.models.dataset_model import UploadedDataset
-from app.schemas.data_schema import DataUploadResponse, UploadedDatasetEntry
+from app.schemas.data_schema import (
+    AngelDataFetchRequest,
+    AngelDataFetchResponse,
+    DataUploadResponse,
+    UploadedDatasetEntry,
+)
+from app.services.data.angel_smartapi_service import AngelSmartApiService
 from app.services.data.data_loader_service import DataLoaderService
 
 router = APIRouter(prefix="/data", tags=["data"])
@@ -18,14 +24,7 @@ def _parse_optional_datetime(value: str | None) -> datetime | None:
     return datetime.fromisoformat(value)
 
 
-@router.post("/upload", response_model=DataUploadResponse)
-async def upload_data(file: UploadFile = File(...), session: Session = Depends(get_session)):
-    try:
-        content = await file.read()
-    finally:
-        await file.close()
-
-    payload = DataLoaderService().save_upload(file.filename, content, file.content_type)
+def _store_dataset_metadata(session: Session, payload: DataUploadResponse) -> None:
     DataRepository().create_dataset(
         session,
         UploadedDataset(
@@ -36,7 +35,36 @@ async def upload_data(file: UploadFile = File(...), session: Session = Depends(g
             max_date=_parse_optional_datetime(payload.preview.max_date),
         ),
     )
+
+
+@router.post("/upload", response_model=DataUploadResponse)
+async def upload_data(file: UploadFile = File(...), session: Session = Depends(get_session)):
+    try:
+        content = await file.read()
+    finally:
+        await file.close()
+
+    payload = DataLoaderService().save_upload(file.filename, content, file.content_type)
+    _store_dataset_metadata(session, payload)
     return payload
+
+
+@router.post("/fetch-angel", response_model=AngelDataFetchResponse)
+def fetch_angel_data(
+    request: AngelDataFetchRequest,
+    session: Session = Depends(get_session),
+):
+    payload = AngelSmartApiService().fetch_dataset(request)
+    _store_dataset_metadata(session, payload)
+    return AngelDataFetchResponse(
+        message=payload.message,
+        original_file_name=payload.original_file_name,
+        stored_file_name=payload.file_name,
+        path=payload.path,
+        row_count=payload.preview.total_rows,
+        min_date=payload.preview.min_date,
+        max_date=payload.preview.max_date,
+    )
 
 
 @router.get("/uploads", response_model=list[UploadedDatasetEntry])

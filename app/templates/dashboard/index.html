@@ -487,6 +487,41 @@
       flex-wrap: wrap;
     }
 
+    .sub-panel {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+
+    .sub-panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .sub-panel-head h4 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .sub-panel-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .inline-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1012,6 +1047,57 @@
 
               <div id="upload-status"></div>
 
+              <div class="sub-panel">
+                <div class="sub-panel-head">
+                  <div>
+                    <h4>Fetch Angel Data</h4>
+                    <p>Pull recent OHLCV candle data from Angel One SmartAPI and save it as a reusable dataset.</p>
+                  </div>
+                  <div class="badge">SmartAPI</div>
+                </div>
+
+                <form id="angel-fetch-form">
+                  <div class="form-grid-2">
+                    <div class="field">
+                      <label for="angel-exchange">Exchange</label>
+                      <input id="angel-exchange" type="text" value="NSE" placeholder="e.g. NSE" />
+                    </div>
+                    <div class="field">
+                      <label for="angel-symbol-token">Symbol Token</label>
+                      <input id="angel-symbol-token" type="text" placeholder="e.g. 3045" />
+                    </div>
+                    <div class="field">
+                      <label for="angel-interval">Interval</label>
+                      <select id="angel-interval">
+                        <option value="ONE_MINUTE">ONE_MINUTE</option>
+                        <option value="THREE_MINUTE">THREE_MINUTE</option>
+                        <option value="FIVE_MINUTE">FIVE_MINUTE</option>
+                        <option value="FIFTEEN_MINUTE">FIFTEEN_MINUTE</option>
+                        <option value="THIRTY_MINUTE">THIRTY_MINUTE</option>
+                        <option value="ONE_HOUR">ONE_HOUR</option>
+                        <option value="ONE_DAY">ONE_DAY</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="angel-from-date">From Date</label>
+                      <input id="angel-from-date" type="datetime-local" />
+                    </div>
+                    <div class="field">
+                      <label for="angel-to-date">To Date</label>
+                      <input id="angel-to-date" type="datetime-local" />
+                    </div>
+                  </div>
+
+                  <div class="btn-row">
+                    <button class="btn-primary" type="submit" id="angel-fetch-btn">Fetch Angel Data</button>
+                  </div>
+
+                  <div class="inline-note">Backend credentials are read from environment variables. Fetched data is saved into the same dataset library as CSV uploads.</div>
+                </form>
+
+                <div id="angel-fetch-status"></div>
+              </div>
+
               <div class="info-grid">
                 <div class="info-card">
                   <div class="info-label">Current Source</div>
@@ -1361,6 +1447,7 @@
       latestResult: null,
       latestTrades: [],
       history: [],
+      datasets: [],
       selectedComparisonIds: new Set(),
       selectedDataset: null,
       selectedConfig: null,
@@ -1403,6 +1490,63 @@
         return;
       }
       el.innerHTML = `<div class="notice-${type}">${message}</div>`;
+    }
+
+    function formatDateRange(minDate, maxDate) {
+      return `${minDate ? formatDate(minDate) : "--"} -> ${maxDate ? formatDate(maxDate) : "--"}`;
+    }
+
+    function getDatasetMeta(data) {
+      const preview = data?.preview || {};
+      return {
+        storedFileName: data?.stored_file_name || data?.file_name || "",
+        displayFileName: data?.original_file_name || data?.stored_file_name || data?.file_name || "None",
+        rowCount: data?.row_count ?? preview?.total_rows ?? "--",
+        minDate: data?.min_date ?? preview?.min_date ?? null,
+        maxDate: data?.max_date ?? preview?.max_date ?? null,
+      };
+    }
+
+    function activateDataset(data, sourceLabel = "Uploaded CSV") {
+      const meta = getDatasetMeta(data);
+      byId("file-name").value = meta.storedFileName;
+      document.querySelector('input[name="source"][value="upload"]').checked = true;
+      byId("current-source-label").textContent = sourceLabel;
+      byId("current-file-label").textContent = meta.displayFileName || "None";
+      byId("current-rows-label").textContent = meta.rowCount ?? "--";
+      byId("current-range-label").textContent = formatDateRange(meta.minDate, meta.maxDate);
+      state.selectedDataset = meta.storedFileName || null;
+      const datasetSelect = byId("saved-dataset-select");
+      if (datasetSelect && meta.storedFileName) {
+        datasetSelect.value = meta.storedFileName;
+      }
+      updateOverviewCards();
+      return meta;
+    }
+
+    function formatDateTimeLocalValue(date) {
+      const local = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+      return local.toISOString().slice(0, 16);
+    }
+
+    function initializeAngelFetchDefaults() {
+      const fromInput = byId("angel-from-date");
+      const toInput = byId("angel-to-date");
+      const intervalInput = byId("angel-interval");
+      if (intervalInput && !intervalInput.value) {
+        intervalInput.value = "ONE_MINUTE";
+      }
+
+      const now = new Date();
+      now.setSeconds(0, 0);
+      const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+
+      if (toInput && !toInput.value) {
+        toInput.value = formatDateTimeLocalValue(now);
+      }
+      if (fromInput && !fromInput.value) {
+        fromInput.value = formatDateTimeLocalValue(oneDayAgo);
+      }
     }
 
     function updateOverviewCards() {
@@ -1637,7 +1781,7 @@
       updateOverviewCards();
     }
 
-    function renderSavedDatasets(datasets) {
+    function renderSavedDatasetsLegacy(datasets) {
       const select = byId("saved-dataset-select");
       const list = byId("saved-datasets-list");
 
@@ -1822,7 +1966,7 @@
       renderHistory(data);
     }
 
-    async function uploadCsv(event) {
+    async function uploadCsvLegacy(event) {
       event.preventDefault();
       const fileInput = byId("csv-file");
       const file = fileInput.files?.[0];
@@ -1968,7 +2112,7 @@
       setNotice("backtest-status", "", "success");
     }
 
-    function applySelectedDatasetFromDropdown() {
+    function applySelectedDatasetFromDropdownLegacy() {
       const stored = byId("saved-dataset-select").value;
       if (!stored) return;
       byId("file-name").value = stored;
@@ -1976,6 +2120,152 @@
       byId("current-source-label").textContent = "Uploaded CSV";
       state.selectedDataset = stored;
       updateOverviewCards();
+    }
+
+    function renderSavedDatasets(datasets) {
+      state.datasets = datasets || [];
+      const select = byId("saved-dataset-select");
+      const list = byId("saved-datasets-list");
+
+      select.innerHTML = '<option value="">Select a saved upload</option>';
+      list.innerHTML = "";
+
+      state.datasets.forEach((dataset) => {
+        const option = document.createElement("option");
+        option.value = dataset.stored_file_name;
+        option.textContent = `${dataset.original_file_name} (${dataset.row_count} rows)`;
+        select.appendChild(option);
+
+        const card = document.createElement("div");
+        card.className = "list-card";
+        card.innerHTML = `
+          <div class="list-card-title">${dataset.original_file_name}</div>
+          <div class="list-card-sub">
+            Stored as: ${dataset.stored_file_name}<br>
+            Rows: ${dataset.row_count} | Range: ${formatDateRange(dataset.min_date, dataset.max_date)}<br>
+            Uploaded: ${formatDate(dataset.uploaded_at)}
+          </div>
+          <div class="list-card-actions">
+            <button class="btn-secondary btn-small" type="button" data-use-dataset="${dataset.stored_file_name}">Use For Backtest</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      list.querySelectorAll("[data-use-dataset]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const stored = btn.dataset.useDataset;
+          const dataset = state.datasets.find((item) => item.stored_file_name === stored) || {
+            stored_file_name: stored,
+            original_file_name: stored,
+          };
+          activateDataset(dataset, "Uploaded CSV");
+          setNotice("upload-status", `Selected saved dataset: ${stored}`, "success");
+        });
+      });
+
+      if (state.selectedDataset) {
+        select.value = state.selectedDataset;
+      }
+    }
+
+    async function uploadCsv(event) {
+      event.preventDefault();
+      const fileInput = byId("csv-file");
+      const file = fileInput.files?.[0];
+
+      if (!file) {
+        setNotice("upload-status", "Please select a CSV file first.", "danger");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      setNotice("upload-status", "Uploading file...", "warning");
+
+      try {
+        const res = await fetch("/api/v1/data/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Upload failed");
+
+        const meta = activateDataset(data, "Uploaded CSV");
+        setNotice(
+          "upload-status",
+          `Upload complete. Stored as <strong>${meta.storedFileName}</strong> with ${meta.rowCount ?? "--"} cleaned rows.`,
+          "success"
+        );
+
+        await loadDatasets();
+      } catch (error) {
+        setNotice("upload-status", error.message, "danger");
+      }
+    }
+
+    async function fetchAngelData(event) {
+      event.preventDefault();
+
+      const payload = {
+        exchange: byId("angel-exchange").value.trim(),
+        symbol_token: byId("angel-symbol-token").value.trim(),
+        interval: byId("angel-interval").value,
+        fromdate: byId("angel-from-date").value,
+        todate: byId("angel-to-date").value,
+      };
+
+      if (!payload.exchange || !payload.symbol_token || !payload.interval || !payload.fromdate || !payload.todate) {
+        setNotice("angel-fetch-status", "Please fill exchange, symbol token, interval, from date, and to date.", "danger");
+        return;
+      }
+
+      if (new Date(payload.todate).getTime() <= new Date(payload.fromdate).getTime()) {
+        setNotice("angel-fetch-status", "To date must be later than from date.", "danger");
+        return;
+      }
+
+      const fetchButton = byId("angel-fetch-btn");
+      fetchButton.disabled = true;
+      setNotice("angel-fetch-status", "Fetching Angel One candle data...", "warning");
+
+      try {
+        const res = await fetch("/api/v1/data/fetch-angel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Angel One fetch failed");
+
+        const meta = activateDataset(data, "Fetched Dataset");
+        setNotice(
+          "angel-fetch-status",
+          `Angel data fetched successfully. Stored as <strong>${meta.storedFileName}</strong> with ${meta.rowCount} rows.`,
+          "success"
+        );
+
+        await loadDatasets();
+      } catch (error) {
+        setNotice("angel-fetch-status", error.message, "danger");
+      } finally {
+        fetchButton.disabled = false;
+      }
+    }
+
+    function applySelectedDatasetFromDropdown() {
+      const stored = byId("saved-dataset-select").value;
+      if (!stored) return;
+
+      const dataset = state.datasets.find((item) => item.stored_file_name === stored) || {
+        stored_file_name: stored,
+        original_file_name: stored,
+      };
+      activateDataset(dataset, "Uploaded CSV");
+      setNotice("upload-status", `Selected saved dataset: ${stored}`, "success");
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -1986,6 +2276,7 @@
       }
 
       byId("upload-form").addEventListener("submit", uploadCsv);
+      byId("angel-fetch-form").addEventListener("submit", fetchAngelData);
       byId("backtest-form").addEventListener("submit", runBacktest);
       byId("save-config-btn").addEventListener("click", saveCurrentConfiguration);
       byId("refresh-datasets-btn").addEventListener("click", loadDatasets);
@@ -2002,6 +2293,7 @@
         renderComparison();
       });
 
+      initializeAngelFetchDefaults();
       updateSizingFields();
       updateChartFrame("equity-chart-frame", "equity-chart-empty", "");
       updateChartFrame("drawdown-chart-frame", "drawdown-chart-empty", "");
