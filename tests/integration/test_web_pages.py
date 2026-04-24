@@ -1,0 +1,39 @@
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+
+client = TestClient(app)
+
+
+def test_backtest_dashboard_page_loads_focused_layout():
+    response = client.get("/dashboard")
+
+    assert response.status_code == 200
+    assert "Backtest Dashboard" in response.text
+    assert "Upload & Datasets" in response.text
+    assert "Backtest Configuration" in response.text
+    assert "Latest Backtest Results" in response.text
+    assert "Recent Backtest History" in response.text
+
+
+def test_research_page_loads_focused_layout():
+    response = client.get("/research")
+
+    assert response.status_code == 200
+    assert "Research &amp; Optimization" in response.text
+    assert "Optimization Results" in response.text
+    assert "Monte Carlo" in response.text
+    assert "Market Regime Analysis" in response.text
+    assert "Strategy Recommendation" in response.text
+    assert "Strategy Scorecard / Tear Sheet" in response.text
+
+
+def test_portfolio_page_loads_focused_layout():
+    response = client.get("/portfolio")
+
+    assert response.status_code == 200
+    assert "Portfolio Dashboard" in response.text
+    assert "Portfolio Backtest" in response.text
+    assert "Run Portfolio Backtest" in response.text
+    assert "Per-Symbol Breakdown" in response.text

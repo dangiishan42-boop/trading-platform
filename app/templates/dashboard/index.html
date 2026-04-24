@@ -98,6 +98,12 @@
       font-weight: 600;
     }
 
+    .nav-item.active {
+      background: rgba(255,255,255,0.14);
+      border-color: rgba(255,255,255,0.24);
+      color: #fff;
+    }
+
     .sidebar-footer {
       margin-top: auto;
       background: rgba(255,255,255,0.07);
@@ -1050,9 +1056,26 @@
       }
     }
 
+    body.page-dashboard .research-section,
+    body.page-dashboard .portfolio-section,
+    body.page-research .dashboard-section,
+    body.page-research .portfolio-section,
+    body.page-portfolio .dashboard-section,
+    body.page-portfolio .research-section {
+      display: none !important;
+    }
+
+    body.page-portfolio .sidebar-stack {
+      display: none;
+    }
+
+    body.page-portfolio .layout {
+      grid-template-columns: 1fr;
+    }
+
   </style>
 </head>
-<body>
+<body class="page-{{ page_mode | default('dashboard') }}">
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
@@ -1064,15 +1087,12 @@
 </div>
 
       <div class="nav-list">
-        <div class="nav-item">Dashboard</div>
+        <a href="/" style="text-decoration:none;"><div class="nav-item">Market Watch</div></a>
+        <a href="/dashboard" style="text-decoration:none;"><div class="nav-item {% if page_mode == 'dashboard' %}active{% endif %}">Backtest Dashboard</div></a>
+        <a href="/research" style="text-decoration:none;"><div class="nav-item {% if page_mode == 'research' %}active{% endif %}">Research</div></a>
+        <a href="/portfolio" style="text-decoration:none;"><div class="nav-item {% if page_mode == 'portfolio' %}active{% endif %}">Portfolio</div></a>
         <a href="/historical-data" style="text-decoration:none;"><div class="nav-item">Historical Data</div></a>
-        <div class="nav-item">Upload Data</div>
-        <div class="nav-item">Backtest</div>
-        <div class="nav-item">Results</div>
-        <div class="nav-item">History</div>
-        <div class="nav-item">Saved Configs</div>
-        <div class="nav-item">Export</div>
-        <div class="nav-item">API Docs</div>
+        <a href="/docs" target="_blank" style="text-decoration:none;"><div class="nav-item">API Docs</div></a>
       </div>
 
       <div class="sidebar-footer">
@@ -1086,11 +1106,8 @@
       <div class="page-shell">
         <section class="hero">
           <div>
-            <h1>Trading Backtesting Platform</h1>
-            <p>
-              Upload market data, reuse saved datasets, configure strategies, run realistic backtests,
-              compare results, and export reports from one clean dashboard.
-            </p>
+            <h1>{{ page_heading | default('Backtest Dashboard') }}</h1>
+            <p>{{ page_description | default('Upload market data, configure strategies, run realistic backtests, compare results, and export reports.') }}</p>
           </div>
           <div class="hero-actions">
             <a href="/docs" target="_blank" style="text-decoration:none;">
@@ -1105,7 +1122,7 @@
           </div>
         </section>
 
-        <section class="top-cards">
+        <section class="top-cards dashboard-section">
           <div class="overview-card">
             <div class="overview-label">Data Source</div>
             <div class="overview-value" id="overview-data-source">No dataset selected</div>
@@ -1130,7 +1147,7 @@
 
         <div class="layout">
           <aside class="sidebar-stack">
-            <section class="panel">
+            <section class="panel dashboard-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Data</div>
@@ -1259,7 +1276,7 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel research-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Tear Sheet</div>
@@ -1296,7 +1313,7 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel research-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Summary</div>
@@ -1336,7 +1353,7 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel research-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Regimes</div>
@@ -1397,7 +1414,7 @@
               <div id="regime-return-chart" class="chart-empty" style="margin-top:16px; min-height:150px;">Regime return visualization will appear here.</div>
             </section>
 
-            <section class="panel">
+            <section class="panel research-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Monte Carlo</div>
@@ -1464,7 +1481,7 @@
               <div id="monte-carlo-distribution" class="chart-empty" style="margin-top:16px; min-height:180px;">Run Monte Carlo to view the return distribution.</div>
             </section>
 
-            <section class="panel">
+            <section class="panel dashboard-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Strategies</div>
@@ -1489,7 +1506,7 @@
           </aside>
 
           <main class="main-stack">
-            <section class="panel" id="run-section">
+            <section class="panel dashboard-section" id="run-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Setup</div>
@@ -1624,7 +1641,7 @@
               </form>
             </section>
 
-            <section class="panel" id="portfolio-backtest-section">
+            <section class="panel portfolio-section" id="portfolio-backtest-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Portfolio</div>
@@ -1736,7 +1753,7 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel research-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Optimizer</div>
@@ -1834,7 +1851,7 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel dashboard-section">
               <div class="section-title">
                 <div>
                   <div class="badge">Results</div>
@@ -1931,7 +1948,7 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel dashboard-section">
               <div class="section-title">
                 <div>
                   <div class="badge">History</div>
