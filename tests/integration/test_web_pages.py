@@ -37,3 +37,13 @@ def test_portfolio_page_loads_focused_layout():
     assert "Portfolio Backtest" in response.text
     assert "Run Portfolio Backtest" in response.text
     assert "Per-Symbol Breakdown" in response.text
+
+
+def test_algo_trading_page_loads():
+    response = client.get("/algo-trading")
+
+    assert response.status_code == 200
+    assert "Algo Trading" in response.text
+    assert "Algo Rule Builder" in response.text
+    assert "Risk Controls" in response.text
+    assert "Simulation Settings" in response.text

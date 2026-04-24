@@ -85,6 +85,19 @@ def portfolio_page(request: Request):
     )
 
 
+@router.get("/algo-trading")
+def algo_trading_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="algo_trading/index.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - Algo Trading",
+            "angel_symbol_map": ANGEL_SYMBOL_TO_TOKEN,
+        },
+    )
+
+
 @router.get("/historical-data")
 def historical_data_page(request: Request):
     return templates.TemplateResponse(

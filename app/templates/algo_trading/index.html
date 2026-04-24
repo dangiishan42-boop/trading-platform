@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <style>
+    :root { --bg:#f4f7fb; --panel:#fff; --line:#dbe4ef; --text:#172033; --muted:#64748b; --blue:#2563eb; --green:#16a34a; --red:#dc2626; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:0; }
+    a { color:inherit; text-decoration:none; }
+    .app-shell { display:grid; grid-template-columns:260px minmax(0,1fr); min-height:100vh; }
+    .sidebar { position:sticky; top:0; height:100vh; padding:22px 16px; background:#102449; color:#fff; display:flex; flex-direction:column; gap:18px; }
+    .sidebar-brand { display:flex; gap:12px; align-items:center; padding:4px 4px 12px; }
+    .brand-badge { width:40px; height:40px; border-radius:8px; background:rgba(255,255,255,.14); display:grid; place-items:center; font-weight:900; }
+    .brand-title { font-weight:850; line-height:1.25; }
+    .brand-sub { margin-top:2px; color:rgba(255,255,255,.72); font-size:12px; }
+    .nav-list { display:grid; gap:8px; }
+    .nav-item { display:block; padding:11px 12px; border-radius:8px; color:rgba(255,255,255,.88); border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); font-weight:750; font-size:14px; }
+    .nav-item.active { background:rgba(37,99,235,.42); border-color:rgba(147,197,253,.45); color:#fff; }
+    .sidebar-footer { margin-top:auto; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.06); color:rgba(255,255,255,.78); font-size:12px; line-height:1.5; }
+    .content { min-width:0; padding:22px; }
+    .shell { width:min(1480px,100%); margin:0 auto; display:grid; gap:18px; }
+    .hero, .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px; box-shadow:0 10px 24px rgba(15,23,42,.06); }
+    .hero h1 { margin:0; font-size:28px; }
+    .hero p { margin:8px 0 0; color:var(--muted); }
+    .grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .grid-4 { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+    .section-head { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:14px; }
+    .section-head h2 { margin:0; font-size:18px; }
+    label { display:block; color:var(--muted); font-size:12px; font-weight:800; margin-bottom:6px; }
+    input, select { width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; min-height:42px; font:inherit; background:#fff; }
+    .btn { border:1px solid var(--line); border-radius:8px; padding:10px 13px; background:#fff; color:var(--text); cursor:pointer; font-weight:750; min-height:40px; }
+    .btn-primary { background:var(--blue); border-color:var(--blue); color:#fff; }
+    .btn-danger { background:#fff1f2; border-color:#fecaca; color:#991b1b; }
+    .btn:disabled { opacity:.55; cursor:not-allowed; }
+    .rule-row { display:grid; grid-template-columns:minmax(90px,.7fr) minmax(120px,1fr) minmax(120px,1fr) minmax(100px,.8fr) minmax(80px,.6fr) minmax(90px,.7fr) auto; gap:10px; align-items:end; margin-top:10px; }
+    .metric-card { border:1px solid var(--line); border-radius:8px; padding:14px; background:#fbfdff; }
+    .metric-label { color:var(--muted); font-size:12px; font-weight:800; }
+    .metric-value { margin-top:7px; font-size:24px; font-weight:900; overflow-wrap:anywhere; }
+    .positive { color:var(--green); } .negative { color:var(--red); }
+    .notice { padding:10px 12px; border-radius:8px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; font-size:13px; }
+    .notice.danger { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+    .notice.success { background:#f0fdf4; border-color:#bbf7d0; color:#166534; }
+    .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:8px; }
+    table { width:100%; min-width:900px; border-collapse:collapse; }
+    th,td { padding:11px 12px; border-bottom:1px solid #e7eef7; text-align:left; font-size:13px; }
+    th { color:var(--muted); background:#f8fbff; font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+    .chart-box { width:100%; min-height:260px; border:1px solid var(--line); border-radius:8px; display:grid; place-items:center; background:#fff; overflow:hidden; }
+    .chart-box svg { width:100%; height:260px; display:block; }
+    @media (max-width: 1100px) { .app-shell { grid-template-columns:1fr; } .sidebar { position:static; height:auto; } .nav-list { grid-template-columns:repeat(3,minmax(0,1fr)); } .sidebar-footer { display:none; } .rule-row,.grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; } }
+    @media (max-width: 560px) { .content { padding:12px; } .nav-list { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="brand-badge">AT</div><div><div class="brand-title">Trading Platform</div><div class="brand-sub">Algo simulation</div></div></div>
+      <nav class="nav-list" aria-label="Primary navigation">
+        <a class="nav-item" href="/">Market Watch</a>
+        <a class="nav-item" href="/dashboard">Backtest Dashboard</a>
+        <a class="nav-item" href="/research">Research</a>
+        <a class="nav-item" href="/portfolio">Portfolio</a>
+        <a class="nav-item active" href="/algo-trading">Algo Trading</a>
+        <a class="nav-item" href="/historical-data">Historical Data</a>
+      </nav>
+      <div class="sidebar-footer">Rule-based strategy simulation only. Live broker order placement is intentionally disabled.</div>
+    </aside>
+
+    <main class="content">
+      <div class="shell">
+        <section class="hero">
+          <h1>Algo Trading</h1>
+          <p>Build rule-based buy, sell, and exit signals, then simulate them on historical data. This page is not connected to live order execution.</p>
+        </section>
+
+        <section class="panel">
+          <div class="section-head"><h2>Symbol Selection</h2><span class="notice">Simulation mode only</span></div>
+          <div class="grid-4">
+            <div><label for="algo-symbol">Stock Search</label><input id="algo-symbol" list="algo-symbol-options" value="RELIANCE" placeholder="RELIANCE, TCS, INFY" /><datalist id="algo-symbol-options"></datalist></div>
+            <div><label for="algo-exchange">Exchange</label><input id="algo-exchange" value="NSE" /></div>
+            <div><label for="algo-timeframe">Timeframe</label><input id="algo-timeframe" value="1D" /></div>
+            <div><label for="algo-source">Data Source</label><select id="algo-source"><option value="sample">Sample</option><option value="upload">Uploaded CSV</option></select></div>
+            <div><label for="algo-file-name">Uploaded File Name</label><input id="algo-file-name" placeholder="Required for uploaded CSV" /></div>
+            <div><label for="algo-from-date">From Date</label><input id="algo-from-date" type="datetime-local" /></div>
+            <div><label for="algo-to-date">To Date</label><input id="algo-to-date" type="datetime-local" /></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head"><h2>Algo Rule Builder</h2><button class="btn" type="button" id="add-rule-btn">Add Rule</button></div>
+          <label><input id="require-all-conditions" type="checkbox" checked style="width:auto; min-height:0;" /> Take trade only when all conditions are fulfilled</label>
+          <div id="rule-rows"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head"><h2>Risk Controls</h2></div>
+          <div class="grid-3">
+            <div><label for="algo-capital">Capital</label><input id="algo-capital" type="number" min="1" step="0.01" value="100000" /></div>
+            <div><label for="algo-stop-loss">Stop Loss %</label><input id="algo-stop-loss" type="number" min="0" step="0.1" value="2" /></div>
+            <div><label for="algo-target">Target %</label><input id="algo-target" type="number" min="0" step="0.1" value="4" /></div>
+            <div><label for="algo-position-size">Position Size</label><input id="algo-position-size" type="number" min="1" step="0.01" value="25000" /></div>
+            <div><label for="algo-max-trades">Max Trades / Day</label><input id="algo-max-trades" type="number" min="1" max="100" value="5" /></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head"><h2>Simulation Settings</h2></div>
+          <div class="grid-3">
+            <div><label for="algo-commission">Commission %</label><input id="algo-commission" type="number" min="0" step="0.01" value="0.1" /></div>
+            <div><label for="algo-slippage">Slippage %</label><input id="algo-slippage" type="number" min="0" step="0.01" value="0.05" /></div>
+            <div style="align-self:end;"><button class="btn btn-primary" type="button" id="run-simulation-btn">Run Simulation</button></div>
+          </div>
+          <div id="algo-status" class="notice" style="margin-top:14px;">Build 3 to 10 rules, then run the simulation.</div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head"><h2>Signal Results</h2></div>
+          <div class="grid-4">
+            <div class="metric-card"><div class="metric-label">Signals</div><div class="metric-value" id="algo-signals">--</div></div>
+            <div class="metric-card"><div class="metric-label">Trades</div><div class="metric-value" id="algo-trades">--</div></div>
+            <div class="metric-card"><div class="metric-label">Win Rate</div><div class="metric-value" id="algo-win-rate">--</div></div>
+            <div class="metric-card"><div class="metric-label">Max Drawdown</div><div class="metric-value" id="algo-drawdown">--</div></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head"><h2>Performance Summary</h2></div>
+          <div class="grid-3">
+            <div class="metric-card"><div class="metric-label">Estimated Net Profit</div><div class="metric-value" id="algo-net-profit">--</div></div>
+            <div class="metric-card"><div class="metric-label">Estimated Loss</div><div class="metric-value" id="algo-estimated-loss">--</div></div>
+            <div class="metric-card"><div class="metric-label">Ending Equity</div><div class="metric-value" id="algo-ending-equity">--</div></div>
+          </div>
+          <div id="algo-equity-chart" class="chart-box" style="margin-top:16px;">Equity curve will appear after simulation.</div>
+          <div class="table-wrap" style="margin-top:16px;">
+            <table>
+              <thead><tr><th>Entry</th><th>Exit</th><th>Entry Price</th><th>Exit Price</th><th>Qty</th><th>PnL</th><th>Return</th><th>Reason</th></tr></thead>
+              <tbody id="algo-trade-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const SYMBOL_MAP = {{ angel_symbol_map | tojson }};
+    const SOURCES = ["Price", "EMA", "RSI", "MACD", "Volume"];
+    const OPERATORS = [">", "<", ">=", "<=", "crosses above", "crosses below"];
+    const SIGNAL_TYPES = ["buy", "sell", "exit"];
+    const CONNECTORS = ["AND", "OR"];
+    let ruleCount = 0;
+
+    function byId(id) { return document.getElementById(id); }
+    function fmt(value, digits = 2) { const n = Number(value); return Number.isFinite(n) ? n.toFixed(digits) : "--"; }
+    function pct(value) { return `${fmt(value)}%`; }
+    function money(value) { return fmt(value); }
+    function setStatus(message, type = "") { const el = byId("algo-status"); el.textContent = message; el.className = `notice ${type}`.trim(); }
+    function options(values, selected = "") { return values.map((value) => `<option value="${value}" ${value === selected ? "selected" : ""}>${value}</option>`).join(""); }
+
+    function addRule(defaults = {}) {
+      if (ruleCount >= 10) { setStatus("You can add up to 10 rule rows.", "danger"); return; }
+      ruleCount += 1;
+      const row = document.createElement("div");
+      row.className = "rule-row";
+      row.dataset.ruleRow = String(ruleCount);
+      row.innerHTML = `
+        <div><label>Signal</label><select data-rule-signal>${options(SIGNAL_TYPES, defaults.signal_type || "buy")}</select></div>
+        <div><label>Condition Source</label><select data-rule-source>${options(SOURCES, defaults.source || "Price")}</select></div>
+        <div><label>Operator</label><select data-rule-operator>${options(OPERATORS, defaults.operator || ">")}</select></div>
+        <div><label>Value</label><input data-rule-value type="number" step="0.01" value="${defaults.value ?? 100}" /></div>
+        <div><label>Period</label><input data-rule-period type="number" min="1" max="300" value="${defaults.period ?? ""}" placeholder="EMA" /></div>
+        <div><label>Connector</label><select data-rule-connector>${options(CONNECTORS, defaults.connector || "AND")}</select></div>
+        <button class="btn btn-danger" type="button" data-remove-rule>Remove</button>
+      `;
+      row.querySelector("[data-remove-rule]").addEventListener("click", () => {
+        row.remove();
+        ruleCount -= 1;
+      });
+      byId("rule-rows").appendChild(row);
+    }
+
+    function getRules() {
+      const rows = [...document.querySelectorAll("[data-rule-row]")];
+      if (rows.length < 1) throw new Error("Add at least one rule row.");
+      return rows.map((row) => ({
+        signal_type: row.querySelector("[data-rule-signal]").value,
+        source: row.querySelector("[data-rule-source]").value,
+        operator: row.querySelector("[data-rule-operator]").value,
+        value: Number(row.querySelector("[data-rule-value]").value || 0),
+        period: row.querySelector("[data-rule-period]").value ? Number(row.querySelector("[data-rule-period]").value) : null,
+        connector: row.querySelector("[data-rule-connector]").value,
+      }));
+    }
+
+    function payload() {
+      const stopLoss = byId("algo-stop-loss").value;
+      const target = byId("algo-target").value;
+      return {
+        source: byId("algo-source").value,
+        file_name: byId("algo-file-name").value.trim() || null,
+        symbol: byId("algo-symbol").value.trim() || "DEMO",
+        exchange: byId("algo-exchange").value.trim() || "NSE",
+        timeframe: byId("algo-timeframe").value.trim() || "1D",
+        from_date: byId("algo-from-date").value || null,
+        to_date: byId("algo-to-date").value || null,
+        conditions: getRules(),
+        require_all_conditions: byId("require-all-conditions").checked,
+        initial_capital: Number(byId("algo-capital").value || 100000),
+        stop_loss_pct: stopLoss ? Number(stopLoss) : null,
+        target_pct: target ? Number(target) : null,
+        position_size: Number(byId("algo-position-size").value || 25000),
+        max_trades_per_day: Number(byId("algo-max-trades").value || 5),
+        commission_pct: Number(byId("algo-commission").value || 0),
+        slippage_pct: Number(byId("algo-slippage").value || 0),
+      };
+    }
+
+    function renderChart(points = []) {
+      const target = byId("algo-equity-chart");
+      if (points.length < 2) { target.textContent = "Equity curve will appear after simulation."; return; }
+      const width = 900, height = 260, pad = { left: 56, right: 24, top: 22, bottom: 38 };
+      const values = points.map((p) => Number(p.equity));
+      const min = Math.min(...values), max = Math.max(...values), range = max - min || 1;
+      const coords = points.map((point, index) => {
+        const x = pad.left + (index / (points.length - 1)) * (width - pad.left - pad.right);
+        const y = pad.top + ((max - Number(point.equity)) / range) * (height - pad.top - pad.bottom);
+        return `${x.toFixed(2)},${y.toFixed(2)}`;
+      }).join(" ");
+      target.innerHTML = `<svg viewBox="0 0 ${width} ${height}"><line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}" stroke="#dbe4ef"></line><line x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}" stroke="#dbe4ef"></line><polyline points="${coords}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline><text x="${pad.left}" y="16" fill="#64748b" font-size="12">High ${money(max)}</text><text x="${width - pad.right}" y="16" text-anchor="end" fill="#64748b" font-size="12">Low ${money(min)}</text></svg>`;
+    }
+
+    function renderResult(data) {
+      byId("algo-signals").textContent = data.signal_count;
+      byId("algo-trades").textContent = data.metrics.total_trades;
+      byId("algo-win-rate").textContent = pct(data.win_rate);
+      byId("algo-drawdown").textContent = pct(data.max_drawdown);
+      byId("algo-net-profit").textContent = money(data.estimated_net_profit);
+      byId("algo-net-profit").className = `metric-value ${Number(data.estimated_net_profit) >= 0 ? "positive" : "negative"}`;
+      byId("algo-estimated-loss").textContent = money(data.estimated_loss);
+      byId("algo-ending-equity").textContent = money(data.metrics.ending_equity);
+      renderChart(data.equity_curve || []);
+      const tbody = byId("algo-trade-table-body");
+      tbody.innerHTML = "";
+      (data.trades || []).forEach((trade) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${trade.entry_time}</td><td>${trade.exit_time}</td><td>${money(trade.entry_price)}</td><td>${money(trade.exit_price)}</td><td>${trade.quantity}</td><td class="${Number(trade.pnl) >= 0 ? "positive" : "negative"}">${money(trade.pnl)}</td><td>${pct(trade.return_pct)}</td><td>${trade.exit_reason}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function simulate() {
+      let body;
+      try { body = payload(); } catch (error) { setStatus(error.message, "danger"); return; }
+      byId("run-simulation-btn").disabled = true;
+      setStatus("Running algo rule simulation...");
+      try {
+        const res = await fetch("/api/v1/algo/simulate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Simulation failed");
+        renderResult(data);
+        setStatus(`Simulation complete. ${data.signal_count} signals evaluated into ${data.metrics.total_trades} trades.`, "success");
+      } catch (error) {
+        setStatus(error.message || "Simulation failed", "danger");
+      } finally {
+        byId("run-simulation-btn").disabled = false;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const list = byId("algo-symbol-options");
+      Object.keys(SYMBOL_MAP).forEach((symbol) => {
+        const option = document.createElement("option");
+        option.value = symbol;
+        list.appendChild(option);
+      });
+      addRule({ signal_type: "buy", source: "Price", operator: ">", value: 100, connector: "AND" });
+      addRule({ signal_type: "sell", source: "RSI", operator: ">", value: 70, connector: "OR" });
+      addRule({ signal_type: "exit", source: "RSI", operator: "<", value: 45, connector: "OR" });
+      byId("add-rule-btn").addEventListener("click", () => addRule());
+      byId("run-simulation-btn").addEventListener("click", simulate);
+    });
+  </script>
+</body>
+</html>
