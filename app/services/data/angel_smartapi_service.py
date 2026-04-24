@@ -33,6 +33,26 @@ class AngelSmartApiService:
             message="Angel One data fetched successfully",
         )
 
+    def has_credentials(self) -> bool:
+        return all(
+            [
+                self.settings.angel_api_key,
+                self.settings.angel_client_id,
+                self.settings.angel_mpin,
+                self.settings.angel_totp_secret,
+            ]
+        )
+
+    def fetch_ltp(self, *, exchange: str, symbol: str, symbol_token: str) -> dict:
+        credentials = self._get_credentials()
+        client = self._build_client(credentials.api_key)
+        try:
+            self._authenticate(client, credentials)
+            response = self._fetch_ltp(client, exchange, symbol, symbol_token)
+        finally:
+            self._terminate_session(client, credentials.client_id)
+        return response
+
     def fetch_frame(self, request: AngelDataFetchRequest) -> pd.DataFrame:
         credentials = self._get_credentials()
         client = self._build_client(credentials.api_key)
@@ -122,6 +142,19 @@ class AngelSmartApiService:
             raise DataValidationError("Angel One candle response was not in the expected format")
         if response.get("status") is False:
             message = response.get("message") or "Angel One candle fetch failed"
+            raise InvalidRequestError(message)
+        return response
+
+    def _fetch_ltp(self, client, exchange: str, symbol: str, symbol_token: str) -> dict:
+        try:
+            response = client.ltpData(exchange, symbol, symbol_token)
+        except Exception as exc:
+            raise InvalidRequestError(f"Angel One quote fetch failed: {exc}") from exc
+
+        if not isinstance(response, dict):
+            raise DataValidationError("Angel One quote response was not in the expected format")
+        if response.get("status") is False:
+            message = response.get("message") or "Angel One quote fetch failed"
             raise InvalidRequestError(message)
         return response
 

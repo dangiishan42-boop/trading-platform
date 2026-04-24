@@ -690,6 +690,67 @@
       font-size: 14px;
     }
 
+    .portfolio-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.9fr) minmax(180px, 1.4fr) minmax(110px, 0.7fr) auto;
+      gap: 12px;
+      align-items: end;
+      margin-top: 12px;
+    }
+
+    .portfolio-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .portfolio-analytics-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .portfolio-viz {
+      width: 100%;
+      min-height: 280px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .portfolio-viz svg {
+      display: block;
+      width: 100%;
+      height: 240px;
+    }
+
+    .portfolio-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .portfolio-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .portfolio-legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+    }
+
     .compare-tools {
       display: flex;
       align-items: center;
@@ -743,7 +804,13 @@
       .form-grid-4,
       .info-grid,
       .metrics-grid,
+      .portfolio-metrics-grid,
+      .portfolio-analytics-grid,
       .top-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .portfolio-row {
         grid-template-columns: 1fr;
       }
 
@@ -1195,6 +1262,211 @@
             <section class="panel">
               <div class="section-title">
                 <div>
+                  <div class="badge">Tear Sheet</div>
+                  <h2 style="margin-top:10px;">Strategy Scorecard / Tear Sheet</h2>
+                  <p>Institutional-style metrics for the latest backtest using transparent v1 formulas.</p>
+                </div>
+                <button class="btn-secondary btn-small" type="button" id="run-scorecard-btn">Run Scorecard</button>
+              </div>
+
+              <div id="scorecard-status" class="footer-note">Run a backtest, then generate the scorecard.</div>
+
+              <div class="metrics-grid" style="margin-top:16px;">
+                <div class="metric-card"><div class="metric-label">CAGR</div><div class="metric-value" id="scorecard-cagr">--</div><div class="metric-sub" id="scorecard-cagr-sub">Annualized return</div></div>
+                <div class="metric-card"><div class="metric-label">Sharpe</div><div class="metric-value" id="scorecard-sharpe">--</div><div class="metric-sub">Return per volatility</div></div>
+                <div class="metric-card"><div class="metric-label">Sortino</div><div class="metric-value" id="scorecard-sortino">--</div><div class="metric-sub">Downside-adjusted return</div></div>
+                <div class="metric-card"><div class="metric-label">Calmar</div><div class="metric-value" id="scorecard-calmar">--</div><div class="metric-sub">CAGR / max drawdown</div></div>
+                <div class="metric-card"><div class="metric-label">Profit Factor</div><div class="metric-value" id="scorecard-profit-factor">--</div><div class="metric-sub">Gross profit / gross loss</div></div>
+                <div class="metric-card"><div class="metric-label">Expectancy</div><div class="metric-value" id="scorecard-expectancy">--</div><div class="metric-sub">Average PnL per trade</div></div>
+                <div class="metric-card"><div class="metric-label">Avg Win</div><div class="metric-value" id="scorecard-avg-win">--</div><div class="metric-sub">Mean winning trade</div></div>
+                <div class="metric-card"><div class="metric-label">Avg Loss</div><div class="metric-value" id="scorecard-avg-loss">--</div><div class="metric-sub">Mean losing trade</div></div>
+                <div class="metric-card"><div class="metric-label">Exposure</div><div class="metric-value" id="scorecard-exposure">--</div><div class="metric-sub">Time in market</div></div>
+                <div class="metric-card"><div class="metric-label">Recovery Factor</div><div class="metric-value" id="scorecard-recovery-factor">--</div><div class="metric-sub">Net profit / max drawdown</div></div>
+              </div>
+
+              <div class="form-grid-2" style="margin-top:16px;">
+                <div class="panel panel-soft" style="padding:16px;">
+                  <div class="mini-title">Pass / Fail Highlights</div>
+                  <div id="scorecard-highlights" class="muted" style="margin-top:10px;">Scorecard checks will appear here.</div>
+                </div>
+                <div class="panel panel-soft" style="padding:16px;">
+                  <div class="mini-title">Weak Metric Warnings</div>
+                  <div id="scorecard-warnings" class="muted" style="margin-top:10px;">Warnings will appear here.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="section-title">
+                <div>
+                  <div class="badge">Summary</div>
+                  <h2 style="margin-top:10px;">Strategy Recommendation</h2>
+                  <p>Analytical summary only. This is not trading advice.</p>
+                </div>
+                <button class="btn-secondary btn-small" type="button" id="refresh-recommendation-btn">Refresh Summary</button>
+              </div>
+
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <div class="metric-label">Recommendation</div>
+                  <div class="metric-value" id="strategy-recommendation-label">--</div>
+                  <div class="metric-sub">Quality label from available evidence</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Score</div>
+                  <div class="metric-value" id="strategy-recommendation-score">--</div>
+                  <div class="metric-sub">Simple 0 to 100 analytical score</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Evidence</div>
+                  <div class="metric-value" id="strategy-recommendation-evidence">--</div>
+                  <div class="metric-sub">Backtest, optimizer, validation, risk checks</div>
+                </div>
+              </div>
+
+              <div class="form-grid-2" style="margin-top:16px;">
+                <div class="panel panel-soft" style="padding:16px;">
+                  <div class="mini-title">Key Reasons</div>
+                  <div id="strategy-recommendation-reasons" class="muted" style="margin-top:10px;">Run a backtest to generate a recommendation summary.</div>
+                </div>
+                <div class="panel panel-soft" style="padding:16px;">
+                  <div class="mini-title">Risk Warnings</div>
+                  <div id="strategy-recommendation-warnings" class="muted" style="margin-top:10px;">Missing validation checks will appear here.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="section-title">
+                <div>
+                  <div class="badge">Regimes</div>
+                  <h2 style="margin-top:10px;">Market Regime Analysis</h2>
+                  <p>Break down latest backtest performance by bull trend, bear trend, and sideways conditions.</p>
+                </div>
+              </div>
+
+              <div class="panel panel-soft" style="padding:16px; margin-bottom:16px;">
+                <div class="form-grid-2">
+                  <div class="field">
+                    <label for="regime-slope-threshold">Slope Threshold %</label>
+                    <input id="regime-slope-threshold" type="number" min="0" step="0.01" value="0.1" />
+                  </div>
+                  <div class="field">
+                    <label>&nbsp;</label>
+                    <button class="btn-primary btn-small" type="button" id="run-regime-analysis-btn">Run Regime Analysis</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="regime-analysis-status" class="footer-note">No regime analysis available yet.</div>
+
+              <div class="metrics-grid" style="margin-top:16px;">
+                <div class="metric-card">
+                  <div class="metric-label">Best Regime</div>
+                  <div class="metric-value" id="regime-best">--</div>
+                  <div class="metric-sub">Highest return bucket</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Worst Regime</div>
+                  <div class="metric-value" id="regime-worst">--</div>
+                  <div class="metric-sub">Lowest return bucket</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Regime Robustness</div>
+                  <div class="metric-value" id="regime-robustness-score">--</div>
+                  <div class="metric-sub" id="regime-robustness-summary">Run analysis to score consistency</div>
+                </div>
+              </div>
+
+              <div class="table-wrap" style="margin-top:16px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Regime</th>
+                      <th>Return</th>
+                      <th>Win Rate</th>
+                      <th>Drawdown</th>
+                      <th>Trades</th>
+                      <th>Net Profit</th>
+                    </tr>
+                  </thead>
+                  <tbody id="regime-breakdown-table-body"></tbody>
+                </table>
+                <div id="regime-breakdown-empty" class="table-empty">Run regime analysis to populate the breakdown.</div>
+              </div>
+              <div id="regime-return-chart" class="chart-empty" style="margin-top:16px; min-height:150px;">Regime return visualization will appear here.</div>
+            </section>
+
+            <section class="panel">
+              <div class="section-title">
+                <div>
+                  <div class="badge">Monte Carlo</div>
+                  <h2 style="margin-top:10px;">Robustness Testing</h2>
+                  <p>Stress test the latest trade results with shuffled trade order and small return perturbations.</p>
+                </div>
+              </div>
+
+              <div class="panel panel-soft" style="padding:16px; margin-bottom:16px;">
+                <div class="form-grid-4">
+                  <div class="field">
+                    <label for="monte-carlo-source">Source</label>
+                    <select id="monte-carlo-source">
+                      <option value="backtest" selected>Latest Backtest</option>
+                      <option value="optimization">Top Optimization Result</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="monte-carlo-simulation-count">Simulations</label>
+                    <select id="monte-carlo-simulation-count">
+                      <option value="100">100</option>
+                      <option value="500" selected>500</option>
+                      <option value="1000">1000</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="monte-carlo-drawdown-threshold">Drawdown Threshold %</label>
+                    <input id="monte-carlo-drawdown-threshold" type="number" min="0" step="0.1" value="20" />
+                  </div>
+                  <div class="field">
+                    <label for="monte-carlo-noise">Noise %</label>
+                    <input id="monte-carlo-noise" type="number" min="0" max="50" step="0.1" value="5" />
+                  </div>
+                </div>
+                <div class="btn-row" style="margin-bottom:0;">
+                  <button class="btn-primary btn-small" type="button" id="run-monte-carlo-btn">Run Monte Carlo</button>
+                </div>
+              </div>
+
+              <div id="monte-carlo-status" class="footer-note">No Monte Carlo results available yet.</div>
+
+              <div class="metrics-grid" style="margin-top:16px;">
+                <div class="metric-card">
+                  <div class="metric-label">Median Return</div>
+                  <div class="metric-value" id="mc-median-return">--</div>
+                  <div class="metric-sub">Middle simulation outcome</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Worst / Best</div>
+                  <div class="metric-value" id="mc-return-range">--</div>
+                  <div class="metric-sub">Return range</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Loss Probability</div>
+                  <div class="metric-value" id="mc-loss-probability">--</div>
+                  <div class="metric-sub">Runs ending below capital</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Robustness</div>
+                  <div class="metric-value" id="mc-robustness-score">--</div>
+                  <div class="metric-sub" id="mc-drawdown-probability">Drawdown risk unavailable</div>
+                </div>
+              </div>
+              <div id="monte-carlo-distribution" class="chart-empty" style="margin-top:16px; min-height:180px;">Run Monte Carlo to view the return distribution.</div>
+            </section>
+
+            <section class="panel">
+              <div class="section-title">
+                <div>
                   <div class="badge">Strategies</div>
                   <h3 class="mini-title" style="margin-top:10px;">Saved Configurations</h3>
                   <div class="muted">Save your current strategy setup and reuse it later.</div>
@@ -1265,6 +1537,17 @@
                     <div class="field">
                       <label for="initial-capital">Initial Capital</label>
                       <input id="initial-capital" type="number" min="1" step="0.01" value="100000" />
+                    </div>
+                  </div>
+
+                  <div class="form-grid-2" style="margin-top:16px;">
+                    <div class="field">
+                      <label for="from-date">From Date</label>
+                      <input id="from-date" type="datetime-local" />
+                    </div>
+                    <div class="field">
+                      <label for="to-date">To Date</label>
+                      <input id="to-date" type="datetime-local" />
                     </div>
                   </div>
                 </div>
@@ -1341,6 +1624,118 @@
               </form>
             </section>
 
+            <section class="panel" id="portfolio-backtest-section">
+              <div class="section-title">
+                <div>
+                  <div class="badge">Portfolio</div>
+                  <h2 style="margin-top:10px;">Portfolio Backtest</h2>
+                  <p>Run the selected strategy across multiple symbols with fixed allocation weights.</p>
+                </div>
+              </div>
+
+              <div class="panel panel-soft" style="padding:16px;">
+                <div class="mini-title">Portfolio Symbols</div>
+                <div class="muted" style="margin-bottom:14px;">Each row uses the current strategy, parameters, execution settings, and timeframe from the backtest form.</div>
+
+                <div class="form-grid-3" style="margin-bottom:16px;">
+                  <div class="field">
+                    <label for="portfolio-rebalancing-mode">Rebalancing Mode</label>
+                    <select id="portfolio-rebalancing-mode">
+                      <option value="none" selected>None</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="quarterly">Quarterly</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div id="portfolio-rows"></div>
+
+                <div class="compare-tools">
+                  <div class="muted" id="portfolio-allocation-summary">Allocation total: 0.00%</div>
+                  <div class="btn-row" style="margin:0;">
+                    <button class="btn-secondary btn-small" type="button" id="add-portfolio-row-btn">Add Symbol</button>
+                    <button class="btn-primary btn-small" type="button" id="run-portfolio-backtest-btn">Run Portfolio Backtest</button>
+                    <button class="btn-ghost btn-small" type="button" id="export-portfolio-result-btn" disabled>Export Portfolio CSV</button>
+                  </div>
+                </div>
+
+                <div id="portfolio-backtest-status"></div>
+              </div>
+
+              <div id="portfolio-result-summary" class="footer-note">Run a portfolio backtest to populate the portfolio summary.</div>
+
+              <div class="portfolio-metrics-grid">
+                <div class="metric-card">
+                  <div class="metric-label">Total Return</div>
+                  <div class="metric-value" id="portfolio-metric-return">--</div>
+                  <div class="metric-sub">Portfolio result</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Net Profit</div>
+                  <div class="metric-value" id="portfolio-metric-profit">--</div>
+                  <div class="metric-sub">Combined PnL</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Max Drawdown</div>
+                  <div class="metric-value" id="portfolio-metric-drawdown">--</div>
+                  <div class="metric-sub">Portfolio curve</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Trades</div>
+                  <div class="metric-value" id="portfolio-metric-trades">--</div>
+                  <div class="metric-sub">All symbols</div>
+                </div>
+              </div>
+
+              <div class="portfolio-analytics-grid">
+                <div class="chart-card">
+                  <div class="chart-head">
+                    <h4>Portfolio Equity Curve</h4>
+                  </div>
+                  <div id="portfolio-equity-chart" class="portfolio-viz">
+                    <div class="empty-state">Portfolio equity curve will appear after a portfolio backtest run.</div>
+                  </div>
+                </div>
+                <div class="chart-card">
+                  <div class="chart-head">
+                    <h4>Allocation</h4>
+                  </div>
+                  <div id="portfolio-allocation-chart" class="portfolio-viz">
+                    <div class="empty-state">Current allocation weights will appear here.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="chart-card" style="margin-top:16px;">
+                <div class="chart-head">
+                  <h4>Per-Symbol PnL Contribution</h4>
+                </div>
+                <div id="portfolio-contribution-chart" class="portfolio-viz">
+                  <div class="empty-state">Contribution breakdown will appear after a portfolio backtest run.</div>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table id="portfolio-breakdown-table">
+                  <thead>
+                    <tr>
+                      <th>Symbol</th>
+                      <th>Dataset</th>
+                      <th>Allocation</th>
+                      <th>Allocated Capital</th>
+                      <th>Total Return</th>
+                      <th>Net Profit</th>
+                      <th>PnL Contribution</th>
+                      <th>Max Drawdown</th>
+                      <th>Trades</th>
+                    </tr>
+                  </thead>
+                  <tbody id="portfolio-breakdown-table-body"></tbody>
+                </table>
+                <div id="portfolio-breakdown-empty" class="table-empty">No portfolio backtest results yet.</div>
+              </div>
+            </section>
+
             <section class="panel">
               <div class="section-title">
                 <div>
@@ -1353,6 +1748,54 @@
               <div class="panel panel-soft" style="padding:16px; margin-bottom:16px;">
                 <div class="mini-title">Optimization Parameter Ranges</div>
                 <div class="muted" style="margin-bottom:10px;">Enter comma-separated values for each optimizer field. These values are used only for optimization.</div>
+                <div class="form-grid-2" style="margin-bottom:16px;">
+                  <div class="field">
+                    <label for="optimizer-strategy-name">Strategy</label>
+                    <select id="optimizer-strategy-name"></select>
+                  </div>
+                  <div class="field">
+                    <label for="optimizer-ranking-metric">Ranking Metric</label>
+                    <select id="optimizer-ranking-metric">
+                      <option value="net_profit" selected>Highest Net Profit</option>
+                      <option value="total_return_pct">Highest Total Return</option>
+                      <option value="win_rate_pct">Highest Win Rate</option>
+                      <option value="max_drawdown_pct">Lowest Max Drawdown</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-grid-2" style="margin-bottom:16px;">
+                  <div class="field">
+                    <label for="optimizer-mode">Optimization Mode</label>
+                    <select id="optimizer-mode">
+                      <option value="standard" selected>Standard Optimization</option>
+                      <option value="walk_forward">Walk-Forward Optimization</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="optimizer-walk-forward-split">Walk-Forward Split</label>
+                    <select id="optimizer-walk-forward-split">
+                      <option value="70_30" selected>70% / 30%</option>
+                      <option value="60_40">60% / 40%</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-grid-3" style="margin-bottom:16px;">
+                  <div class="field">
+                    <label for="optimizer-max-results">Show Results</label>
+                    <select id="optimizer-max-results">
+                      <option value="10">Top 10</option>
+                      <option value="20" selected>Top 20</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="optimizer-from-date">From Date</label>
+                    <input id="optimizer-from-date" type="datetime-local" />
+                  </div>
+                  <div class="field">
+                    <label for="optimizer-to-date">To Date</label>
+                    <input id="optimizer-to-date" type="datetime-local" />
+                  </div>
+                </div>
                 <div id="optimizer-range-hint" class="inline-note" style="margin-top:0; margin-bottom:14px;">Enter comma-separated values like 5,10,15.</div>
                 <div class="form-grid-3" id="optimizer-parameters-grid"></div>
                 <div id="optimizer-range-status"></div>
@@ -1372,13 +1815,15 @@
               <div class="table-wrap">
                 <table id="optimizer-results-table">
                   <thead>
-                    <tr>
+                    <tr id="optimizer-results-header-row">
                       <th>Rank</th>
                       <th>Strategy</th>
-                      <th>Score</th>
+                      <th>Net Profit</th>
                       <th>Total Return</th>
                       <th>Win Rate</th>
                       <th>Max Drawdown</th>
+                      <th>Trades</th>
+                      <th>Ending Equity</th>
                       <th>Parameters</th>
                       <th>Action</th>
                     </tr>
@@ -1557,6 +2002,14 @@
       optimizationResults: [],
       optimizationLoading: false,
       optimizationEmptyMessage: "No optimization results yet.",
+      monteCarloLoading: false,
+      latestMonteCarloResult: null,
+      regimeAnalysisLoading: false,
+      latestRegimeAnalysisResult: null,
+      scorecardLoading: false,
+      latestScorecardResult: null,
+      portfolioRowCount: 0,
+      latestPortfolioResult: null,
       datasets: [],
       selectedComparisonIds: new Set(),
       selectedDataset: null,
@@ -1603,13 +2056,24 @@
     });
 
     const OPTIMIZER_PARAMETER_EXAMPLES = Object.freeze({
-      fast_period: "5,10,15",
-      slow_period: "20,30,50",
+      fast_period: "5,10,15,20",
+      slow_period: "30,50,100,150,200",
       rsi_period: "7,14,21",
-      oversold: "20,30,40",
-      overbought: "60,70,80",
+      oversold: "20,25,30,35",
+      overbought: "60,65,70,75,80",
       lookback: "10,20,30",
     });
+
+    const PORTFOLIO_COLORS = Object.freeze([
+      "#2563eb",
+      "#16a34a",
+      "#f59e0b",
+      "#dc2626",
+      "#7c3aed",
+      "#0891b2",
+      "#db2777",
+      "#4f46e5",
+    ]);
 
     function byId(id) {
       return document.getElementById(id);
@@ -1639,6 +2103,15 @@
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) return String(value);
       return d.toLocaleString();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     }
 
     function setNotice(targetId, message, type = "success") {
@@ -1767,8 +2240,13 @@
       return "Enter comma-separated values like 5,10,15.";
     }
 
+    function getOptimizerStrategySlug() {
+      const optimizerSelect = byId("optimizer-strategy-name");
+      return optimizerSelect?.value || byId("strategy-name").value;
+    }
+
     function renderOptimizerParameterRanges(preloaded = null) {
-      const slug = byId("strategy-name").value;
+      const slug = getOptimizerStrategySlug();
       const strategy = state.strategyMap.get(slug);
       const grid = byId("optimizer-parameters-grid");
       const hint = byId("optimizer-range-hint");
@@ -1803,7 +2281,7 @@
         input.dataset.optimizerParamKey = key;
         input.autocomplete = "off";
         input.placeholder = OPTIMIZER_PARAMETER_EXAMPLES[key] || "e.g. 5,10,15";
-        input.value = formatOptimizerRangeInputValue(params[key] ?? schema.default ?? "");
+        input.value = formatOptimizerRangeInputValue(OPTIMIZER_PARAMETER_EXAMPLES[key] ?? params[key] ?? schema.default ?? "");
         input.addEventListener("input", () => {
           input.classList.remove("input-invalid");
           input.removeAttribute("aria-invalid");
@@ -1847,6 +2325,10 @@
         runButton.disabled = state.optimizationLoading;
         runButton.textContent = state.optimizationLoading ? "Running..." : "Run Optimization";
       }
+      ["optimizer-mode", "optimizer-walk-forward-split"].forEach((id) => {
+        const control = byId(id);
+        if (control) control.disabled = state.optimizationLoading;
+      });
 
       document.querySelectorAll("[data-optimizer-param-key]").forEach((input) => {
         input.disabled = state.optimizationLoading;
@@ -1893,6 +2375,48 @@
 
     function getSortedOptimizationResults() {
       return [...state.optimizationResults].sort(compareOptimizationResults);
+    }
+
+    function isWalkForwardOptimizationResult(result) {
+      return pickFirstDefined(result, ["optimization_mode"]) === "walk_forward" ||
+        pickFirstDefined(result, ["out_sample_net_profit"]) !== null;
+    }
+
+    function usesWalkForwardResults(results = state.optimizationResults) {
+      return Array.isArray(results) && results.some(isWalkForwardOptimizationResult);
+    }
+
+    function renderOptimizationTableHeader(isWalkForward = false) {
+      const header = byId("optimizer-results-header-row");
+      if (!header) return;
+
+      const labels = isWalkForward
+        ? [
+            "Rank",
+            "Strategy",
+            "In Profit",
+            "Out Profit",
+            "In Return",
+            "Out Return",
+            "Out Drawdown",
+            "Robustness",
+            "Degradation",
+            "In-Sample Params",
+            "Action",
+          ]
+        : [
+            "Rank",
+            "Strategy",
+            "Net Profit",
+            "Total Return",
+            "Win Rate",
+            "Max Drawdown",
+            "Trades",
+            "Ending Equity",
+            "Parameters",
+            "Action",
+          ];
+      header.innerHTML = labels.map((label) => `<th>${label}</th>`).join("");
     }
 
     function formatOptimizationScore(value) {
@@ -1943,6 +2467,18 @@
         "max_drawdown_pct",
         "total_trades",
         "net_profit",
+        "ending_equity",
+        "ranking_metric",
+        "optimization_mode",
+        "walk_forward_split",
+        "in_sample_net_profit",
+        "out_sample_net_profit",
+        "in_sample_return",
+        "out_sample_return",
+        "out_sample_drawdown",
+        "robustness_score",
+        "degradation_pct",
+        "performance_degraded",
       ];
 
       const rows = orderedResults.map((result, index) => [
@@ -1954,6 +2490,18 @@
         pickFirstDefined(result, ["max_drawdown_pct", "metrics.max_drawdown_pct"]) ?? "",
         pickFirstDefined(result, ["total_trades", "metrics.total_trades"]) ?? "",
         pickFirstDefined(result, ["net_profit", "metrics.net_profit"]) ?? "",
+        pickFirstDefined(result, ["ending_equity", "metrics.ending_equity"]) ?? "",
+        pickFirstDefined(result, ["ranking_metric"]) ?? "",
+        pickFirstDefined(result, ["optimization_mode"]) ?? "",
+        pickFirstDefined(result, ["walk_forward_split"]) ?? "",
+        pickFirstDefined(result, ["in_sample_net_profit"]) ?? "",
+        pickFirstDefined(result, ["out_sample_net_profit"]) ?? "",
+        pickFirstDefined(result, ["in_sample_return"]) ?? "",
+        pickFirstDefined(result, ["out_sample_return"]) ?? "",
+        pickFirstDefined(result, ["out_sample_drawdown"]) ?? "",
+        pickFirstDefined(result, ["robustness_score"]) ?? "",
+        pickFirstDefined(result, ["degradation_pct"]) ?? "",
+        pickFirstDefined(result, ["performance_degraded"]) ?? "",
       ]);
 
       return [
@@ -2032,7 +2580,7 @@
     }
 
     function getOptimizationParameterRanges() {
-      const strategy = state.strategyMap.get(byId("strategy-name").value);
+      const strategy = state.strategyMap.get(getOptimizerStrategySlug());
       const properties = strategy?.parameter_schema?.properties || {};
       const parameters = {};
       const errors = [];
@@ -2090,12 +2638,15 @@
       const exportButton = byId("export-optimization-results-btn");
 
       if (!tbody || !empty || !topActionButton || !exportButton) {
+        refreshStrategyRecommendation();
         return;
       }
 
       tbody.innerHTML = "";
       const orderedResults = getSortedOptimizationResults();
       const hasResults = orderedResults.length > 0;
+      const isWalkForward = usesWalkForwardResults(orderedResults);
+      renderOptimizationTableHeader(isWalkForward);
 
       empty.textContent = state.optimizationEmptyMessage || "No optimization results yet.";
       empty.style.display = hasResults ? "none" : "block";
@@ -2103,6 +2654,7 @@
       exportButton.disabled = state.optimizationLoading || !hasResults;
 
       if (!hasResults) {
+        refreshStrategyRecommendation();
         return;
       }
 
@@ -2114,11 +2666,63 @@
 
         const strategyCell = document.createElement("td");
         strategyCell.textContent = getStrategyDisplayName(getOptimizationStrategyIdentifier(result));
+        tr.appendChild(rankCell);
+        tr.appendChild(strategyCell);
 
-        const scoreCell = document.createElement("td");
-        scoreCell.textContent = formatOptimizationScore(
-          pickFirstDefined(result, ["score", "objective_score", "fitness", "total_return_pct", "metrics.total_return_pct"])
-        );
+        if (isWalkForwardOptimizationResult(result)) {
+          const inProfit = pickFirstDefined(result, ["in_sample_net_profit"]);
+          const outProfit = pickFirstDefined(result, ["out_sample_net_profit"]);
+          const inReturn = pickFirstDefined(result, ["in_sample_return"]);
+          const outReturn = pickFirstDefined(result, ["out_sample_return"]);
+          const outDrawdown = pickFirstDefined(result, ["out_sample_drawdown"]);
+          const robustness = pickFirstDefined(result, ["robustness_score"]);
+          const degraded = Boolean(pickFirstDefined(result, ["performance_degraded"]));
+          const degradationPct = pickFirstDefined(result, ["degradation_pct"]);
+
+          [
+            { value: formatCurrency(inProfit), number: Number(inProfit) },
+            { value: formatCurrency(outProfit), number: Number(outProfit) },
+            { value: formatPercent(inReturn), number: Number(inReturn) },
+            { value: formatPercent(outReturn), number: Number(outReturn) },
+            { value: formatPercent(outDrawdown) },
+            { value: formatOptimizationScore(robustness) },
+            { value: `${degraded ? "Significant" : "Contained"} (${formatPercent(degradationPct)})`, number: degraded ? -1 : 1 },
+          ].forEach((item, itemIndex) => {
+            const cell = document.createElement("td");
+            cell.textContent = item.value;
+            if (Number.isFinite(item.number)) {
+              cell.className = item.number >= 0 ? "positive" : "negative";
+            }
+            if (itemIndex === 6) {
+              cell.className = degraded ? "negative" : "positive";
+            }
+            tr.appendChild(cell);
+          });
+
+          const parametersCell = document.createElement("td");
+          parametersCell.style.whiteSpace = "normal";
+          parametersCell.textContent = formatOptimizationParameters(getOptimizationParameters(result));
+          tr.appendChild(parametersCell);
+
+          const actionCell = document.createElement("td");
+          const applyButton = document.createElement("button");
+          applyButton.className = "btn-secondary btn-small";
+          applyButton.type = "button";
+          applyButton.textContent = "Apply Params";
+          applyButton.addEventListener("click", () => applyOptimizationResult(result));
+          actionCell.appendChild(applyButton);
+          tr.appendChild(actionCell);
+          tbody.appendChild(tr);
+          return;
+        }
+
+        const profitCell = document.createElement("td");
+        const netProfit = pickFirstDefined(result, ["net_profit", "metrics.net_profit"]);
+        profitCell.textContent = formatCurrency(netProfit);
+        const profitNumber = Number(netProfit);
+        if (!Number.isNaN(profitNumber)) {
+          profitCell.className = profitNumber >= 0 ? "positive" : "negative";
+        }
 
         const returnCell = document.createElement("td");
         const totalReturn = pickFirstDefined(result, ["total_return_pct", "return_pct", "metrics.total_return_pct"]);
@@ -2134,6 +2738,12 @@
         const drawdownCell = document.createElement("td");
         drawdownCell.textContent = formatPercent(pickFirstDefined(result, ["max_drawdown_pct", "metrics.max_drawdown_pct"]));
 
+        const tradesCell = document.createElement("td");
+        tradesCell.textContent = String(pickFirstDefined(result, ["total_trades", "metrics.total_trades"]) ?? "--");
+
+        const endingEquityCell = document.createElement("td");
+        endingEquityCell.textContent = formatCurrency(pickFirstDefined(result, ["ending_equity", "metrics.ending_equity"]));
+
         const parametersCell = document.createElement("td");
         parametersCell.style.whiteSpace = "normal";
         parametersCell.textContent = formatOptimizationParameters(getOptimizationParameters(result));
@@ -2146,20 +2756,647 @@
         applyButton.addEventListener("click", () => applyOptimizationResult(result));
         actionCell.appendChild(applyButton);
 
-        tr.appendChild(rankCell);
-        tr.appendChild(strategyCell);
-        tr.appendChild(scoreCell);
+        tr.appendChild(profitCell);
         tr.appendChild(returnCell);
         tr.appendChild(winRateCell);
         tr.appendChild(drawdownCell);
+        tr.appendChild(tradesCell);
+        tr.appendChild(endingEquityCell);
         tr.appendChild(parametersCell);
         tr.appendChild(actionCell);
         tbody.appendChild(tr);
       });
+      refreshStrategyRecommendation();
     }
 
     function setOptimizationResults(results) {
       renderOptimizationResults(results);
+    }
+
+    function getMonteCarloSourceResult() {
+      const source = byId("monte-carlo-source")?.value || "backtest";
+      if (source === "optimization") {
+        const [topResult] = getSortedOptimizationResults();
+        return {
+          source,
+          label: "top optimization result",
+          trades: topResult?.trades || topResult?.out_sample_trades || [],
+        };
+      }
+
+      return {
+        source,
+        label: "latest backtest",
+        trades: state.latestTrades || [],
+      };
+    }
+
+    function getMonteCarloPayload() {
+      const sourceResult = getMonteCarloSourceResult();
+      if (!sourceResult.trades.length) {
+        throw new Error(`No completed trades found for the ${sourceResult.label}.`);
+      }
+
+      const drawdownThreshold = Number(byId("monte-carlo-drawdown-threshold")?.value || 20);
+      const noisePct = Number(byId("monte-carlo-noise")?.value || 5);
+      if (!Number.isFinite(drawdownThreshold) || drawdownThreshold < 0) {
+        throw new Error("Drawdown threshold must be zero or greater.");
+      }
+      if (!Number.isFinite(noisePct) || noisePct < 0 || noisePct > 50) {
+        throw new Error("Noise must be between 0 and 50 percent.");
+      }
+
+      return {
+        source: sourceResult.source,
+        initial_capital: Number(byId("initial-capital")?.value || 100000),
+        simulation_count: Number(byId("monte-carlo-simulation-count")?.value || 500),
+        drawdown_threshold_pct: drawdownThreshold,
+        noise_pct: noisePct,
+        trades: sourceResult.trades,
+      };
+    }
+
+    function setMonteCarloLoading(isLoading) {
+      state.monteCarloLoading = Boolean(isLoading);
+      const button = byId("run-monte-carlo-btn");
+      if (button) {
+        button.disabled = state.monteCarloLoading;
+        button.textContent = state.monteCarloLoading ? "Running..." : "Run Monte Carlo";
+      }
+      ["monte-carlo-source", "monte-carlo-simulation-count", "monte-carlo-drawdown-threshold", "monte-carlo-noise"].forEach((id) => {
+        const control = byId(id);
+        if (control) control.disabled = state.monteCarloLoading;
+      });
+    }
+
+    function renderMonteCarloDistribution(distribution = []) {
+      const container = byId("monte-carlo-distribution");
+      if (!container) return;
+
+      if (!distribution.length) {
+        container.className = "chart-empty";
+        container.textContent = "Run Monte Carlo to view the return distribution.";
+        return;
+      }
+
+      const maxCount = Math.max(...distribution.map((bucket) => Number(bucket.count) || 0), 1);
+      container.className = "";
+      container.style.display = "grid";
+      container.style.gap = "8px";
+      container.style.minHeight = "180px";
+      container.innerHTML = "";
+
+      distribution.forEach((bucket) => {
+        const row = document.createElement("div");
+        row.style.display = "grid";
+        row.style.gridTemplateColumns = "minmax(90px, 140px) 1fr minmax(36px, auto)";
+        row.style.gap = "10px";
+        row.style.alignItems = "center";
+
+        const label = document.createElement("div");
+        label.className = "muted";
+        label.style.fontSize = "12px";
+        label.textContent = bucket.label || "--";
+
+        const track = document.createElement("div");
+        track.style.height = "12px";
+        track.style.background = "#e5e7eb";
+        track.style.borderRadius = "999px";
+        track.style.overflow = "hidden";
+
+        const bar = document.createElement("div");
+        bar.style.height = "100%";
+        bar.style.width = `${((Number(bucket.count) || 0) / maxCount) * 100}%`;
+        bar.style.background = "#2563eb";
+        track.appendChild(bar);
+
+        const count = document.createElement("div");
+        count.className = "muted";
+        count.style.fontSize = "12px";
+        count.textContent = String(bucket.count ?? 0);
+
+        row.appendChild(label);
+        row.appendChild(track);
+        row.appendChild(count);
+        container.appendChild(row);
+      });
+    }
+
+    function renderMonteCarloResult(result) {
+      state.latestMonteCarloResult = result;
+      const medianReturn = Number(result?.median_return);
+      byId("mc-median-return").textContent = formatPercent(result?.median_return);
+      byId("mc-median-return").className = `metric-value ${medianReturn >= 0 ? "positive" : "negative"}`;
+      byId("mc-return-range").textContent = `${formatPercent(result?.worst_case_return)} / ${formatPercent(result?.best_case_return)}`;
+      byId("mc-loss-probability").textContent = formatPercent(result?.probability_of_loss);
+      byId("mc-robustness-score").textContent = formatOptimizationScore(result?.robustness_score);
+      byId("mc-drawdown-probability").textContent =
+        `Drawdown > ${formatPercent(result?.drawdown_threshold_pct)} in ${formatPercent(result?.probability_of_drawdown_beyond_threshold)} of runs`;
+      renderMonteCarloDistribution(result?.distribution || []);
+      refreshStrategyRecommendation();
+    }
+
+    async function runMonteCarlo() {
+      let payload;
+      try {
+        payload = getMonteCarloPayload();
+      } catch (error) {
+        setNotice("monte-carlo-status", error.message || "Invalid Monte Carlo setup.", "danger");
+        return;
+      }
+
+      setMonteCarloLoading(true);
+      setNotice("monte-carlo-status", "Running Monte Carlo simulations...", "warning");
+
+      try {
+        const res = await fetch("/api/v1/monte-carlo/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Monte Carlo analysis failed");
+
+        renderMonteCarloResult(data);
+        setNotice(
+          "monte-carlo-status",
+          `Monte Carlo complete: ${data.simulation_count} simulations across ${data.trade_count} trades.`,
+          "success"
+        );
+      } catch (error) {
+        setNotice("monte-carlo-status", error.message || "Monte Carlo analysis failed", "danger");
+      } finally {
+        setMonteCarloLoading(false);
+      }
+    }
+
+    function getRegimeAnalysisPayload() {
+      if (!state.latestResult) {
+        throw new Error("Run a backtest before market regime analysis.");
+      }
+      if (!state.latestResult.market_data?.length) {
+        throw new Error("Latest backtest does not include market data for regime classification.");
+      }
+
+      const slopeThreshold = Number(byId("regime-slope-threshold")?.value || 0.1);
+      if (!Number.isFinite(slopeThreshold) || slopeThreshold < 0) {
+        throw new Error("Slope threshold must be zero or greater.");
+      }
+
+      return {
+        initial_capital: Number(byId("initial-capital")?.value || 100000),
+        slope_threshold_pct: slopeThreshold,
+        market_data: state.latestResult.market_data || [],
+        trades: state.latestTrades || [],
+      };
+    }
+
+    function setRegimeAnalysisLoading(isLoading) {
+      state.regimeAnalysisLoading = Boolean(isLoading);
+      const button = byId("run-regime-analysis-btn");
+      if (button) {
+        button.disabled = state.regimeAnalysisLoading;
+        button.textContent = state.regimeAnalysisLoading ? "Running..." : "Run Regime Analysis";
+      }
+      const threshold = byId("regime-slope-threshold");
+      if (threshold) threshold.disabled = state.regimeAnalysisLoading;
+    }
+
+    function renderRegimeReturnChart(breakdown = []) {
+      const container = byId("regime-return-chart");
+      if (!container) return;
+      if (!breakdown.length) {
+        container.className = "chart-empty";
+        container.textContent = "Regime return visualization will appear here.";
+        return;
+      }
+
+      const maxAbsReturn = Math.max(...breakdown.map((item) => Math.abs(Number(item.return_pct) || 0)), 1);
+      container.className = "";
+      container.style.display = "grid";
+      container.style.gap = "10px";
+      container.style.minHeight = "150px";
+      container.innerHTML = "";
+
+      breakdown.forEach((item) => {
+        const value = Number(item.return_pct) || 0;
+        const row = document.createElement("div");
+        row.style.display = "grid";
+        row.style.gridTemplateColumns = "minmax(90px, 140px) 1fr minmax(54px, auto)";
+        row.style.gap = "10px";
+        row.style.alignItems = "center";
+
+        const label = document.createElement("div");
+        label.className = "muted";
+        label.style.fontSize = "12px";
+        label.textContent = item.regime || "--";
+
+        const track = document.createElement("div");
+        track.style.height = "14px";
+        track.style.background = "#e5e7eb";
+        track.style.borderRadius = "999px";
+        track.style.overflow = "hidden";
+
+        const bar = document.createElement("div");
+        bar.style.height = "100%";
+        bar.style.width = `${(Math.abs(value) / maxAbsReturn) * 100}%`;
+        bar.style.background = value >= 0 ? "#16a34a" : "#dc2626";
+        track.appendChild(bar);
+
+        const amount = document.createElement("div");
+        amount.className = value >= 0 ? "positive" : "negative";
+        amount.textContent = formatPercent(value);
+
+        row.appendChild(label);
+        row.appendChild(track);
+        row.appendChild(amount);
+        container.appendChild(row);
+      });
+    }
+
+    function renderRegimeAnalysisResult(result) {
+      state.latestRegimeAnalysisResult = result;
+      byId("regime-best").textContent = result?.best_regime || "--";
+      byId("regime-worst").textContent = result?.worst_regime || "--";
+      byId("regime-robustness-score").textContent = formatOptimizationScore(result?.robustness_summary?.robustness_score);
+      byId("regime-robustness-summary").textContent = result?.robustness_summary?.summary || "Run analysis to score consistency";
+
+      const tbody = byId("regime-breakdown-table-body");
+      const empty = byId("regime-breakdown-empty");
+      tbody.innerHTML = "";
+      const breakdown = result?.breakdown || [];
+
+      if (!breakdown.length) {
+        empty.style.display = "block";
+        renderRegimeReturnChart([]);
+        return;
+      }
+
+      empty.style.display = "none";
+      breakdown.forEach((item) => {
+        const row = document.createElement("tr");
+        const returnValue = Number(item.return_pct);
+        const cells = [
+          item.regime || "--",
+          formatPercent(item.return_pct),
+          formatPercent(item.win_rate_pct),
+          formatPercent(item.drawdown_pct),
+          item.trades_count ?? 0,
+          formatCurrency(item.net_profit),
+        ];
+
+        cells.forEach((value, index) => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          if (index === 1 && Number.isFinite(returnValue)) {
+            cell.className = returnValue >= 0 ? "positive" : "negative";
+          }
+          row.appendChild(cell);
+        });
+        tbody.appendChild(row);
+      });
+      renderRegimeReturnChart(breakdown);
+      refreshStrategyRecommendation();
+    }
+
+    async function runRegimeAnalysis() {
+      let payload;
+      try {
+        payload = getRegimeAnalysisPayload();
+      } catch (error) {
+        setNotice("regime-analysis-status", error.message || "Invalid regime analysis setup.", "danger");
+        return;
+      }
+
+      setRegimeAnalysisLoading(true);
+      setNotice("regime-analysis-status", "Running market regime analysis...", "warning");
+
+      try {
+        const res = await fetch("/api/v1/market-regime/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Market regime analysis failed");
+
+        renderRegimeAnalysisResult(data);
+        setNotice("regime-analysis-status", `${data.method} Best: ${data.best_regime}. Worst: ${data.worst_regime}.`, "success");
+      } catch (error) {
+        setNotice("regime-analysis-status", error.message || "Market regime analysis failed", "danger");
+      } finally {
+        setRegimeAnalysisLoading(false);
+      }
+    }
+
+    function recommendationNumber(value, fallback = 0) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : fallback;
+    }
+
+    function addRecommendationReason(list, message) {
+      if (message) list.push(message);
+    }
+
+    function getLatestWalkForwardResult() {
+      return getSortedOptimizationResults().find(isWalkForwardOptimizationResult) || null;
+    }
+
+    function buildStrategyRecommendation() {
+      const reasons = [];
+      const warnings = [];
+      const evidence = [];
+      let score = 50;
+
+      if (!state.latestResult?.metrics) {
+        return {
+          score: 0,
+          label: "Needs More Testing",
+          evidence,
+          reasons: ["Run a backtest to create the baseline strategy summary."],
+          warnings: ["No latest backtest is available yet."],
+        };
+      }
+
+      const metrics = state.latestResult.metrics;
+      const netProfit = recommendationNumber(metrics.net_profit);
+      const totalReturn = recommendationNumber(metrics.total_return_pct);
+      const maxDrawdown = recommendationNumber(metrics.max_drawdown_pct);
+      const tradesCount = recommendationNumber(metrics.total_trades, state.latestTrades.length);
+      evidence.push("Backtest");
+
+      if (netProfit > 0) {
+        score += 15;
+        addRecommendationReason(reasons, `Backtest net profit is positive at ${formatCurrency(netProfit)}.`);
+      } else {
+        score -= 20;
+        addRecommendationReason(reasons, `Backtest net profit is not positive at ${formatCurrency(netProfit)}.`);
+      }
+
+      if (totalReturn > 0) {
+        score += 5;
+        addRecommendationReason(reasons, `Backtest return is ${formatPercent(totalReturn)}.`);
+      } else {
+        score -= 5;
+      }
+
+      if (maxDrawdown <= 10) {
+        score += 10;
+        addRecommendationReason(reasons, `Max drawdown is contained at ${formatPercent(maxDrawdown)}.`);
+      } else if (maxDrawdown <= 25) {
+        addRecommendationReason(warnings, `Max drawdown is moderate at ${formatPercent(maxDrawdown)}.`);
+      } else {
+        score -= 20;
+        addRecommendationReason(warnings, `Max drawdown is high at ${formatPercent(maxDrawdown)}.`);
+      }
+
+      if (tradesCount < 5) {
+        score -= 10;
+        addRecommendationReason(warnings, `Only ${tradesCount} completed trade${tradesCount === 1 ? "" : "s"} are available.`);
+      }
+
+      const [topOptimizationResult] = getSortedOptimizationResults();
+      if (topOptimizationResult) {
+        evidence.push("Optimizer");
+        const optimizerProfit = recommendationNumber(pickFirstDefined(topOptimizationResult, ["net_profit", "metrics.net_profit"]));
+        if (optimizerProfit > 0) {
+          score += 5;
+          addRecommendationReason(reasons, `Top optimizer result is profitable at ${formatCurrency(optimizerProfit)}.`);
+        } else {
+          score -= 5;
+          addRecommendationReason(warnings, `Top optimizer result is not profitable at ${formatCurrency(optimizerProfit)}.`);
+        }
+      }
+
+      const walkForwardResult = getLatestWalkForwardResult();
+      if (walkForwardResult) {
+        evidence.push("Walk-forward");
+        const outProfit = recommendationNumber(walkForwardResult.out_sample_net_profit);
+        const outReturn = recommendationNumber(walkForwardResult.out_sample_return);
+        if (outProfit > 0) {
+          score += 15;
+          addRecommendationReason(reasons, `Walk-forward out-of-sample profit is positive at ${formatCurrency(outProfit)}.`);
+        } else {
+          score -= 20;
+          addRecommendationReason(warnings, `Walk-forward out-of-sample profit is negative at ${formatCurrency(outProfit)}.`);
+        }
+        if (walkForwardResult.performance_degraded) {
+          score -= 15;
+          addRecommendationReason(warnings, `Walk-forward performance degraded significantly; out-of-sample return is ${formatPercent(outReturn)}.`);
+        } else {
+          score += 5;
+          addRecommendationReason(reasons, "Walk-forward degradation is contained.");
+        }
+      } else {
+        addRecommendationReason(warnings, "Walk-forward validation is not available yet.");
+      }
+
+      if (state.latestMonteCarloResult) {
+        evidence.push("Monte Carlo");
+        const lossProbability = recommendationNumber(state.latestMonteCarloResult.probability_of_loss);
+        const monteCarloScore = recommendationNumber(state.latestMonteCarloResult.robustness_score);
+        score += (monteCarloScore - 50) * 0.2;
+
+        if (lossProbability <= 20) {
+          score += 15;
+          addRecommendationReason(reasons, `Monte Carlo probability of loss is low at ${formatPercent(lossProbability)}.`);
+        } else if (lossProbability <= 40) {
+          score += 5;
+          addRecommendationReason(warnings, `Monte Carlo probability of loss is moderate at ${formatPercent(lossProbability)}.`);
+        } else {
+          score -= 20;
+          addRecommendationReason(warnings, `Monte Carlo probability of loss is high at ${formatPercent(lossProbability)}.`);
+        }
+      } else {
+        addRecommendationReason(warnings, "Monte Carlo robustness testing is not available yet.");
+      }
+
+      if (state.latestRegimeAnalysisResult) {
+        evidence.push("Regime analysis");
+        const regimeSummary = state.latestRegimeAnalysisResult.robustness_summary || {};
+        const regimeScore = recommendationNumber(regimeSummary.robustness_score);
+        const activeRegimes = recommendationNumber(regimeSummary.active_regimes);
+        const profitableRegimes = recommendationNumber(regimeSummary.profitable_regimes);
+
+        if (regimeScore >= 70) {
+          score += 10;
+          addRecommendationReason(reasons, `Regime consistency is strong with score ${formatOptimizationScore(regimeScore)}.`);
+        } else if (regimeScore >= 40) {
+          addRecommendationReason(warnings, `Regime consistency is mixed with score ${formatOptimizationScore(regimeScore)}.`);
+        } else {
+          score -= 10;
+          addRecommendationReason(warnings, `Regime consistency is weak with score ${formatOptimizationScore(regimeScore)}.`);
+        }
+
+        if (activeRegimes > 0 && profitableRegimes < activeRegimes) {
+          addRecommendationReason(warnings, `Strategy is profitable in ${profitableRegimes} of ${activeRegimes} active regimes.`);
+        }
+      } else {
+        addRecommendationReason(warnings, "Market regime analysis is not available yet.");
+      }
+
+      const missingValidationCount = ["Walk-forward", "Monte Carlo", "Regime analysis"].filter((item) => !evidence.includes(item)).length;
+      if (missingValidationCount >= 2) {
+        score -= 5;
+      }
+
+      const boundedScore = Math.round(Math.max(0, Math.min(100, score)));
+      let label = "Avoid";
+      if (boundedScore >= 80) label = "Strong";
+      else if (boundedScore >= 60) label = "Moderate";
+      else if (boundedScore >= 40) label = "Weak";
+
+      if ((missingValidationCount >= 2 || tradesCount < 5) && boundedScore >= 35) {
+        label = "Needs More Testing";
+      }
+
+      return {
+        score: boundedScore,
+        label,
+        evidence,
+        reasons: reasons.length ? reasons : ["Available evidence is inconclusive."],
+        warnings: warnings.length ? warnings : ["No major risk warnings from available checks."],
+      };
+    }
+
+    function renderTextList(targetId, items) {
+      const target = byId(targetId);
+      if (!target) return;
+      target.innerHTML = "";
+      const list = document.createElement("ul");
+      list.style.margin = "0";
+      list.style.paddingLeft = "18px";
+      (items || []).forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        list.appendChild(li);
+      });
+      target.appendChild(list);
+    }
+
+    function refreshStrategyRecommendation() {
+      const recommendation = buildStrategyRecommendation();
+      const labelEl = byId("strategy-recommendation-label");
+      const scoreEl = byId("strategy-recommendation-score");
+      const evidenceEl = byId("strategy-recommendation-evidence");
+      if (!labelEl || !scoreEl || !evidenceEl) return;
+
+      labelEl.textContent = recommendation.label;
+      labelEl.className = `metric-value ${
+        recommendation.label === "Strong" || recommendation.label === "Moderate"
+          ? "positive"
+          : recommendation.label === "Avoid"
+            ? "negative"
+            : ""
+      }`;
+      scoreEl.textContent = String(recommendation.score);
+      scoreEl.className = `metric-value ${recommendation.score >= 60 ? "positive" : recommendation.score < 40 ? "negative" : ""}`;
+      evidenceEl.textContent = recommendation.evidence.length ? recommendation.evidence.join(", ") : "None";
+      renderTextList("strategy-recommendation-reasons", recommendation.reasons);
+      renderTextList("strategy-recommendation-warnings", recommendation.warnings);
+    }
+
+    function getScorecardPayload() {
+      if (!state.latestResult?.equity_curve?.length) {
+        throw new Error("Run a backtest before generating the scorecard.");
+      }
+      return {
+        initial_capital: Number(byId("initial-capital")?.value || 100000),
+        equity_curve: state.latestResult.equity_curve || [],
+        trades: state.latestTrades || [],
+      };
+    }
+
+    function setScorecardLoading(isLoading) {
+      state.scorecardLoading = Boolean(isLoading);
+      const button = byId("run-scorecard-btn");
+      if (button) {
+        button.disabled = state.scorecardLoading;
+        button.textContent = state.scorecardLoading ? "Running..." : "Run Scorecard";
+      }
+    }
+
+    function scorecardClass(value, goodThreshold = 0, warnThreshold = null) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "metric-value";
+      if (number >= goodThreshold) return "metric-value positive";
+      if (warnThreshold !== null && number >= warnThreshold) return "metric-value";
+      return "metric-value negative";
+    }
+
+    function setScorecardMetric(id, value, formatter, className = "metric-value") {
+      const element = byId(id);
+      if (!element) return;
+      element.textContent = formatter(value);
+      element.className = className;
+    }
+
+    function renderScorecardList(targetId, items, formatter) {
+      const target = byId(targetId);
+      if (!target) return;
+      target.innerHTML = "";
+      const list = document.createElement("ul");
+      list.style.margin = "0";
+      list.style.paddingLeft = "18px";
+      (items || []).forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = formatter(item);
+        list.appendChild(li);
+      });
+      target.appendChild(list);
+    }
+
+    function renderScorecardResult(result) {
+      state.latestScorecardResult = result;
+      const metrics = result?.metrics || {};
+      setScorecardMetric("scorecard-cagr", metrics.cagr, formatPercent, scorecardClass(metrics.cagr, 0));
+      setScorecardMetric("scorecard-sharpe", metrics.sharpe_ratio, formatOptimizationScore, scorecardClass(metrics.sharpe_ratio, 1, 0.5));
+      setScorecardMetric("scorecard-sortino", metrics.sortino_ratio, formatOptimizationScore, scorecardClass(metrics.sortino_ratio, 1, 0.5));
+      setScorecardMetric("scorecard-calmar", metrics.calmar_ratio, formatOptimizationScore, scorecardClass(metrics.calmar_ratio, 1, 0.3));
+      setScorecardMetric("scorecard-profit-factor", metrics.profit_factor, formatOptimizationScore, scorecardClass(metrics.profit_factor, 1.2, 1));
+      setScorecardMetric("scorecard-expectancy", metrics.expectancy, formatCurrency, scorecardClass(metrics.expectancy, 0));
+      setScorecardMetric("scorecard-avg-win", metrics.avg_win, formatCurrency, "metric-value positive");
+      setScorecardMetric("scorecard-avg-loss", metrics.avg_loss, formatCurrency, Number(metrics.avg_loss) < 0 ? "metric-value negative" : "metric-value");
+      setScorecardMetric("scorecard-exposure", metrics.exposure_pct, formatPercent, "metric-value");
+      setScorecardMetric("scorecard-recovery-factor", metrics.recovery_factor, formatOptimizationScore, scorecardClass(metrics.recovery_factor, 1, 0.3));
+      renderScorecardList(
+        "scorecard-highlights",
+        result?.highlights || [],
+        (item) => `${item.passed ? "PASS" : "FAIL"}: ${item.metric} = ${typeof item.value === "number" ? formatOptimizationScore(item.value) : item.value}`
+      );
+      renderScorecardList("scorecard-warnings", result?.warnings || [], (item) => item);
+    }
+
+    async function runScorecard() {
+      let payload;
+      try {
+        payload = getScorecardPayload();
+      } catch (error) {
+        setNotice("scorecard-status", error.message || "Invalid scorecard setup.", "danger");
+        return;
+      }
+
+      setScorecardLoading(true);
+      setNotice("scorecard-status", "Generating strategy scorecard...", "warning");
+
+      try {
+        const res = await fetch("/api/v1/strategy-scorecard/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Scorecard failed");
+
+        renderScorecardResult(data);
+        setNotice("scorecard-status", data.method, "success");
+      } catch (error) {
+        setNotice("scorecard-status", error.message || "Scorecard failed", "danger");
+      } finally {
+        setScorecardLoading(false);
+      }
     }
 
     function normalizeAngelSymbol(value) {
@@ -2514,16 +3751,26 @@
 
     function renderStrategyOptions() {
       const select = byId("strategy-name");
+      const optimizerSelect = byId("optimizer-strategy-name");
       select.innerHTML = "";
+      if (optimizerSelect) {
+        optimizerSelect.innerHTML = "";
+      }
 
       state.strategies.forEach((strategy) => {
         const option = document.createElement("option");
         option.value = strategy.slug;
         option.textContent = strategy.name;
         select.appendChild(option);
+        if (optimizerSelect) {
+          optimizerSelect.appendChild(option.cloneNode(true));
+        }
         state.strategyMap.set(strategy.slug, strategy);
       });
 
+      if (optimizerSelect) {
+        optimizerSelect.value = select.value;
+      }
       renderStrategyParameters();
       renderOptimizationResults();
       updateOverviewCards();
@@ -2608,6 +3855,8 @@
         file_name: source === "upload" ? byId("file-name").value.trim() : null,
         symbol: byId("symbol").value.trim() || "DEMO",
         timeframe: byId("timeframe").value,
+        from_date: byId("from-date")?.value || null,
+        to_date: byId("to-date")?.value || null,
         strategy_name: byId("strategy-name").value,
         initial_capital: Number(byId("initial-capital").value),
         commission_pct: Number(byId("commission-pct").value || 0),
@@ -2635,11 +3884,496 @@
       return getRunPayload();
     }
 
+    function getDatasetLabel(fileName) {
+      if (!fileName) return "Sample data";
+      const dataset = state.datasets.find((item) => item.stored_file_name === fileName);
+      return dataset?.original_file_name || fileName;
+    }
+
+    function getPortfolioRowsFromForm() {
+      return Array.from(document.querySelectorAll("[data-portfolio-row]")).map((row) => ({
+        symbol: row.querySelector("[data-portfolio-symbol]")?.value.trim() || "--",
+        fileName: row.querySelector("[data-portfolio-file]")?.value.trim() || null,
+        allocationPct: Number(row.querySelector("[data-portfolio-allocation]")?.value || 0),
+      }));
+    }
+
+    function getPortfolioRebalancingMode() {
+      return byId("portfolio-rebalancing-mode")?.value || "none";
+    }
+
+    function getPortfolioRebalancingLabel(mode) {
+      const labels = {
+        none: "No rebalancing",
+        monthly: "Monthly rebalancing",
+        quarterly: "Quarterly rebalancing",
+      };
+      return labels[mode] || labels.none;
+    }
+
+    function getPortfolioLegendHtml(items) {
+      return items.map((item, index) => `
+        <span class="portfolio-legend-item">
+          <span class="portfolio-legend-swatch" style="background:${PORTFOLIO_COLORS[index % PORTFOLIO_COLORS.length]}"></span>
+          <span>${escapeHtml(item.symbol)} ${formatPercent(item.allocationPct)}</span>
+        </span>
+      `).join("");
+    }
+
+    function renderPortfolioAllocationChart(rows = getPortfolioRowsFromForm()) {
+      const target = byId("portfolio-allocation-chart");
+      const validRows = rows.filter((row) => row.allocationPct > 0);
+
+      if (!validRows.length) {
+        target.innerHTML = '<div class="empty-state">Current allocation weights will appear here.</div>';
+        return;
+      }
+
+      const total = validRows.reduce((sum, row) => sum + row.allocationPct, 0);
+      const width = 640;
+      const height = 240;
+      let cursor = 0;
+      const segments = validRows.map((row, index) => {
+        const segmentWidth = total ? (row.allocationPct / total) * 560 : 0;
+        const rect = `<rect x="${40 + cursor}" y="92" width="${Math.max(segmentWidth, 1)}" height="54" rx="8" fill="${PORTFOLIO_COLORS[index % PORTFOLIO_COLORS.length]}"></rect>`;
+        const label = segmentWidth > 58
+          ? `<text x="${40 + cursor + segmentWidth / 2}" y="124" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">${escapeHtml(row.symbol)}</text>`
+          : "";
+        cursor += segmentWidth;
+        return rect + label;
+      }).join("");
+
+      target.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Portfolio allocation chart">
+          <rect x="40" y="92" width="560" height="54" rx="8" fill="#eef3fb"></rect>
+          ${segments}
+          <text x="40" y="58" fill="#64748b" font-size="13">Allocation total</text>
+          <text x="40" y="80" fill="#172033" font-size="22" font-weight="800">${formatPercent(total)}</text>
+          <text x="600" y="168" text-anchor="end" fill="#64748b" font-size="12">${escapeHtml(getPortfolioRebalancingLabel(getPortfolioRebalancingMode()))}</text>
+        </svg>
+        <div class="portfolio-legend">${getPortfolioLegendHtml(validRows)}</div>
+      `;
+    }
+
+    function renderPortfolioEquityCurve(points = []) {
+      const target = byId("portfolio-equity-chart");
+      const validPoints = points
+        .map((point) => ({ timestamp: point.timestamp, equity: Number(point.equity) }))
+        .filter((point) => Number.isFinite(point.equity));
+
+      if (validPoints.length < 2) {
+        target.innerHTML = '<div class="empty-state">Portfolio equity curve will appear after a portfolio backtest run.</div>';
+        return;
+      }
+
+      const width = 640;
+      const height = 240;
+      const padding = { left: 56, right: 24, top: 24, bottom: 42 };
+      const values = validPoints.map((point) => point.equity);
+      const minEquity = Math.min(...values);
+      const maxEquity = Math.max(...values);
+      const range = maxEquity - minEquity || 1;
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const coords = validPoints.map((point, index) => {
+        const x = padding.left + (index / (validPoints.length - 1)) * chartWidth;
+        const y = padding.top + ((maxEquity - point.equity) / range) * chartHeight;
+        return `${x.toFixed(2)},${y.toFixed(2)}`;
+      });
+      const coordText = coords.join(" ");
+      const lastCoord = coords[coords.length - 1].split(",");
+      const first = validPoints[0];
+      const last = validPoints[validPoints.length - 1];
+      const endingClassColor = last.equity >= first.equity ? "#16a34a" : "#dc2626";
+
+      target.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Portfolio equity curve">
+          <line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${height - padding.bottom}" stroke="#dbe4f0"></line>
+          <line x1="${padding.left}" y1="${height - padding.bottom}" x2="${width - padding.right}" y2="${height - padding.bottom}" stroke="#dbe4f0"></line>
+          <line x1="${padding.left}" y1="${padding.top}" x2="${width - padding.right}" y2="${padding.top}" stroke="#eef3fb"></line>
+          <polyline points="${coordText}" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <circle cx="${lastCoord[0]}" cy="${lastCoord[1]}" r="5" fill="${endingClassColor}"></circle>
+          <text x="${padding.left}" y="18" fill="#64748b" font-size="12">High ${formatCurrency(maxEquity)}</text>
+          <text x="${padding.left}" y="${height - 12}" fill="#64748b" font-size="12">${escapeHtml(formatDate(first.timestamp))}</text>
+          <text x="${width - padding.right}" y="${height - 12}" text-anchor="end" fill="#64748b" font-size="12">${escapeHtml(formatDate(last.timestamp))}</text>
+          <text x="${width - padding.right}" y="18" text-anchor="end" fill="${endingClassColor}" font-size="13" font-weight="800">End ${formatCurrency(last.equity)}</text>
+        </svg>
+      `;
+    }
+
+    function renderPortfolioContributionChart(symbolResults = []) {
+      const target = byId("portfolio-contribution-chart");
+      const rows = symbolResults.map((result) => ({
+        symbol: result.symbol || "--",
+        pnl: Number(result.metrics?.net_profit || 0),
+      }));
+
+      if (!rows.length) {
+        target.innerHTML = '<div class="empty-state">Contribution breakdown will appear after a portfolio backtest run.</div>';
+        return;
+      }
+
+      const width = 640;
+      const height = Math.max(240, rows.length * 44 + 58);
+      const centerX = 320;
+      const maxAbsPnl = Math.max(...rows.map((row) => Math.abs(row.pnl)), 1);
+      const totalAbsPnl = rows.reduce((sum, row) => sum + Math.abs(row.pnl), 0) || 1;
+      const bars = rows.map((row, index) => {
+        const y = 34 + index * 44;
+        const barWidth = (Math.abs(row.pnl) / maxAbsPnl) * 230;
+        const x = row.pnl >= 0 ? centerX : centerX - barWidth;
+        const color = row.pnl >= 0 ? "#16a34a" : "#dc2626";
+        const labelX = row.pnl >= 0 ? x + barWidth + 8 : x - 8;
+        const anchor = row.pnl >= 0 ? "start" : "end";
+        const contributionPct = (Math.abs(row.pnl) / totalAbsPnl) * 100;
+        return `
+          <text x="24" y="${y + 18}" fill="#172033" font-size="13" font-weight="700">${escapeHtml(row.symbol)}</text>
+          <rect x="${x}" y="${y}" width="${Math.max(barWidth, 1)}" height="24" rx="6" fill="${color}"></rect>
+          <text x="${labelX}" y="${y + 17}" text-anchor="${anchor}" fill="${color}" font-size="12" font-weight="700">${formatCurrency(row.pnl)} (${formatPercent(contributionPct)})</text>
+        `;
+      }).join("");
+
+      target.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Per-symbol PnL contribution chart">
+          <line x1="${centerX}" y1="18" x2="${centerX}" y2="${height - 20}" stroke="#dbe4f0"></line>
+          ${bars}
+          <text x="${centerX - 8}" y="${height - 4}" text-anchor="end" fill="#64748b" font-size="12">Negative PnL</text>
+          <text x="${centerX + 8}" y="${height - 4}" fill="#64748b" font-size="12">Positive PnL</text>
+        </svg>
+      `;
+    }
+
+    function populatePortfolioDatasetSelect(select, selectedValue = "") {
+      select.innerHTML = '<option value="">Sample data / no upload</option>';
+      state.datasets.forEach((dataset) => {
+        const option = document.createElement("option");
+        option.value = dataset.stored_file_name;
+        option.textContent = `${dataset.original_file_name} (${dataset.stored_file_name})`;
+        select.appendChild(option);
+      });
+      select.value = selectedValue;
+    }
+
+    function refreshPortfolioDatasetOptions() {
+      document.querySelectorAll("[data-portfolio-file]").forEach((select) => {
+        populatePortfolioDatasetSelect(select, select.value);
+      });
+      renderPortfolioAllocationChart();
+    }
+
+    function updatePortfolioAllocationSummary() {
+      const total = Array.from(document.querySelectorAll("[data-portfolio-allocation]"))
+        .reduce((sum, input) => sum + Number(input.value || 0), 0);
+      const summary = byId("portfolio-allocation-summary");
+      summary.textContent = `Allocation total: ${formatPercent(total)}`;
+      summary.className = Math.abs(total - 100) <= 0.01 ? "muted positive" : "muted";
+      return total;
+    }
+
+    function addPortfolioRow(values = {}) {
+      const rows = byId("portfolio-rows");
+      const row = document.createElement("div");
+      const rowId = state.portfolioRowCount + 1;
+      state.portfolioRowCount = rowId;
+      row.className = "portfolio-row";
+      row.dataset.portfolioRow = String(rowId);
+
+      const symbolField = document.createElement("div");
+      symbolField.className = "field";
+      const symbolLabel = document.createElement("label");
+      symbolLabel.setAttribute("for", `portfolio-symbol-${rowId}`);
+      symbolLabel.textContent = "Symbol";
+      const symbolInput = document.createElement("input");
+      symbolInput.id = `portfolio-symbol-${rowId}`;
+      symbolInput.type = "text";
+      symbolInput.placeholder = "e.g. RELIANCE";
+      symbolInput.value = values.symbol || "";
+      symbolInput.dataset.portfolioSymbol = "";
+      symbolInput.addEventListener("input", () => renderPortfolioAllocationChart());
+      symbolField.appendChild(symbolLabel);
+      symbolField.appendChild(symbolInput);
+
+      const fileField = document.createElement("div");
+      fileField.className = "field";
+      const fileLabel = document.createElement("label");
+      fileLabel.setAttribute("for", `portfolio-file-${rowId}`);
+      fileLabel.textContent = "Stored Dataset / File";
+      const fileSelect = document.createElement("select");
+      fileSelect.id = `portfolio-file-${rowId}`;
+      fileSelect.dataset.portfolioFile = "";
+      populatePortfolioDatasetSelect(fileSelect, values.fileName || "");
+      fileSelect.addEventListener("change", () => renderPortfolioAllocationChart());
+      fileField.appendChild(fileLabel);
+      fileField.appendChild(fileSelect);
+
+      const allocationField = document.createElement("div");
+      allocationField.className = "field";
+      const allocationLabel = document.createElement("label");
+      allocationLabel.setAttribute("for", `portfolio-allocation-${rowId}`);
+      allocationLabel.textContent = "Allocation %";
+      const allocationInput = document.createElement("input");
+      allocationInput.id = `portfolio-allocation-${rowId}`;
+      allocationInput.type = "number";
+      allocationInput.min = "0.01";
+      allocationInput.max = "100";
+      allocationInput.step = "0.01";
+      allocationInput.value = values.allocationPct ?? "";
+      allocationInput.dataset.portfolioAllocation = "";
+      allocationInput.addEventListener("input", () => {
+        updatePortfolioAllocationSummary();
+        renderPortfolioAllocationChart();
+      });
+      allocationField.appendChild(allocationLabel);
+      allocationField.appendChild(allocationInput);
+
+      const removeButton = document.createElement("button");
+      removeButton.className = "btn-danger btn-small";
+      removeButton.type = "button";
+      removeButton.textContent = "Remove row";
+      removeButton.addEventListener("click", () => {
+        row.remove();
+        updatePortfolioAllocationSummary();
+        renderPortfolioAllocationChart();
+      });
+
+      row.appendChild(symbolField);
+      row.appendChild(fileField);
+      row.appendChild(allocationField);
+      row.appendChild(removeButton);
+      rows.appendChild(row);
+      updatePortfolioAllocationSummary();
+      renderPortfolioAllocationChart();
+    }
+
+    function initializePortfolioRows() {
+      const rows = byId("portfolio-rows");
+      rows.innerHTML = "";
+      state.portfolioRowCount = 0;
+      addPortfolioRow({ symbol: "RELIANCE", allocationPct: 50 });
+      addPortfolioRow({ symbol: "TCS", allocationPct: 50 });
+      renderPortfolioAllocationChart();
+    }
+
+    function getPortfolioPayload() {
+      const basePayload = getRunPayload();
+      const datasets = getPortfolioRowsFromForm().map((row) => {
+        return {
+          source: row.fileName ? "upload" : "sample",
+          file_name: row.fileName,
+          symbol: row.symbol === "--" ? "" : row.symbol,
+          timeframe: basePayload.timeframe,
+          allocation_pct: row.allocationPct,
+        };
+      });
+
+      if (datasets.length < 2) {
+        throw new Error("Add at least two symbols for a portfolio backtest.");
+      }
+
+      const missingSymbol = datasets.some((dataset) => !dataset.symbol);
+      if (missingSymbol) {
+        throw new Error("Enter a symbol for every portfolio row.");
+      }
+
+      const invalidAllocation = datasets.some((dataset) => !Number.isFinite(dataset.allocation_pct) || dataset.allocation_pct <= 0);
+      if (invalidAllocation) {
+        throw new Error("Each portfolio row needs an allocation greater than 0%.");
+      }
+
+      const allocationTotal = datasets.reduce((sum, dataset) => sum + dataset.allocation_pct, 0);
+      if (Math.abs(allocationTotal - 100) > 0.01) {
+        throw new Error(`Portfolio allocation must total 100%. Current total is ${formatPercent(allocationTotal)}.`);
+      }
+
+      return {
+        datasets,
+        strategy_name: basePayload.strategy_name,
+        rebalancing_mode: getPortfolioRebalancingMode(),
+        initial_capital: basePayload.initial_capital,
+        commission_pct: basePayload.commission_pct,
+        slippage_pct: basePayload.slippage_pct,
+        stop_loss_pct: basePayload.stop_loss_pct,
+        take_profit_pct: basePayload.take_profit_pct,
+        position_sizing_mode: basePayload.position_sizing_mode,
+        fixed_quantity: basePayload.fixed_quantity,
+        capital_per_trade: basePayload.capital_per_trade,
+        equity_pct_per_trade: basePayload.equity_pct_per_trade,
+        parameters: basePayload.parameters,
+      };
+    }
+
+    function getPortfolioPnlContributionPct(symbolResult, symbolResults) {
+      const totalAbsPnl = symbolResults.reduce((sum, result) => {
+        return sum + Math.abs(Number(result.metrics?.net_profit || 0));
+      }, 0) || 1;
+      return (Math.abs(Number(symbolResult.metrics?.net_profit || 0)) / totalAbsPnl) * 100;
+    }
+
+    function buildPortfolioResultsCsv() {
+      const result = state.latestPortfolioResult;
+      const symbolResults = result?.symbol_results || [];
+      const metrics = result?.metrics || {};
+
+      const summaryRows = [
+        ["strategy_name", result?.strategy_name || ""],
+        ["rebalancing_mode", result?.rebalancing_mode || "none"],
+        ["initial_capital", result?.initial_capital ?? ""],
+        ["ending_equity", metrics.ending_equity ?? ""],
+        ["total_return_pct", metrics.total_return_pct ?? ""],
+        ["net_profit", metrics.net_profit ?? ""],
+        ["max_drawdown_pct", metrics.max_drawdown_pct ?? ""],
+        ["total_trades", metrics.total_trades ?? ""],
+        ["win_rate_pct", metrics.win_rate_pct ?? ""],
+        ["total_costs", metrics.total_costs ?? ""],
+      ];
+
+      const allocationHeaders = [
+        "symbol",
+        "dataset",
+        "allocation_pct",
+        "allocated_capital",
+        "rebalancing_mode",
+      ];
+      const allocationRows = symbolResults.map((symbolResult) => [
+        symbolResult.symbol || "",
+        getDatasetLabel(symbolResult.file_name),
+        symbolResult.allocation_pct ?? "",
+        symbolResult.allocated_capital ?? "",
+        result?.rebalancing_mode || "none",
+      ]);
+
+      const breakdownHeaders = [
+        "symbol",
+        "allocation_pct",
+        "total_return_pct",
+        "net_profit",
+        "max_drawdown_pct",
+        "total_trades",
+        "pnl_contribution",
+      ];
+      const breakdownRows = symbolResults.map((symbolResult) => [
+        symbolResult.symbol || "",
+        symbolResult.allocation_pct ?? "",
+        symbolResult.metrics?.total_return_pct ?? "",
+        symbolResult.metrics?.net_profit ?? "",
+        symbolResult.metrics?.max_drawdown_pct ?? "",
+        symbolResult.metrics?.total_trades ?? "",
+        getPortfolioPnlContributionPct(symbolResult, symbolResults).toFixed(2),
+      ]);
+
+      return [
+        ["Portfolio Summary"].map(escapeCsvValue).join(","),
+        ...summaryRows.map((row) => row.map(escapeCsvValue).join(",")),
+        "",
+        ["Allocation Rows"].map(escapeCsvValue).join(","),
+        allocationHeaders.map(escapeCsvValue).join(","),
+        ...allocationRows.map((row) => row.map(escapeCsvValue).join(",")),
+        "",
+        ["Per-Symbol Breakdown"].map(escapeCsvValue).join(","),
+        breakdownHeaders.map(escapeCsvValue).join(","),
+        ...breakdownRows.map((row) => row.map(escapeCsvValue).join(",")),
+      ].join("\r\n");
+    }
+
+    function getPortfolioResultsExportFilename() {
+      const result = state.latestPortfolioResult;
+      const strategy = String(result?.strategy_name || "portfolio")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, "_") || "portfolio";
+      const mode = String(result?.rebalancing_mode || "none").replace(/[^a-z0-9_-]+/g, "_");
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      return `${strategy}_portfolio_${mode}_${timestamp}.csv`;
+    }
+
+    function resetPortfolioResults() {
+      ["portfolio-metric-return", "portfolio-metric-profit", "portfolio-metric-drawdown", "portfolio-metric-trades"].forEach((id) => {
+        byId(id).textContent = "--";
+        byId(id).className = "metric-value";
+      });
+      state.latestPortfolioResult = null;
+      byId("portfolio-breakdown-table-body").innerHTML = "";
+      byId("portfolio-breakdown-empty").style.display = "block";
+      byId("portfolio-result-summary").textContent = "Run a portfolio backtest to populate the portfolio summary.";
+      byId("export-portfolio-result-btn").disabled = true;
+      renderPortfolioEquityCurve([]);
+      renderPortfolioContributionChart([]);
+    }
+
+    function updatePortfolioResults(result) {
+      const metrics = result?.metrics || {};
+      const totalReturn = Number(metrics.total_return_pct);
+      const netProfit = Number(metrics.net_profit);
+
+      byId("portfolio-metric-return").textContent = formatPercent(metrics.total_return_pct);
+      byId("portfolio-metric-return").className = `metric-value ${totalReturn >= 0 ? "positive" : "negative"}`;
+      byId("portfolio-metric-profit").textContent = formatCurrency(metrics.net_profit);
+      byId("portfolio-metric-profit").className = `metric-value ${netProfit >= 0 ? "positive" : "negative"}`;
+      byId("portfolio-metric-drawdown").textContent = formatPercent(metrics.max_drawdown_pct);
+      byId("portfolio-metric-trades").textContent = metrics.total_trades ?? "--";
+      state.latestPortfolioResult = result;
+      byId("export-portfolio-result-btn").disabled = false;
+      renderPortfolioEquityCurve(result?.equity_curve || []);
+      renderPortfolioAllocationChart();
+      renderPortfolioContributionChart(result?.symbol_results || []);
+      byId("portfolio-result-summary").textContent =
+        `Strategy: ${getStrategyDisplayName(result?.strategy_name)} | ` +
+        `Rebalancing: ${getPortfolioRebalancingLabel(result?.rebalancing_mode || "none")} | ` +
+        `Symbols: ${result?.symbol_results?.length || 0} | Ending equity: ${formatCurrency(metrics.ending_equity)}`;
+
+      const tbody = byId("portfolio-breakdown-table-body");
+      const empty = byId("portfolio-breakdown-empty");
+      tbody.innerHTML = "";
+
+      const symbolResults = result?.symbol_results || [];
+      if (!symbolResults.length) {
+        empty.style.display = "block";
+        return;
+      }
+
+      empty.style.display = "none";
+      symbolResults.forEach((symbolResult) => {
+        const pnlContributionPct = getPortfolioPnlContributionPct(symbolResult, symbolResults);
+        const row = document.createElement("tr");
+        const cells = [
+          symbolResult.symbol || "--",
+          getDatasetLabel(symbolResult.file_name),
+          formatPercent(symbolResult.allocation_pct),
+          formatCurrency(symbolResult.allocated_capital),
+          formatPercent(symbolResult.metrics?.total_return_pct),
+          formatCurrency(symbolResult.metrics?.net_profit),
+          formatPercent(pnlContributionPct),
+          formatPercent(symbolResult.metrics?.max_drawdown_pct),
+          symbolResult.metrics?.total_trades ?? 0,
+        ];
+
+        cells.forEach((value, index) => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          if (index === 4 && Number(symbolResult.metrics?.total_return_pct) >= 0) cell.className = "positive";
+          if (index === 4 && Number(symbolResult.metrics?.total_return_pct) < 0) cell.className = "negative";
+          if (index === 5 && Number(symbolResult.metrics?.net_profit) >= 0) cell.className = "positive";
+          if (index === 5 && Number(symbolResult.metrics?.net_profit) < 0) cell.className = "negative";
+          row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+      });
+    }
+
     function getOptimizationPayload() {
+      const optimizerFromDate = byId("optimizer-from-date")?.value || "";
+      const optimizerToDate = byId("optimizer-to-date")?.value || "";
       return {
         ...getRunPayload(),
+        strategy_name: getOptimizerStrategySlug(),
+        from_date: optimizerFromDate || byId("from-date")?.value || null,
+        to_date: optimizerToDate || byId("to-date")?.value || null,
         parameters: getOptimizationParameterRanges(),
-        max_results: 20,
+        ranking_metric: byId("optimizer-ranking-metric")?.value || "net_profit",
+        optimization_mode: byId("optimizer-mode")?.value || "standard",
+        walk_forward_split: byId("optimizer-walk-forward-split")?.value || "70_30",
+        max_results: Number(byId("optimizer-max-results")?.value || 20),
       };
     }
 
@@ -2731,6 +4465,7 @@
       state.latestTrades = result?.trades || [];
       byId("export-result-btn").disabled = false;
       updateOverviewCards();
+      refreshStrategyRecommendation();
     }
 
     function renderSavedDatasetsLegacy(datasets) {
@@ -3042,8 +4777,22 @@
         const evaluatedSuffix = Number.isFinite(evaluatedCount)
           ? ` Evaluated ${evaluatedCount} candidate${evaluatedCount === 1 ? "" : "s"}.`
           : "";
+        const best = results[0] || {};
+        const isWalkForward = data?.optimization_mode === "walk_forward" || isWalkForwardOptimizationResult(best);
+        const bestSummary = isWalkForward
+          ? ` Best in-sample params: ${formatOptimizationParameters(data?.best_in_sample_parameters || getOptimizationParameters(best))} | ` +
+            `Out-sample profit ${formatCurrency(pickFirstDefined(best, ["out_sample_net_profit"]))} | ` +
+            `Out return ${formatPercent(pickFirstDefined(best, ["out_sample_return"]))} | ` +
+            `Out drawdown ${formatPercent(pickFirstDefined(best, ["out_sample_drawdown"]))} | ` +
+            `Robustness ${formatOptimizationScore(pickFirstDefined(best, ["robustness_score"]))} | ` +
+            `Degradation ${pickFirstDefined(best, ["performance_degraded"]) ? "significant" : "contained"}.`
+          : ` Best: ${formatOptimizationParameters(getOptimizationParameters(best))} | ` +
+            `Max profit ${formatCurrency(pickFirstDefined(best, ["net_profit", "metrics.net_profit"]))} | ` +
+            `Return ${formatPercent(pickFirstDefined(best, ["total_return_pct", "metrics.total_return_pct"]))} | ` +
+            `Drawdown ${formatPercent(pickFirstDefined(best, ["max_drawdown_pct", "metrics.max_drawdown_pct"]))} | ` +
+            `Trades ${pickFirstDefined(best, ["total_trades", "metrics.total_trades"]) ?? "--"}.`;
         setOptimizationStatus(
-          `${results.length} optimization result${results.length === 1 ? "" : "s"} loaded.${evaluatedSuffix}`,
+          `${results.length} optimization result${results.length === 1 ? "" : "s"} loaded.${evaluatedSuffix}${bestSummary}`,
           "success"
         );
       } catch (error) {
@@ -3078,6 +4827,63 @@
       } catch (error) {
         setNotice("backtest-status", error.message, "danger");
       }
+    }
+
+    async function runPortfolioBacktest() {
+      let payload;
+
+      try {
+        payload = getPortfolioPayload();
+      } catch (error) {
+        setNotice("portfolio-backtest-status", error.message || "Invalid portfolio setup.", "danger");
+        return;
+      }
+
+      const runButton = byId("run-portfolio-backtest-btn");
+      runButton.disabled = true;
+      setNotice("portfolio-backtest-status", "Running portfolio backtest...", "warning");
+
+      try {
+        const res = await fetch("/api/v1/portfolio/backtest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Portfolio backtest failed");
+
+        updatePortfolioResults(data);
+        setNotice(
+          "portfolio-backtest-status",
+          `Portfolio backtest complete for ${data.symbol_results?.length || 0} symbols using ${getStrategyDisplayName(data.strategy_name)}.`,
+          "success"
+        );
+      } catch (error) {
+        resetPortfolioResults();
+        setNotice("portfolio-backtest-status", error.message || "Portfolio backtest failed", "danger");
+      } finally {
+        runButton.disabled = false;
+      }
+    }
+
+    function exportLatestPortfolioResult() {
+      if (!state.latestPortfolioResult) {
+        setNotice("portfolio-backtest-status", "No portfolio backtest result available to export yet.", "warning");
+        return;
+      }
+
+      const csvContent = buildPortfolioResultsCsv();
+      const blob = new Blob([`\uFEFF${csvContent}`], { type: "text/csv;charset=utf-8;" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = getPortfolioResultsExportFilename();
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setNotice("portfolio-backtest-status", "Portfolio CSV exported.", "success");
     }
 
     async function exportLatestResult() {
@@ -3118,6 +4924,12 @@
       byId("commission-pct").value = "0.1";
       byId("slippage-pct").value = "0.05";
       byId("percent-equity").value = "100";
+      byId("from-date").value = "";
+      byId("to-date").value = "";
+      byId("optimizer-from-date").value = "";
+      byId("optimizer-to-date").value = "";
+      byId("optimizer-mode").value = "standard";
+      byId("optimizer-walk-forward-split").value = "70_30";
       updateSizingFields();
       renderStrategyParameters();
       setNotice("backtest-status", "", "success");
@@ -3178,6 +4990,7 @@
       if (state.selectedDataset) {
         select.value = state.selectedDataset;
       }
+      refreshPortfolioDatasetOptions();
     }
 
     async function uploadCsv(event) {
@@ -3271,6 +5084,10 @@
         const meta = activateDataset(data, "Uploaded CSV");
         const appliedSymbol = applyBacktestSymbol(selectedSymbol);
         const appliedTimeframe = applyBacktestTimeframe(payload.interval);
+        byId("from-date").value = payload.fromdate;
+        byId("to-date").value = payload.todate;
+        byId("optimizer-from-date").value = "";
+        byId("optimizer-to-date").value = "";
         persistAngelFetchFormState();
         await loadDatasets();
         setNotice(
@@ -3317,6 +5134,10 @@
       byId("angel-from-date").addEventListener("input", handleAngelDateManualEdit);
       byId("angel-to-date").addEventListener("input", handleAngelDateManualEdit);
       byId("backtest-form").addEventListener("submit", runBacktest);
+      byId("add-portfolio-row-btn").addEventListener("click", () => addPortfolioRow());
+      byId("run-portfolio-backtest-btn").addEventListener("click", runPortfolioBacktest);
+      byId("export-portfolio-result-btn").addEventListener("click", exportLatestPortfolioResult);
+      byId("portfolio-rebalancing-mode").addEventListener("change", () => renderPortfolioAllocationChart());
       byId("save-config-btn").addEventListener("click", saveCurrentConfiguration);
       byId("refresh-datasets-btn").addEventListener("click", loadDatasets);
       byId("refresh-configs-btn").addEventListener("click", loadConfigs);
@@ -3324,10 +5145,21 @@
       byId("export-result-btn").addEventListener("click", exportLatestResult);
       byId("run-optimization-btn").addEventListener("click", runOptimization);
       byId("export-optimization-results-btn").addEventListener("click", exportOptimizationResultsCsv);
+      byId("run-monte-carlo-btn").addEventListener("click", runMonteCarlo);
+      byId("run-regime-analysis-btn").addEventListener("click", runRegimeAnalysis);
+      byId("refresh-recommendation-btn").addEventListener("click", refreshStrategyRecommendation);
+      byId("run-scorecard-btn").addEventListener("click", runScorecard);
       byId("reset-form-btn").addEventListener("click", resetForm);
       byId("apply-top-optimizer-result-btn").addEventListener("click", applyTopOptimizationResult);
       byId("saved-dataset-select").addEventListener("change", applySelectedDatasetFromDropdown);
-      byId("strategy-name").addEventListener("change", () => renderStrategyParameters());
+      byId("strategy-name").addEventListener("change", () => {
+        const optimizerSelect = byId("optimizer-strategy-name");
+        if (optimizerSelect) {
+          optimizerSelect.value = byId("strategy-name").value;
+        }
+        renderStrategyParameters();
+      });
+      byId("optimizer-strategy-name").addEventListener("change", () => renderOptimizerParameterRanges());
       byId("position-sizing-mode").addEventListener("change", updateSizingFields);
       byId("clear-comparison-btn").addEventListener("click", () => {
         state.selectedComparisonIds.clear();
@@ -3341,10 +5173,13 @@
       restoreAngelFetchFormState();
       initializeAngelFetchDefaults();
       refreshAngelSymbolSelection();
+      initializePortfolioRows();
+      resetPortfolioResults();
       updateSizingFields();
       updateChartFrame("equity-chart-frame", "equity-chart-empty", "");
       updateChartFrame("drawdown-chart-frame", "drawdown-chart-empty", "");
       updateOverviewCards();
+      refreshStrategyRecommendation();
     });
   </script>
 </body>

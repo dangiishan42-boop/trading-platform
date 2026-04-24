@@ -1,7 +1,9 @@
+from typing import Literal
+
 from fastapi import APIRouter
 from pydantic import Field
 
-from app.schemas.backtest_schema import BacktestRunRequest
+from app.schemas.backtest_schema import BacktestRunRequest, OptimizationRankingMetric
 from app.services.optimization.parameter_optimizer import ParameterOptimizer
 
 router = APIRouter(prefix="/optimization", tags=["optimization"])
@@ -9,6 +11,9 @@ router = APIRouter(prefix="/optimization", tags=["optimization"])
 
 class OptimizationRunRequest(BacktestRunRequest):
     max_results: int = Field(default=20, ge=1, le=50)
+    ranking_metric: OptimizationRankingMetric = "net_profit"
+    optimization_mode: Literal["standard", "walk_forward"] = "standard"
+    walk_forward_split: Literal["70_30", "60_40"] = "70_30"
 
 
 @router.get("/capabilities")

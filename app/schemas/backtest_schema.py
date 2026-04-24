@@ -6,12 +6,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 PositionSizingMode = Literal["fixed_quantity", "fixed_capital", "percent_equity"]
 TradeExitReason = Literal["signal", "stop_loss", "take_profit", "end_of_data"]
 DataSource = Literal["sample", "upload"]
+OptimizationRankingMetric = Literal[
+    "net_profit",
+    "total_return_pct",
+    "win_rate_pct",
+    "max_drawdown_pct",
+]
 
 class BacktestRunRequest(BaseModel):
     source: DataSource = "sample"
     file_name: str | None = None
     symbol: str = Field(default="DEMO", min_length=1, max_length=24)
     timeframe: str = Field(default="1D", min_length=1, max_length=20)
+    from_date: str | None = None
+    to_date: str | None = None
     strategy_name: str = Field(min_length=1, max_length=64)
     initial_capital: float = Field(default=100000, gt=0)
     commission_pct: float = Field(default=0.1, ge=0, le=100)
@@ -66,6 +74,14 @@ class BacktestRunRequest(BaseModel):
             raise ValueError("strategy_name must be a slug using lowercase letters, numbers, and underscores")
         return value.lower()
 
+    @field_validator("from_date", "to_date", mode="before")
+    @classmethod
+    def normalize_optional_date_fields(cls, value: Any) -> str | None:
+        if value is None:
+            return None
+        normalized = str(value).strip()
+        return normalized or None
+
     @model_validator(mode="after")
     def validate_position_sizing(self):
         if self.source == "upload" and not self.file_name:
@@ -108,10 +124,17 @@ class EquityPoint(BaseModel):
     timestamp: str
     equity: float
 
+
+class MarketDataPoint(BaseModel):
+    timestamp: str
+    close: float
+
 class BacktestRunResponse(BaseModel):
     strategy_name: str
     symbol: str
     timeframe: str
+    from_date: str | None = None
+    to_date: str | None = None
     commission_pct: float
     slippage_pct: float
     stop_loss_pct: float | None = None
@@ -123,6 +146,7 @@ class BacktestRunResponse(BaseModel):
     metrics: BacktestMetrics
     trades: list[BacktestTrade]
     equity_curve: list[EquityPoint]
+    market_data: list[MarketDataPoint] = Field(default_factory=list)
     chart_html: str
     drawdown_chart_html: str
 

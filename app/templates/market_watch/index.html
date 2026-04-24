@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --line: #dbe4ef;
+      --text: #172033;
+      --muted: #64748b;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --red: #dc2626;
+      --amber: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      letter-spacing: 0;
+    }
+    a { color: inherit; text-decoration: none; }
+    .shell { width: min(1440px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 40px; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .brand h1 { margin: 0; font-size: 26px; }
+    .brand p { margin: 6px 0 0; color: var(--muted); }
+    .nav-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 13px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      min-height: 40px;
+    }
+    .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+    .search-panel { margin-bottom: 18px; }
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(120px, 180px) minmax(150px, 210px) auto;
+      gap: 12px;
+      align-items: end;
+    }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 800; }
+    input, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      min-height: 40px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.75fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .stack { display: grid; gap: 18px; }
+    .section-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 14px; }
+    .section-head h2 { margin: 0; font-size: 18px; }
+    .muted { color: var(--muted); }
+    .quote-main { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
+    .quote-name { font-size: 22px; font-weight: 850; }
+    .quote-symbol { color: var(--muted); margin-top: 4px; }
+    .price { font-size: 34px; font-weight: 900; text-align: right; }
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+    .warning { color: var(--amber); }
+    .indices-grid, .stats-grid, .performance-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfdff;
+      min-height: 76px;
+    }
+    .mini-label { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .mini-value { margin-top: 7px; font-size: 18px; font-weight: 850; overflow-wrap: anywhere; }
+    .mini-sub { margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .timeframes { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tf-btn { padding: 7px 10px; min-height: 34px; }
+    .tf-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .chart-box {
+      width: 100%;
+      min-height: 320px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #fff;
+    }
+    .chart-box svg { width: 100%; height: 320px; display: block; }
+    .notice {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+      font-size: 13px;
+    }
+    .notice.danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .notice.success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    @media (max-width: 980px) {
+      .layout, .search-row { grid-template-columns: 1fr; }
+      .indices-grid, .stats-grid, .performance-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .quote-main { grid-template-columns: 1fr; }
+      .price { text-align: left; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 1440px); padding-top: 14px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .indices-grid, .stats-grid, .performance-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Live Market Watch</h1>
+        <p>Indian equity quote view using local Angel symbol mapping and SmartAPI data when configured.</p>
+      </div>
+      <div class="nav-actions">
+        <a class="btn" href="/historical-data">Historical Data</a>
+        <a class="btn btn-primary" href="/dashboard">Advanced Dashboard</a>
+      </div>
+    </header>
+
+    <section class="panel search-panel">
+      <div class="search-row">
+        <div>
+          <label for="stock-search">Stock Name or Symbol</label>
+          <input id="stock-search" list="symbol-options" placeholder="HDFC Bank, RELIANCE, TCS, INFY" value="RELIANCE" />
+          <datalist id="symbol-options"></datalist>
+        </div>
+        <div>
+          <label for="exchange">Exchange</label>
+          <select id="exchange">
+            <option value="NSE" selected>NSE</option>
+            <option value="BSE">BSE</option>
+          </select>
+        </div>
+        <div>
+          <label for="manual-token">Manual Angel Token</label>
+          <input id="manual-token" placeholder="Optional token" />
+        </div>
+        <button class="btn btn-primary" type="button" id="search-btn">Search</button>
+      </div>
+      <div id="page-status" class="notice">Search a mapped stock or provide a manual Angel token.</div>
+    </section>
+
+    <section class="panel" style="margin-bottom:18px;">
+      <div class="section-head">
+        <h2>Indian Indices</h2>
+        <span class="muted">Angel-backed when configured</span>
+      </div>
+      <div class="indices-grid" id="indices-grid"></div>
+    </section>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="panel">
+          <div class="quote-main">
+            <div>
+              <div class="quote-name" id="quote-name">--</div>
+              <div class="quote-symbol" id="quote-symbol">--</div>
+              <div class="mini-sub" id="quote-updated">Last updated: --</div>
+            </div>
+            <div>
+              <div class="price" id="quote-price">--</div>
+              <div id="quote-change" class="mini-sub">--</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <h2>Price Chart</h2>
+            <div class="timeframes" id="timeframes"></div>
+          </div>
+          <div class="chart-box" id="price-chart">Chart will appear after candles load.</div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <h2>Price and Volume</h2>
+          </div>
+          <div class="performance-grid" id="performance-grid"></div>
+        </section>
+      </div>
+
+      <aside class="stack">
+        <section class="panel">
+          <div class="section-head">
+            <h2>Overview</h2>
+          </div>
+          <div class="stats-grid" id="overview-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <h2>Actions</h2>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary" type="button" id="use-backtest-btn">Use for Backtest</button>
+            <a class="btn" href="/historical-data">Open Historical Data</a>
+            <a class="btn" href="/dashboard">Open Advanced Dashboard</a>
+          </div>
+          <div id="action-status" class="notice">Use for Backtest saves current candles as a reusable uploaded dataset.</div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const SYMBOL_MAP = {{ angel_symbol_map | tojson }};
+    const SYMBOL_NAMES = {
+      RELIANCE: "Reliance Industries",
+      TCS: "Tata Consultancy Services",
+      INFY: "Infosys",
+      HDFCBANK: "HDFC Bank",
+      ICICIBANK: "ICICI Bank",
+      SBIN: "State Bank of India",
+      AXISBANK: "Axis Bank",
+      LT: "Larsen & Toubro",
+      ITC: "ITC",
+      HINDUNILVR: "Hindustan Unilever",
+      BAJFINANCE: "Bajaj Finance",
+      WIPRO: "Wipro",
+    };
+    const TIMEFRAMES = ["1m", "5m", "15m", "30m", "1H", "1D"];
+    const state = { quote: null, candles: [], interval: "5m" };
+
+    function byId(id) { return document.getElementById(id); }
+    function formatNumber(value, digits = 2) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toLocaleString("en-IN", { maximumFractionDigits: digits, minimumFractionDigits: digits }) : "--";
+    }
+    function formatCompact(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toLocaleString("en-IN", { notation: "compact", maximumFractionDigits: 2 }) : "--";
+    }
+    function formatPercent(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? `${number.toFixed(2)}%` : "--";
+    }
+    function setStatus(id, message, type = "") {
+      const target = byId(id);
+      target.textContent = message;
+      target.className = `notice ${type}`.trim();
+    }
+    function requestPayload() {
+      return {
+        query: byId("stock-search").value.trim(),
+        exchange: byId("exchange").value,
+        symbol_token: byId("manual-token").value.trim() || null,
+      };
+    }
+    function candlePayload() {
+      return { ...requestPayload(), interval: state.interval };
+    }
+    async function postJson(url, payload) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "Request failed");
+      return data;
+    }
+    function renderSymbolOptions() {
+      const list = byId("symbol-options");
+      list.innerHTML = "";
+      Object.keys(SYMBOL_MAP).forEach((symbol) => {
+        const option = document.createElement("option");
+        option.value = symbol;
+        option.label = SYMBOL_NAMES[symbol] || symbol;
+        list.appendChild(option);
+      });
+    }
+    function renderIndices(rows = []) {
+      const grid = byId("indices-grid");
+      grid.innerHTML = "";
+      rows.forEach((item) => {
+        const change = Number(item.change_pct);
+        const card = document.createElement("div");
+        card.className = "mini-card";
+        card.innerHTML = `
+          <div class="mini-label">${item.name}</div>
+          <div class="mini-value">${formatNumber(item.latest_price)}</div>
+          <div class="mini-sub ${change >= 0 ? "positive" : change < 0 ? "negative" : ""}">
+            ${item.available ? `${formatNumber(item.change)} (${formatPercent(item.change_pct)})` : item.message || "Unavailable"}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+    function renderQuote(quote) {
+      state.quote = quote;
+      const change = Number(quote.change);
+      byId("quote-name").textContent = quote.stock_name || quote.symbol || "--";
+      byId("quote-symbol").textContent = `${quote.symbol || "--"} | ${quote.exchange || "--"} | Token ${quote.symbol_token || "--"}`;
+      byId("quote-updated").textContent = `Last updated: ${quote.last_updated || "--"}`;
+      byId("quote-price").textContent = formatNumber(quote.latest_price);
+      byId("quote-change").className = `mini-sub ${change >= 0 ? "positive" : change < 0 ? "negative" : ""}`;
+      byId("quote-change").textContent = `${formatNumber(quote.change)} (${formatPercent(quote.change_pct)})`;
+      renderOverview(quote);
+      if (quote.message) setStatus("page-status", quote.message, quote.available ? "" : "danger");
+    }
+    function statCard(label, value, sub = "") {
+      return `<div class="mini-card"><div class="mini-label">${label}</div><div class="mini-value">${value}</div><div class="mini-sub">${sub}</div></div>`;
+    }
+    function renderOverview(quote) {
+      byId("overview-grid").innerHTML = [
+        statCard("Open", formatNumber(quote.open)),
+        statCard("High", formatNumber(quote.high)),
+        statCard("Low", formatNumber(quote.low)),
+        statCard("Previous Close", formatNumber(quote.previous_close)),
+        statCard("Volume", formatCompact(quote.volume)),
+        statCard("Day Range", quote.day_range || "--"),
+        statCard("52 Week High", formatNumber(quote.week_52_high)),
+        statCard("52 Week Low", formatNumber(quote.week_52_low)),
+        statCard("VWAP", formatNumber(quote.vwap)),
+        statCard("Value Traded", formatCompact(quote.value_traded)),
+      ].join("");
+    }
+    function renderTimeframes() {
+      const wrap = byId("timeframes");
+      wrap.innerHTML = "";
+      TIMEFRAMES.forEach((tf) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `btn tf-btn ${tf === state.interval ? "active" : ""}`;
+        button.textContent = tf;
+        button.addEventListener("click", async () => {
+          state.interval = tf;
+          renderTimeframes();
+          await loadCandles();
+        });
+        wrap.appendChild(button);
+      });
+    }
+    function renderChart(rows = []) {
+      const target = byId("price-chart");
+      if (rows.length < 2) {
+        target.textContent = "No candle data available for the selected symbol and timeframe.";
+        return;
+      }
+      const width = 820;
+      const height = 320;
+      const padding = { left: 58, right: 24, top: 24, bottom: 42 };
+      const closes = rows.map((row) => Number(row.close));
+      const min = Math.min(...closes);
+      const max = Math.max(...closes);
+      const range = max - min || 1;
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const points = closes.map((close, index) => {
+        const x = padding.left + (index / (closes.length - 1)) * chartWidth;
+        const y = padding.top + ((max - close) / range) * chartHeight;
+        return `${x.toFixed(2)},${y.toFixed(2)}`;
+      }).join(" ");
+      const last = rows[rows.length - 1];
+      const first = rows[0];
+      target.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Price chart">
+          <line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${height - padding.bottom}" stroke="#dbe4ef"></line>
+          <line x1="${padding.left}" y1="${height - padding.bottom}" x2="${width - padding.right}" y2="${height - padding.bottom}" stroke="#dbe4ef"></line>
+          <polyline points="${points}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <text x="${padding.left}" y="18" fill="#64748b" font-size="12">High ${formatNumber(max)}</text>
+          <text x="${width - padding.right}" y="18" text-anchor="end" fill="#64748b" font-size="12">Low ${formatNumber(min)}</text>
+          <text x="${padding.left}" y="${height - 12}" fill="#64748b" font-size="12">${new Date(first.datetime).toLocaleString()}</text>
+          <text x="${width - padding.right}" y="${height - 12}" text-anchor="end" fill="#64748b" font-size="12">${new Date(last.datetime).toLocaleString()}</text>
+        </svg>
+      `;
+    }
+    function performanceFromRows(rows, barsBack) {
+      if (rows.length < 2) return null;
+      const last = Number(rows[rows.length - 1].close);
+      const previous = Number(rows[Math.max(0, rows.length - 1 - barsBack)].close);
+      return previous ? ((last - previous) / previous) * 100 : null;
+    }
+    function renderPerformance(rows = []) {
+      const avgVolume = rows.length ? rows.reduce((sum, row) => sum + Number(row.volume || 0), 0) / rows.length : null;
+      const todayVolume = rows.length ? Number(rows[rows.length - 1].volume || 0) : null;
+      byId("performance-grid").innerHTML = [
+        statCard("1 Day", formatPercent(performanceFromRows(rows, 1))),
+        statCard("1 Week", formatPercent(performanceFromRows(rows, 5))),
+        statCard("1 Month", formatPercent(performanceFromRows(rows, 21))),
+        statCard("3 Months", formatPercent(performanceFromRows(rows, 63))),
+        statCard("Today Volume", formatCompact(todayVolume)),
+        statCard("Average Volume", formatCompact(avgVolume)),
+      ].join("");
+    }
+    async function loadQuote() {
+      const quote = await postJson("/api/v1/market-watch/quote", requestPayload());
+      renderQuote(quote);
+    }
+    async function loadCandles() {
+      byId("price-chart").textContent = "Loading candles...";
+      try {
+        const data = await postJson("/api/v1/market-watch/candles", candlePayload());
+        state.candles = data.rows || [];
+        renderChart(state.candles);
+        renderPerformance(state.candles);
+      } catch (error) {
+        state.candles = [];
+        renderChart([]);
+        renderPerformance([]);
+        setStatus("page-status", error.message, "danger");
+      }
+    }
+    async function search() {
+      setStatus("page-status", "Loading market watch data...");
+      try {
+        await loadQuote();
+        await loadCandles();
+        setStatus("page-status", "Market watch data loaded.", "success");
+      } catch (error) {
+        setStatus("page-status", error.message, "danger");
+      }
+    }
+    async function loadIndices() {
+      try {
+        const response = await fetch("/api/v1/market-watch/indices");
+        const data = await response.json();
+        renderIndices(data);
+      } catch (error) {
+        renderIndices([]);
+      }
+    }
+    async function useForBacktest() {
+      const button = byId("use-backtest-btn");
+      button.disabled = true;
+      setStatus("action-status", "Saving current candles for backtest...");
+      try {
+        const data = await postJson("/api/v1/market-watch/use-for-backtest", candlePayload());
+        setStatus(
+          "action-status",
+          `Saved ${data.row_count} candles as ${data.stored_file_name}. Open Advanced Dashboard and select the uploaded dataset.`,
+          "success"
+        );
+      } catch (error) {
+        setStatus("action-status", error.message, "danger");
+      } finally {
+        button.disabled = false;
+      }
+    }
+    document.addEventListener("DOMContentLoaded", async () => {
+      renderSymbolOptions();
+      renderTimeframes();
+      renderOverview({});
+      renderPerformance([]);
+      byId("search-btn").addEventListener("click", search);
+      byId("stock-search").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") search();
+      });
+      byId("use-backtest-btn").addEventListener("click", useForBacktest);
+      await loadIndices();
+      await search();
+    });
+  </script>
+</body>
+</html>

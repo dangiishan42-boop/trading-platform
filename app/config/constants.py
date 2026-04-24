@@ -17,3 +17,23 @@ ANGEL_SYMBOL_TO_TOKEN = {
     "BAJFINANCE": "317",
     "WIPRO": "3787",
 }
+ANGEL_SYMBOL_DETAILS = {
+    "RELIANCE": {"name": "Reliance Industries", "exchange": "NSE", "token": "2885"},
+    "TCS": {"name": "Tata Consultancy Services", "exchange": "NSE", "token": "11536"},
+    "INFY": {"name": "Infosys", "exchange": "NSE", "token": "1594"},
+    "HDFCBANK": {"name": "HDFC Bank", "exchange": "NSE", "token": "1333"},
+    "ICICIBANK": {"name": "ICICI Bank", "exchange": "NSE", "token": "4963"},
+    "SBIN": {"name": "State Bank of India", "exchange": "NSE", "token": "3045"},
+    "AXISBANK": {"name": "Axis Bank", "exchange": "NSE", "token": "5900"},
+    "LT": {"name": "Larsen & Toubro", "exchange": "NSE", "token": "11483"},
+    "ITC": {"name": "ITC", "exchange": "NSE", "token": "1660"},
+    "HINDUNILVR": {"name": "Hindustan Unilever", "exchange": "NSE", "token": "1394"},
+    "BAJFINANCE": {"name": "Bajaj Finance", "exchange": "NSE", "token": "317"},
+    "WIPRO": {"name": "Wipro", "exchange": "NSE", "token": "3787"},
+}
+ANGEL_INDEX_DETAILS = {
+    "NIFTY 50": {"name": "NIFTY 50", "exchange": "NSE", "token": None},
+    "BANK NIFTY": {"name": "BANK NIFTY", "exchange": "NSE", "token": None},
+    "SENSEX": {"name": "SENSEX", "exchange": "BSE", "token": None},
+    "NIFTY IT": {"name": "NIFTY IT", "exchange": "NSE", "token": None},
+}
