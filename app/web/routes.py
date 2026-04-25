@@ -48,6 +48,40 @@ def market_watch_large_chart_page(request: Request):
     )
 
 
+@router.get("/market-watch/stock/{symbol}")
+def market_watch_stock_detail_page(request: Request, symbol: str):
+    normalized_symbol = symbol.strip().upper()
+    return templates.TemplateResponse(
+        request=request,
+        name="market_watch/detail.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - {normalized_symbol} Detail",
+            "angel_symbol_map": ANGEL_SYMBOL_TO_TOKEN,
+            "symbol": normalized_symbol,
+            "asset_type": "stock",
+            "exchange": "NSE",
+        },
+    )
+
+
+@router.get("/market-watch/index/{symbol}")
+def market_watch_index_detail_page(request: Request, symbol: str):
+    normalized_symbol = symbol.strip().upper()
+    return templates.TemplateResponse(
+        request=request,
+        name="market_watch/detail.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - {normalized_symbol} Detail",
+            "angel_symbol_map": ANGEL_SYMBOL_TO_TOKEN,
+            "symbol": normalized_symbol,
+            "asset_type": "index",
+            "exchange": "BSE" if normalized_symbol == "SENSEX" else "NSE",
+        },
+    )
+
+
 @router.get("/dashboard")
 def dashboard_page(request: Request):
     strategies = StrategyRegistry().available()

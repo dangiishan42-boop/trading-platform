@@ -366,6 +366,17 @@
       text-align: left;
       font-weight: 950;
     }
+    .load-mini-btn {
+      min-height: 24px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0b1828;
+      color: #b9c9df;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .load-mini-btn:hover { border-color: var(--blue); color: #fff; background: rgba(47,129,247,0.18); }
     .watchlist-row { cursor: pointer; }
     .watchlist-row:hover td { background: rgba(47,129,247,0.12); }
     .watchlist-refreshing {
@@ -854,6 +865,12 @@
 
     function byId(id) { return document.getElementById(id); }
     function normalize(value) { return String(value || "").trim().toUpperCase().replace(/\s+/g, ""); }
+    function routeSymbol(value) { return String(value || "").trim().toUpperCase().replace(/[\s_-]+/g, ""); }
+    function isIndexSymbol(value) { return INDEX_HEATMAP.some((item) => routeSymbol(item.name) === routeSymbol(value)) || ["NIFTY50", "SENSEX", "BANKNIFTY", "FINNIFTY"].includes(routeSymbol(value)); }
+    function detailPath(symbol, type = null) {
+      const route = routeSymbol(symbol);
+      return `/market-watch/${type || (isIndexSymbol(route) ? "index" : "stock")}/${route}`;
+    }
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
     }
@@ -956,7 +973,7 @@
       ];
       byId("ticker-strip").innerHTML = items.map(([name, value, change], index) => {
         const points = Array.from({ length: 18 }, (_, i) => `${(i / 17) * 42},${22 - (Math.sin((i + index) / 3) * 7 + 11)}`).join(" ");
-        return `<div class="ticker-card"><div><div class="ticker-name">${name}</div><div class="ticker-value mono">${fmt(value)}</div><div class="ticker-chg ${cls(change)}">${change >= 0 ? "UP" : "DN"} ${pct(change)}</div></div><svg class="spark" viewBox="0 0 42 25"><polyline points="${points}" fill="none" stroke="${change >= 0 ? "var(--green)" : "var(--red)"}" stroke-width="2"/></svg></div>`;
+        return `<a class="ticker-card" href="${detailPath(name, "index")}"><div><div class="ticker-name">${name}</div><div class="ticker-value mono">${fmt(value)}</div><div class="ticker-chg ${cls(change)}">${change >= 0 ? "UP" : "DN"} ${pct(change)}</div></div><svg class="spark" viewBox="0 0 42 25"><polyline points="${points}" fill="none" stroke="${change >= 0 ? "var(--green)" : "var(--red)"}" stroke-width="2"/></svg></a>`;
       }).join("");
     }
     function renderClock() {
@@ -1128,13 +1145,13 @@
         const change = Number(index.change);
         const alpha = Math.min(0.86, 0.22 + Math.abs(changePct || 0) / 5.5);
         const bg = changePct >= 0 ? `rgba(0,193,118,${alpha})` : `rgba(255,77,94,${alpha})`;
-        return `<div class="heat-tile" style="background:${bg}">
+        return `<a class="heat-tile" href="${detailPath(index.name, "index")}" style="background:${bg}">
           <div class="heat-symbol">${index.name}</div>
           <div>
             <div class="heat-value mono">${Number.isFinite(Number(index.value)) ? fmt(index.value) : "--"}</div>
             <div class="heat-change mono">${Number.isFinite(change) ? fmt(change) : "--"} | ${Number.isFinite(changePct) ? pct(changePct) : "--"}</div>
           </div>
-        </div>`;
+        </a>`;
       }).join("");
     }
     function renderSectorBars(targetId = "sector-performance") {
@@ -1149,7 +1166,7 @@
     function tableRows(symbols) {
       return symbols.map((symbol) => {
         const q = fallbackQuote(symbol);
-        return `<tr><td><strong>${symbol}</strong></td><td class="mono">${fmt(q.latest_price)}</td><td class="${cls(q.change)} mono">${fmt(q.change)}</td><td class="${cls(q.change_pct)} mono">${pct(q.change_pct)}</td></tr>`;
+        return `<tr><td><a class="symbol-cell-btn" href="${detailPath(symbol)}">${symbol}</a></td><td class="mono">${fmt(q.latest_price)}</td><td class="${cls(q.change)} mono">${fmt(q.change)}</td><td class="${cls(q.change_pct)} mono">${pct(q.change_pct)}</td></tr>`;
       }).join("");
     }
     function activeWatchlist() {
@@ -1180,12 +1197,12 @@
         const hasPrice = Number.isFinite(Number(q.latest_price));
         const hasChange = Number.isFinite(Number(q.change));
         const hasChangePct = Number.isFinite(Number(q.change_pct));
-        return `<tr class="watchlist-row" data-watchlist-load="${item.id}">
-          <td><button class="symbol-cell-btn" type="button" data-watchlist-load="${item.id}">${escapeHtml(item.symbol)}</button><div class="muted">${escapeHtml(item.exchange)} ${escapeHtml(item.display_name || "")}</div></td>
+        return `<tr class="watchlist-row">
+          <td><a class="symbol-cell-btn" href="${detailPath(item.symbol)}">${escapeHtml(item.symbol)}</a><div class="muted">${escapeHtml(item.exchange)} ${escapeHtml(item.display_name || "")}</div></td>
           <td class="mono">${hasPrice ? fmt(q.latest_price) : "--"}</td>
           <td class="${hasChange ? cls(q.change) : "muted"} mono">${hasChange ? fmt(q.change) : "--"}</td>
           <td class="${hasChangePct ? cls(q.change_pct) : "muted"} mono">${hasChangePct ? pct(q.change_pct) : "--"}</td>
-          <td><button class="remove-btn" type="button" data-watchlist-remove="${item.id}">Remove</button></td>
+          <td><button class="load-mini-btn" type="button" data-watchlist-load="${item.id}">Load</button> <button class="remove-btn" type="button" data-watchlist-remove="${item.id}">Remove</button></td>
         </tr>`;
       }).join("");
     }
@@ -1330,7 +1347,7 @@
         ["HDFCBANK", "RSI oversold on daily chart", "8m ago"],
         ["TCS", "Moving average crossover", "14m ago"],
         ["INFY", "High volume spike detected", "21m ago"],
-      ].map(([symbol, text, time]) => `<div class="alert-item"><strong>${symbol}</strong> - ${text}<div class="muted mono">${time}</div></div>`).join("");
+      ].map(([symbol, text, time]) => `<div class="alert-item"><a class="symbol-cell-btn" href="${detailPath(symbol)}">${symbol}</a> - ${text}<div class="muted mono">${time}</div></div>`).join("");
     }
     function renderBottomWidgets() {
       const adv = 1238, dec = 846, flat = 102, total = adv + dec + flat;
@@ -1343,7 +1360,7 @@
       byId("news-list").innerHTML = [["09:42", "Banks mixed ahead of weekly derivatives expiry", "Desk"], ["09:36", "IT basket gains on renewed institutional buying", "Research"], ["09:28", "Rupee opens flat against US dollar", "FX"], ["09:20", "Oil and gas counters see selective demand", "Desk"]].map(([t,h,s]) => `<div class="news-item"><span class="mono muted">${t}</span> ${h}<div class="muted">${s}</div></div>`).join("");
       byId("active-volume-body").innerHTML = ["SBIN", "RELIANCE", "TATASTEEL", "ONGC", "INFY"].map((symbol) => {
         const q = fallbackQuote(symbol);
-        return `<tr><td>${symbol}</td><td class="mono">${fmt(q.latest_price)}</td><td class="mono">${compact(q.volume)}</td><td class="${cls(q.change_pct)}">${pct(q.change_pct)}</td></tr>`;
+        return `<tr><td><a class="symbol-cell-btn" href="${detailPath(symbol)}">${symbol}</a></td><td class="mono">${fmt(q.latest_price)}</td><td class="mono">${compact(q.volume)}</td><td class="${cls(q.change_pct)}">${pct(q.change_pct)}</td></tr>`;
       }).join("");
       byId("currency-body").innerHTML = [["USD/INR", 83.31, 0.04], ["EUR/INR", 89.42, -0.12], ["GBP/INR", 103.9, 0.18], ["JPY/INR", 0.54, -0.06]].map(([s,p,c]) => `<tr><td>${s}</td><td class="mono">${fmt(p)}</td><td class="${cls(c)}">${pct(c)}</td></tr>`).join("");
     }
