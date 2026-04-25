@@ -104,8 +104,8 @@ class AlgoSimulationRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_source(self):
-        if self.source == "upload" and not self.file_name:
-            raise ValueError("file_name is required when source is upload")
+        if self.source in {"upload", "fetched"} and not self.file_name:
+            raise ValueError("file_name is required when source is upload or fetched")
         if not self.conditions and not any(leg.conditions for leg in self.legs):
             raise ValueError("at least one condition or strategy leg is required")
         return self

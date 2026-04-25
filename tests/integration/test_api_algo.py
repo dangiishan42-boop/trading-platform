@@ -108,6 +108,43 @@ def test_algo_simulate_supports_advanced_strategy_payload():
     assert isinstance(payload["equity_curve"], list)
 
 
+def test_algo_simulate_accepts_fetched_dataset_source_alias():
+    upload_response = client.post(
+        "/api/v1/data/upload",
+        files={
+            "file": (
+                "algo_fetched_alias.csv",
+                b"Date,Open,High,Low,Close,Volume\n"
+                b"2025-01-01,100,105,99,104,1000\n"
+                b"2025-01-02,104,108,103,107,1200\n"
+                b"2025-01-03,107,109,101,102,1100\n",
+                "text/csv",
+            )
+        },
+    )
+    assert upload_response.status_code == 200
+    stored_file_name = upload_response.json()["file_name"]
+
+    response = client.post(
+        "/api/v1/algo/simulate",
+        json={
+            "source": "fetched",
+            "file_name": stored_file_name,
+            "symbol": "RELIANCE",
+            "exchange": "NSE",
+            "timeframe": "1D",
+            "conditions": [
+                {"signal_type": "buy", "source": "Price", "operator": ">", "value": 100, "connector": "AND"}
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["symbol"] == "RELIANCE"
+    assert "metrics" in payload
+
+
 def test_algo_validate_returns_strategy_warnings():
     response = client.post(
         "/api/v1/algo/validate",

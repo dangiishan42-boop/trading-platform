@@ -207,9 +207,9 @@ class DataLoaderService:
         normalized_source = source.strip().lower()
         if normalized_source == "sample":
             return self.load_sample()
-        if normalized_source == "upload":
+        if normalized_source in {"upload", "fetched"}:
             return self.load_uploaded(file_name or "")
-        raise InvalidRequestError("source must be either 'sample' or 'upload'")
+        raise InvalidRequestError("source must be either 'sample', 'upload', or 'fetched'")
 
     def preview_sample(self) -> DataPreviewResponse:
         path = SAMPLE_DATA_DIR / "sample_ohlcv.csv"

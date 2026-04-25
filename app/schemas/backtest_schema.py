@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 PositionSizingMode = Literal["fixed_quantity", "fixed_capital", "percent_equity"]
 TradeExitReason = Literal["signal", "stop_loss", "take_profit", "end_of_data"]
-DataSource = Literal["sample", "upload"]
+DataSource = Literal["sample", "upload", "fetched"]
 OptimizationRankingMetric = Literal[
     "net_profit",
     "total_return_pct",

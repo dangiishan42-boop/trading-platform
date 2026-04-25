@@ -44,6 +44,9 @@ def test_algo_trading_page_loads():
 
     assert response.status_code == 200
     assert "Algo Trading" in response.text
+    assert "Market Data / Dataset" in response.text
+    assert "Fetch Angel Data" in response.text
+    assert "Fetched Dataset" in response.text
     assert "Algo Rule Builder" in response.text
     assert "Risk Controls" in response.text
     assert "Simulation Settings" in response.text

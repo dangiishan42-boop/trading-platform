@@ -38,6 +38,7 @@
     .btn-danger { background:#fff1f2; border-color:#fecaca; color:#991b1b; }
     .btn:disabled { opacity:.55; cursor:not-allowed; }
     .notice { padding:10px 12px; border-radius:8px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; font-size:13px; }
+    .notice.warning { background:#fffbeb; border-color:#fde68a; color:#92400e; }
     .notice.danger { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
     .notice.success { background:#f0fdf4; border-color:#bbf7d0; color:#166534; }
     .builder-card { border:1px solid var(--line); border-radius:8px; padding:14px; background:var(--soft); margin-top:12px; }
@@ -47,6 +48,12 @@
     .condition-row.compact { grid-template-columns:120px 110px 132px 116px 96px 120px 96px auto; }
     .chip-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
     .chip { border:1px solid #cbd5e1; background:#fff; border-radius:999px; padding:6px 10px; color:var(--muted); font-size:12px; font-weight:800; }
+    .chip.active { background:#dbeafe; border-color:#93c5fd; color:#1e40af; }
+    .inline-note { color:var(--muted); font-size:12px; line-height:1.5; margin-top:8px; }
+    .dataset-list { display:grid; gap:8px; max-height:240px; overflow:auto; }
+    .list-card { border:1px solid var(--line); border-radius:8px; padding:11px; background:#fff; display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .list-card-title { font-weight:850; overflow-wrap:anywhere; }
+    .list-card-meta { color:var(--muted); font-size:12px; line-height:1.45; margin-top:4px; }
     .metric-card { border:1px solid var(--line); border-radius:8px; padding:14px; background:var(--soft); }
     .metric-label { color:var(--muted); font-size:12px; font-weight:800; }
     .metric-value { margin-top:7px; font-size:24px; font-weight:900; overflow-wrap:anywhere; }
@@ -86,6 +93,48 @@
           <p>Create multi-leg entry logic, indicator exits, stop/target rules, risk controls, and historical simulations from existing data. This is an analytical simulator, not live auto-trading.</p>
         </section>
 
+        <section class="panel" id="market-data-panel">
+          <div class="section-head">
+            <div>
+              <h2>Market Data / Dataset</h2>
+              <div class="muted">Fetch Angel candles here, select a saved dataset, then run the algo simulation without leaving this page.</div>
+            </div>
+            <span class="notice">Upload-backed datasets</span>
+          </div>
+          <form id="angel-fetch-form">
+            <div class="grid-4">
+              <div><label for="angel-exchange">Exchange</label><input id="angel-exchange" value="NSE" /></div>
+              <div><label for="angel-symbol-search">Symbol</label><input id="angel-symbol-search" list="angel-symbol-options" value="RELIANCE" placeholder="RELIANCE, TCS, INFY" /><datalist id="angel-symbol-options"></datalist></div>
+              <div><label for="angel-symbol-token">Symbol Token</label><input id="angel-symbol-token" placeholder="Angel token" /></div>
+              <div><label for="angel-interval">Interval</label><select id="angel-interval"><option value="FIVE_MINUTE">5 Minute</option><option value="FIFTEEN_MINUTE">15 Minute</option><option value="THIRTY_MINUTE">30 Minute</option><option value="ONE_HOUR">1 Hour</option><option value="ONE_DAY">1 Day</option></select></div>
+              <div><label for="angel-from-date">From Date</label><input id="angel-from-date" type="datetime-local" /></div>
+              <div><label for="angel-to-date">To Date</label><input id="angel-to-date" type="datetime-local" /></div>
+              <div style="align-self:end;"><button class="btn btn-primary" type="submit" id="angel-fetch-btn">Fetch Angel Data</button></div>
+              <div style="align-self:end;"><button class="btn" type="button" id="refresh-datasets-btn">Refresh Datasets</button></div>
+            </div>
+            <div class="chip-row" id="angel-interval-presets"></div>
+            <div class="chip-row" id="angel-date-shortcuts"></div>
+            <div class="inline-note" id="angel-range-note">Select a range to fetch candles.</div>
+            <div class="inline-note" id="angel-symbol-note">Known local symbols can fill the Angel token automatically.</div>
+            <div id="angel-fetch-status" class="notice" style="margin-top:14px;">Fetched data is saved into the same dataset library as CSV uploads.</div>
+          </form>
+
+          <div class="grid-4" style="margin-top:16px;">
+            <div class="metric-card"><div class="metric-label">Current Source</div><div class="metric-value" id="dataset-current-source">Sample</div></div>
+            <div class="metric-card"><div class="metric-label">Rows</div><div class="metric-value" id="dataset-rows">--</div></div>
+            <div class="metric-card"><div class="metric-label">Date Range</div><div class="metric-value" id="dataset-date-range">--</div></div>
+            <div class="metric-card"><div class="metric-label">Fetched File Name</div><div class="metric-value" id="dataset-file-name">--</div></div>
+          </div>
+
+          <div class="grid-2" style="margin-top:16px;">
+            <div>
+              <label for="algo-dataset-select">Saved Datasets</label>
+              <select id="algo-dataset-select"><option value="">Select saved dataset</option></select>
+            </div>
+            <div class="dataset-list" id="algo-datasets-list"></div>
+          </div>
+        </section>
+
         <section class="panel">
           <div class="section-head"><h2>Underlying / Symbol</h2><span class="notice">Simulation mode only</span></div>
           <div class="grid-4">
@@ -96,7 +145,7 @@
             <div><label for="algo-symbol">Stock Search</label><input id="algo-symbol" list="algo-symbol-options" value="RELIANCE" placeholder="HDFC Bank, RELIANCE, TCS" /><datalist id="algo-symbol-options"></datalist></div>
             <div><label for="algo-exchange">Exchange</label><input id="algo-exchange" value="NSE" /></div>
             <div><label for="algo-timeframe">Base Timeframe</label><input id="algo-timeframe" value="1D" /></div>
-            <div><label for="algo-source">Data Source</label><select id="algo-source"><option value="sample">Sample</option><option value="upload">Uploaded CSV</option></select></div>
+            <div><label for="algo-source">Data Source</label><select id="algo-source"><option value="sample">Sample</option><option value="upload">Uploaded CSV</option><option value="fetched">Fetched Dataset</option></select></div>
             <div><label for="algo-file-name">Uploaded File Name</label><input id="algo-file-name" placeholder="Required for uploaded CSV" /></div>
             <div><label for="algo-from-date">From Date</label><input id="algo-from-date" type="datetime-local" /></div>
             <div><label for="algo-to-date">To Date</label><input id="algo-to-date" type="datetime-local" /></div>
@@ -207,18 +256,281 @@
     const OPERATORS = [">", "<", ">=", "<=", "crosses above", "crosses below"];
     const CONNECTORS = ["AND", "OR"];
     const TIMEFRAMES = ["Intraday", "Daily", "Weekly", "Monthly"];
+    const ANGEL_INTERVAL_PRESETS = [
+      { label: "5m", value: "FIVE_MINUTE", timeframe: "5M" },
+      { label: "15m", value: "FIFTEEN_MINUTE", timeframe: "15M" },
+      { label: "30m", value: "THIRTY_MINUTE", timeframe: "30M" },
+      { label: "1h", value: "ONE_HOUR", timeframe: "1H" },
+      { label: "1D", value: "ONE_DAY", timeframe: "1D" },
+    ];
+    const ANGEL_DATE_SHORTCUTS = [
+      { label: "1D", days: 1 },
+      { label: "5D", days: 5 },
+      { label: "1M", days: 30 },
+      { label: "3M", days: 90 },
+    ];
     const savedStrategies = new Map();
+    const datasets = new Map();
+    const angelState = { dateShortcutDays: null, activeDataset: null };
     let legCounter = 0;
 
     function byId(id) { return document.getElementById(id); }
     function fmt(value, digits = 2) { const n = Number(value); return Number.isFinite(n) ? n.toFixed(digits) : "--"; }
     function pct(value) { return `${fmt(value)}%`; }
     function money(value) { return fmt(value); }
+    function setNotice(id, message, type = "") { const el = byId(id); el.innerHTML = message; el.className = `notice ${type}`.trim(); }
     function setStatus(message, type = "") { const el = byId("algo-status"); el.textContent = message; el.className = `notice ${type}`.trim(); }
     function setSaveStatus(message, type = "") { const el = byId("algo-save-status"); el.textContent = message; el.className = `notice ${type}`.trim(); }
     function setValidation(message, type = "") { const el = byId("validation-status"); el.textContent = message; el.className = `notice ${type}`.trim(); }
     function options(values, selected = "") { return values.map((value) => `<option value="${value}" ${value === selected ? "selected" : ""}>${value}</option>`).join(""); }
     function numberOrNull(value) { return value === "" || value === null || value === undefined ? null : Number(value); }
+    function normalizeSymbol(value) { return String(value || "").trim().toUpperCase().replace(/\s+/g, ""); }
+    function mappedToken(symbol) { return SYMBOL_MAP[normalizeSymbol(symbol)] || null; }
+    function intervalToTimeframe(value) { return (ANGEL_INTERVAL_PRESETS.find((item) => item.value === value) || {}).timeframe || value; }
+    function formatDateValue(value) {
+      if (!value) return "--";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+    }
+    function formatDateRange(minDate, maxDate) {
+      if (!minDate && !maxDate) return "--";
+      return `${formatDateValue(minDate)} to ${formatDateValue(maxDate)}`;
+    }
+    function toDatetimeLocal(date) {
+      const pad = (value) => String(value).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+    function selectedDatasetMeta() {
+      return angelState.activeDataset || datasets.get(byId("algo-file-name").value.trim()) || null;
+    }
+
+    function refreshDatasetSummary() {
+      const source = byId("algo-source").value;
+      const meta = selectedDatasetMeta();
+      byId("dataset-current-source").textContent = source === "sample" ? "Sample" : source === "fetched" ? "Fetched Dataset" : "Uploaded CSV";
+      byId("dataset-rows").textContent = meta?.row_count ?? "--";
+      byId("dataset-date-range").textContent = formatDateRange(meta?.min_date, meta?.max_date);
+      byId("dataset-file-name").textContent = byId("algo-file-name").value.trim() || "--";
+      const datasetSelect = byId("algo-dataset-select");
+      if (datasetSelect && byId("algo-file-name").value.trim()) {
+        datasetSelect.value = byId("algo-file-name").value.trim();
+      }
+    }
+
+    function activateDataset(dataset, source = "upload", notice = "") {
+      if (!dataset) return;
+      const storedFileName = dataset.stored_file_name || dataset.storedFileName || dataset.file_name || "";
+      const originalFileName = dataset.original_file_name || dataset.originalFileName || storedFileName;
+      const meta = {
+        original_file_name: originalFileName,
+        stored_file_name: storedFileName,
+        row_count: dataset.row_count ?? dataset.rowCount ?? null,
+        min_date: dataset.min_date ?? dataset.minDate ?? null,
+        max_date: dataset.max_date ?? dataset.maxDate ?? null,
+      };
+      if (storedFileName) datasets.set(storedFileName, meta);
+      angelState.activeDataset = meta;
+      byId("algo-source").value = source;
+      byId("algo-file-name").value = storedFileName;
+      refreshDatasetSummary();
+      if (notice) setNotice("angel-fetch-status", notice, "success");
+    }
+
+    function renderSavedDatasets(items = []) {
+      const select = byId("algo-dataset-select");
+      const list = byId("algo-datasets-list");
+      datasets.clear();
+      select.innerHTML = '<option value="">Select saved dataset</option>';
+      list.innerHTML = "";
+      if (!items.length) {
+        list.innerHTML = '<div class="notice">No saved datasets yet.</div>';
+        refreshDatasetSummary();
+        return;
+      }
+      items.forEach((dataset) => {
+        datasets.set(dataset.stored_file_name, dataset);
+        const option = document.createElement("option");
+        option.value = dataset.stored_file_name;
+        option.textContent = `${dataset.original_file_name} (${dataset.row_count} rows)`;
+        select.appendChild(option);
+        const card = document.createElement("div");
+        card.className = "list-card";
+        card.innerHTML = `
+          <div>
+            <div class="list-card-title">${dataset.original_file_name}</div>
+            <div class="list-card-meta">Stored as: ${dataset.stored_file_name}<br>Rows: ${dataset.row_count} | Range: ${formatDateRange(dataset.min_date, dataset.max_date)}</div>
+          </div>
+          <button class="btn" type="button" data-use-dataset="${dataset.stored_file_name}">Use</button>
+        `;
+        list.appendChild(card);
+      });
+      list.querySelectorAll("[data-use-dataset]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const dataset = datasets.get(button.dataset.useDataset);
+          activateDataset(dataset, "upload", `Selected saved dataset: <strong>${button.dataset.useDataset}</strong>`);
+        });
+      });
+      refreshDatasetSummary();
+    }
+
+    async function loadDatasets() {
+      try {
+        const res = await fetch("/api/v1/data/uploads?limit=50");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Failed to load datasets");
+        renderSavedDatasets(data || []);
+      } catch (error) {
+        setNotice("angel-fetch-status", error.message || "Unable to load saved datasets", "danger");
+      }
+    }
+
+    function applySelectedDatasetFromDropdown() {
+      const stored = byId("algo-dataset-select").value;
+      if (!stored) return;
+      activateDataset(datasets.get(stored), "upload", `Selected saved dataset: <strong>${stored}</strong>`);
+    }
+
+    function refreshAngelIntervalPresetState() {
+      const active = byId("angel-interval").value;
+      document.querySelectorAll("[data-angel-interval-preset]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.angelIntervalPreset === active);
+      });
+    }
+
+    function refreshAngelDateShortcutState() {
+      document.querySelectorAll("[data-angel-range-days]").forEach((button) => {
+        button.classList.toggle("active", Number(button.dataset.angelRangeDays) === angelState.dateShortcutDays);
+      });
+    }
+
+    function refreshAngelRangeSelection() {
+      const fromValue = byId("angel-from-date").value;
+      const toValue = byId("angel-to-date").value;
+      byId("angel-range-note").textContent = fromValue && toValue
+        ? `Selected range: ${formatDateValue(fromValue)} to ${formatDateValue(toValue)}.`
+        : "Select a range to fetch candles.";
+    }
+
+    function applyAngelDateShortcut(days) {
+      const toDate = new Date();
+      const fromDate = new Date(toDate);
+      fromDate.setDate(fromDate.getDate() - days);
+      byId("angel-from-date").value = toDatetimeLocal(fromDate);
+      byId("angel-to-date").value = toDatetimeLocal(toDate);
+      angelState.dateShortcutDays = days;
+      refreshAngelDateShortcutState();
+      refreshAngelRangeSelection();
+    }
+
+    function handleAngelDateManualEdit() {
+      angelState.dateShortcutDays = null;
+      refreshAngelDateShortcutState();
+      refreshAngelRangeSelection();
+    }
+
+    function refreshAngelSymbolSelection() {
+      const symbol = normalizeSymbol(byId("angel-symbol-search").value);
+      const token = mappedToken(symbol);
+      const tokenInput = byId("angel-symbol-token");
+      if (token && !tokenInput.value.trim()) tokenInput.value = token;
+      byId("angel-symbol-note").textContent = token
+        ? `${symbol} matched local Angel token ${token}.`
+        : `Known local symbols: ${Object.keys(SYMBOL_MAP).join(", ")}. You can also enter a token manually.`;
+    }
+
+    function applyAngelSymbolLookup() {
+      const symbol = normalizeSymbol(byId("angel-symbol-search").value);
+      byId("angel-symbol-search").value = symbol;
+      const token = mappedToken(symbol);
+      if (token) byId("angel-symbol-token").value = token;
+      if (symbol) byId("algo-symbol").value = symbol;
+      refreshAngelSymbolSelection();
+    }
+
+    function syncAlgoSymbolToFetch() {
+      const symbol = normalizeSymbol(byId("algo-symbol").value);
+      if (!symbol) return;
+      byId("angel-symbol-search").value = symbol;
+      const token = mappedToken(symbol);
+      if (token) byId("angel-symbol-token").value = token;
+      refreshAngelSymbolSelection();
+    }
+
+    function renderAngelControls() {
+      const intervalWrap = byId("angel-interval-presets");
+      intervalWrap.innerHTML = "";
+      ANGEL_INTERVAL_PRESETS.forEach((preset) => {
+        const button = document.createElement("button");
+        button.className = "chip";
+        button.type = "button";
+        button.dataset.angelIntervalPreset = preset.value;
+        button.textContent = preset.label;
+        button.addEventListener("click", () => {
+          byId("angel-interval").value = preset.value;
+          byId("algo-timeframe").value = preset.timeframe;
+          refreshAngelIntervalPresetState();
+        });
+        intervalWrap.appendChild(button);
+      });
+      const shortcutWrap = byId("angel-date-shortcuts");
+      shortcutWrap.innerHTML = "";
+      ANGEL_DATE_SHORTCUTS.forEach((shortcut) => {
+        const button = document.createElement("button");
+        button.className = "chip";
+        button.type = "button";
+        button.dataset.angelRangeDays = String(shortcut.days);
+        button.textContent = shortcut.label;
+        button.addEventListener("click", () => applyAngelDateShortcut(shortcut.days));
+        shortcutWrap.appendChild(button);
+      });
+      refreshAngelIntervalPresetState();
+      refreshAngelDateShortcutState();
+    }
+
+    async function fetchAngelData(event) {
+      event.preventDefault();
+      applyAngelSymbolLookup();
+      const selectedSymbol = normalizeSymbol(byId("angel-symbol-search").value);
+      const body = {
+        exchange: byId("angel-exchange").value.trim() || "NSE",
+        symbol_token: byId("angel-symbol-token").value.trim(),
+        interval: byId("angel-interval").value,
+        fromdate: byId("angel-from-date").value,
+        todate: byId("angel-to-date").value,
+      };
+      if (!body.symbol_token) {
+        setNotice("angel-fetch-status", "Enter a Symbol Token or choose a mapped symbol before fetching.", "danger");
+        return;
+      }
+      byId("angel-fetch-btn").disabled = true;
+      setNotice("angel-fetch-status", "Fetching Angel One candle data...", "warning");
+      try {
+        const res = await fetch("/api/v1/data/fetch-angel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Angel One fetch failed");
+        const meta = {
+          original_file_name: data.original_file_name,
+          stored_file_name: data.stored_file_name,
+          row_count: data.row_count,
+          min_date: data.min_date,
+          max_date: data.max_date,
+        };
+        byId("algo-symbol").value = selectedSymbol || byId("algo-symbol").value.trim() || "DEMO";
+        byId("algo-exchange").value = body.exchange;
+        byId("algo-timeframe").value = intervalToTimeframe(body.interval);
+        activateDataset(meta, "fetched", "Angel data fetched and selected for Algo simulation");
+        await loadDatasets();
+        activateDataset(meta, "fetched", "Angel data fetched and selected for Algo simulation");
+      } catch (error) {
+        setNotice("angel-fetch-status", error.message || "Angel One fetch failed", "danger");
+      } finally {
+        byId("angel-fetch-btn").disabled = false;
+      }
+    }
 
     function conditionRow(defaults = {}, compact = false) {
       const row = document.createElement("div");
@@ -407,6 +719,9 @@
       byId("algo-target").value = exits.target_pct ?? config.target_pct ?? 4;
       byId("algo-max-bars").value = exits.max_bars_in_trade ?? "";
       byId("algo-reversal-exit").checked = exits.signal_reversal_exit !== false;
+      const configDataset = byId("algo-file-name").value.trim();
+      angelState.activeDataset = configDataset ? datasets.get(configDataset) || angelState.activeDataset : null;
+      refreshDatasetSummary();
       clearBuilder();
       const legacyConditions = config.conditions || [];
       const legs = config.legs && config.legs.length ? config.legs : [{ name: "Entry", connector: "AND", conditions: legacyConditions.filter((rule) => rule.signal_type !== "exit") }];
@@ -560,6 +875,15 @@
         option.value = symbol;
         list.appendChild(option);
       });
+      const angelList = byId("angel-symbol-options");
+      Object.keys(SYMBOL_MAP).forEach((symbol) => {
+        const option = document.createElement("option");
+        option.value = symbol;
+        angelList.appendChild(option);
+      });
+      renderAngelControls();
+      applyAngelDateShortcut(1);
+      applyAngelSymbolLookup();
       addDefaultBuilder();
       byId("add-leg-btn").addEventListener("click", () => addLeg({ name: `Leg ${legCounter + 1}` }));
       byId("add-target-btn").addEventListener("click", () => addTarget());
@@ -568,7 +892,27 @@
       byId("run-simulation-btn").addEventListener("click", simulate);
       byId("save-algo-strategy-btn").addEventListener("click", saveAlgoStrategy);
       byId("load-algo-strategy-btn").addEventListener("click", loadSelectedStrategy);
+      byId("angel-fetch-form").addEventListener("submit", fetchAngelData);
+      byId("angel-symbol-search").addEventListener("input", applyAngelSymbolLookup);
+      byId("angel-symbol-search").addEventListener("change", applyAngelSymbolLookup);
+      byId("angel-symbol-token").addEventListener("input", refreshAngelSymbolSelection);
+      byId("angel-interval").addEventListener("change", () => {
+        byId("algo-timeframe").value = intervalToTimeframe(byId("angel-interval").value);
+        refreshAngelIntervalPresetState();
+      });
+      byId("angel-from-date").addEventListener("input", handleAngelDateManualEdit);
+      byId("angel-to-date").addEventListener("input", handleAngelDateManualEdit);
+      byId("refresh-datasets-btn").addEventListener("click", loadDatasets);
+      byId("algo-dataset-select").addEventListener("change", applySelectedDatasetFromDropdown);
+      byId("algo-source").addEventListener("change", refreshDatasetSummary);
+      byId("algo-file-name").addEventListener("input", () => {
+        angelState.activeDataset = datasets.get(byId("algo-file-name").value.trim()) || null;
+        refreshDatasetSummary();
+      });
+      byId("algo-symbol").addEventListener("change", syncAlgoSymbolToFetch);
       loadSavedStrategies();
+      loadDatasets();
+      refreshDatasetSummary();
     });
   </script>
 </body>
