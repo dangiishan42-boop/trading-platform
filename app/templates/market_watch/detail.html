@@ -123,10 +123,60 @@
     .peer-name { margin-top: 2px; color: var(--muted); font-size: 11px; font-weight: 850; overflow-wrap: anywhere; }
     .news-stack { display: grid; gap: 8px; }
     .ohlc-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .fundamentals-stack { display: grid; gap: 10px; }
+    .fundamentals-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, auto); gap: 16px; padding: 16px; background: linear-gradient(180deg, #111f33, #081322); }
+    .fundamentals-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+    .fundamentals-table-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+    .research-list { display: grid; gap: 8px; }
+    .research-warning { border: 1px solid rgba(245,184,75,0.36); border-radius: 7px; background: rgba(245,184,75,0.08); padding: 10px; color: #e7d2a7; font-size: 12px; font-weight: 850; }
+    .option-stack { display: grid; gap: 10px; }
+    .option-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, auto); gap: 16px; padding: 16px; background: linear-gradient(180deg, #111f33, #081322); }
+    .option-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.8fr); gap: 10px; align-items: start; }
+    .option-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+    .option-controls.pro { grid-template-columns: 180px 160px 160px auto 1fr; align-items: center; }
+    .option-table-wrap.chain-scroll { max-height: 560px; overflow: auto; }
+    .option-table thead th { position: sticky; top: 0; z-index: 2; background: #0b1828; }
+    .call-cell { background: rgba(0,193,118,0.055); }
+    .put-cell { background: rgba(255,77,94,0.055); }
+    .strike-cell { background: rgba(47,129,247,0.12); font-weight: 950; text-align: center; }
+    .atm-row td { box-shadow: inset 0 0 0 999px rgba(245,184,75,0.055); }
+    .high-oi { color: var(--amber); font-weight: 950; }
+    .heatmap-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .heatmap-card { border: 1px solid rgba(31,53,82,0.75); border-radius: 7px; background: rgba(5,11,20,0.5); min-height: 82px; padding: 10px; }
+    .strategy-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .technical-stack { display: grid; gap: 10px; }
+    .technical-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, auto); gap: 16px; padding: 16px; background: linear-gradient(180deg, #111f33, #081322); }
+    .technical-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+    .score-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+    .technical-table-grid { display: grid; grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1.15fr); gap: 10px; align-items: start; }
+    .interpretation-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .peers-stack { display: grid; gap: 10px; }
+    .peers-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, auto); gap: 16px; padding: 16px; background: linear-gradient(180deg, #111f33, #081322); }
+    .peers-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.8fr); gap: 10px; align-items: start; }
+    .peer-bar-list { display: grid; gap: 8px; }
+    .peer-bar { display: grid; grid-template-columns: 90px minmax(0, 1fr) 70px; gap: 8px; align-items: center; font-size: 12px; font-weight: 850; }
+    .peer-bar-track { height: 10px; border-radius: 5px; background: rgba(31,53,82,0.75); overflow: hidden; }
+    .peer-bar-fill { height: 100%; background: var(--green); }
+    .peer-bar-fill.negative { background: var(--red); }
+    .actions-stack { display: grid; gap: 10px; }
+    .actions-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, auto); gap: 16px; padding: 16px; background: linear-gradient(180deg, #111f33, #081322); }
+    .actions-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+    .quick-action-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .quick-action-card { min-height: 84px; border: 1px solid rgba(31,53,82,0.82); border-radius: 8px; background: rgba(5,11,20,0.48); color: var(--text); padding: 12px; display: grid; align-content: center; gap: 5px; text-align: left; font-weight: 900; }
+    .quick-action-card:hover { border-color: var(--blue); background: rgba(47,129,247,0.16); }
+    .quick-action-sub { color: var(--muted); font-size: 11px; font-weight: 850; }
+    .workflow-list { display: grid; gap: 8px; }
+    .workflow-step { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; color: #afc0d6; font-size: 12px; font-weight: 850; }
+    .workflow-step span:first-child { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line-2); color: #58a6ff; font-size: 11px; }
+    .alert-form { display: grid; grid-template-columns: 180px 160px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
     @media (max-width: 1280px) {
-      .content-grid, .overview-layout, .overview-row, .overview-bottom { grid-template-columns: 1fr; }
+      .content-grid, .overview-layout, .overview-row, .overview-bottom, .fundamentals-layout, .fundamentals-table-grid, .option-layout, .option-row, .technical-layout, .technical-table-grid, .peers-layout, .actions-layout { grid-template-columns: 1fr; }
       .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .performance-grid.overview-performance { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .option-controls.pro { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .score-grid, .interpretation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .quick-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .alert-form { grid-template-columns: 1fr; }
     }
     @media (max-width: 900px) {
       .terminal { grid-template-columns: 1fr; }
@@ -138,7 +188,7 @@
       .top-actions { border-left: 0; border-top: 1px solid var(--line); justify-content: space-between; }
       .hero-price { text-align: left; }
       .action-row { justify-content: flex-start; }
-      .overview-hero, .overview-meta-grid, .ohlc-row, .stat-grid, .performance-grid, .performance-grid.overview-performance, .signal-grid, .action-grid, .option-controls { grid-template-columns: 1fr; }
+      .overview-hero, .fundamentals-hero, .option-hero, .technical-hero, .peers-hero, .actions-hero, .overview-meta-grid, .ohlc-row, .stat-grid, .performance-grid, .performance-grid.overview-performance, .signal-grid, .action-grid, .option-controls, .option-controls.pro, .heatmap-grid, .strategy-grid, .score-grid, .interpretation-grid, .quick-action-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -336,77 +386,490 @@
         </section>
       </section>
       {% elif active_section == 'fundamentals' %}
-      <section class="panel" id="fundamentals">
-        <div class="panel-head"><div class="panel-title">Company Snapshot / Fundamentals</div></div>
-        <div class="panel-body">
-          <div class="placeholder" id="fundamentals-message">Fundamental data source not connected yet</div>
-          <div class="stat-grid" id="fundamentals-grid" style="margin-top:10px;"></div>
-        </div>
-      </section>
-      {% elif active_section == 'option-chain' %}
-      <section class="panel" id="option-chain">
-        <div class="panel-head"><div class="panel-title">Option Chain</div></div>
-        <div class="panel-body">
-          <div class="option-controls">
-            <select class="terminal-select" id="expiry-select"><option>Expiry unavailable</option></select>
-            <select class="terminal-select" id="strike-range-select"><option>ATM +/- 5 strikes</option><option>ATM +/- 10 strikes</option></select>
-            <div class="placeholder" id="option-chain-message">Option chain data source not connected yet</div>
+      <section class="fundamentals-stack" id="fundamentals">
+        <section class="panel">
+          <div class="fundamentals-hero">
+            <div>
+              <div class="hero-kicker" id="fundamentals-data-status">Fundamental data source not connected yet</div>
+              <div class="hero-symbol" id="fundamentals-symbol">{{ symbol }}</div>
+              <div class="hero-name" id="fundamentals-name">Loading instrument...</div>
+              <div class="badge-row">
+                <span class="badge" id="fundamentals-exchange">{{ exchange }}</span>
+                <span class="badge" id="fundamentals-sector">Sector --</span>
+                <span class="badge" id="fundamentals-industry">Industry --</span>
+              </div>
+            </div>
+            <div class="hero-price">
+              <div class="price-main mono" id="fundamentals-price">--</div>
+              <div class="price-change mono" id="fundamentals-change">--</div>
+              <div class="hero-meta" id="fundamentals-updated">Last updated --</div>
+            </div>
           </div>
-          <div class="performance-grid" id="option-summary"></div>
-          <div class="option-table-wrap" style="margin-top:10px;">
-            <table class="option-table">
-              <thead>
-                <tr><th>CE LTP</th><th>CE Chg</th><th>CE OI</th><th>CE OI Chg</th><th>CE Vol</th><th>CE IV</th><th>Strike</th><th>PE LTP</th><th>PE Chg</th><th>PE OI</th><th>PE OI Chg</th><th>PE Vol</th><th>PE IV</th></tr>
-              </thead>
-              <tbody id="option-chain-body"><tr><td colspan="13" class="muted">Option chain data source not connected yet</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-      {% elif active_section == 'technical' %}
-      <section class="content-grid">
-        <div class="left-stack">
-          <section class="panel" id="technical-signals">
-            <div class="panel-head"><div class="panel-title">Technical Signals</div></div>
+        </section>
+
+        <section class="fundamentals-layout">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Valuation Snapshot</div></div>
             <div class="panel-body">
-              <div id="technical-rating"></div>
-              <div class="signal-grid" id="technical-signals-grid"></div>
+              <div class="placeholder" id="fundamentals-message">Fundamental data source not connected yet</div>
+              <div class="stat-grid" id="valuation-grid" style="margin-top:10px;"></div>
             </div>
           </section>
-          <section class="panel" id="technical" style="margin-top:10px;">
-            <div class="panel-head"><div class="panel-title">Derived Metrics</div></div>
-            <div class="panel-body"><div class="metric-list" id="technical-list"></div></div>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Profitability Ratios</div></div>
+            <div class="panel-body"><div class="stat-grid" id="profitability-grid"></div></div>
           </section>
-        </div>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Growth Metrics</div></div>
+            <div class="panel-body"><div class="stat-grid" id="growth-grid"></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Balance Sheet Strength</div></div>
+            <div class="panel-body"><div class="stat-grid" id="balance-strength-grid"></div></div>
+          </section>
+        </section>
+
+        <section class="fundamentals-table-grid">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Quarterly Results</div></div>
+            <div class="panel-body">
+              <div class="option-table-wrap">
+                <table class="peer-table">
+                  <thead><tr><th>Quarter</th><th>Revenue</th><th>EBITDA</th><th>Net Profit</th><th>EPS</th><th>Margin %</th></tr></thead>
+                  <tbody id="quarterly-results-body"><tr><td colspan="6" class="muted">Quarterly results data source not connected yet</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Annual P&amp;L</div></div>
+            <div class="panel-body">
+              <div class="option-table-wrap">
+                <table class="peer-table">
+                  <thead><tr><th>Year</th><th>Revenue</th><th>Expenses</th><th>EBITDA</th><th>Net Profit</th><th>EPS</th></tr></thead>
+                  <tbody id="annual-pl-body"><tr><td colspan="6" class="muted">Annual P&amp;L data source not connected yet</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Balance Sheet</div></div>
+            <div class="panel-body">
+              <div class="option-table-wrap">
+                <table class="peer-table">
+                  <thead><tr><th>Year</th><th>Assets</th><th>Liabilities</th><th>Equity</th><th>Debt</th><th>Cash</th></tr></thead>
+                  <tbody id="balance-sheet-body"><tr><td colspan="6" class="muted">Balance sheet data source not connected yet</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Cash Flow</div></div>
+            <div class="panel-body">
+              <div class="option-table-wrap">
+                <table class="peer-table">
+                  <thead><tr><th>Year</th><th>Operating CF</th><th>Investing CF</th><th>Financing CF</th><th>Free Cash Flow</th></tr></thead>
+                  <tbody id="cash-flow-body"><tr><td colspan="5" class="muted">Cash flow data source not connected yet</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="fundamentals-layout">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Shareholding Pattern</div></div>
+            <div class="panel-body"><div class="stat-grid" id="shareholding-grid"></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Dividend / Corporate Actions</div></div>
+            <div class="panel-body news-stack">
+              <div class="placeholder">Dividend history data source not connected yet</div>
+              <div class="placeholder">Bonus/split data source not connected yet</div>
+              <div class="placeholder">Results date data source not connected yet</div>
+            </div>
+          </section>
+        </section>
+
+        <section class="fundamentals-layout">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Peer Valuation Compare</div></div>
+            <div class="panel-body">
+              <div class="option-table-wrap">
+                <table class="peer-table">
+                  <thead><tr><th>Peer Symbol</th><th>Market Cap</th><th>P/E</th><th>P/B</th><th>ROE</th><th>1Y Return</th></tr></thead>
+                  <tbody id="peer-valuation-body"><tr><td colspan="6" class="muted">Peer fundamentals data source not connected yet</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Research Notes / Warnings</div></div>
+            <div class="panel-body"><div class="research-list" id="research-warnings"></div></div>
+          </section>
+        </section>
+      </section>
+      {% elif active_section == 'option-chain' %}
+      <section class="option-stack" id="option-chain">
+        <section class="panel">
+          <div class="option-hero">
+            <div>
+              <div class="hero-kicker" id="option-data-status">Option chain data source not connected yet</div>
+              <div class="hero-symbol" id="option-symbol">{{ symbol }}</div>
+              <div class="hero-name" id="option-name">Loading instrument...</div>
+              <div class="badge-row">
+                <span class="badge" id="option-exchange">{{ exchange }}</span>
+                <span class="badge" id="option-expiry">Expiry unavailable</span>
+                <span class="badge" id="option-atm">ATM --</span>
+              </div>
+            </div>
+            <div class="hero-price">
+              <div class="price-main mono" id="option-underlying-price">--</div>
+              <div class="price-change mono" id="option-underlying-change">--</div>
+              <div class="hero-meta" id="option-updated">Last updated --</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Controls</div></div>
+          <div class="panel-body">
+            <div class="option-controls pro">
+              <select class="terminal-select" id="expiry-select"><option>Expiry unavailable</option></select>
+              <select class="terminal-select" id="strike-range-select"><option value="5">ATM +/- 5</option><option value="10">ATM +/- 10</option><option value="all">All</option></select>
+              <select class="terminal-select" id="option-type-filter"><option value="both">Calls + Puts</option><option value="calls">Calls only</option><option value="puts">Puts only</option></select>
+              <button class="tool-btn" id="option-refresh-btn" type="button">Refresh</button>
+              <label class="market-pill"><input id="option-auto-refresh" type="checkbox" disabled /> Auto-refresh</label>
+            </div>
+            <div class="placeholder" id="option-chain-message" style="margin-top:10px;">Option chain data source not connected yet</div>
+          </div>
+        </section>
+
+        <section class="option-layout">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Option Chain Table</div></div>
+            <div class="panel-body">
+              <div class="option-table-wrap chain-scroll">
+                <table class="option-table">
+                  <thead>
+                    <tr><th colspan="6">CALL SIDE</th><th colspan="2">STRIKE</th><th colspan="6">PUT SIDE</th></tr>
+                    <tr><th>CE LTP</th><th>CE Chg</th><th>CE Volume</th><th>CE OI</th><th>CE OI Chg</th><th>CE IV</th><th>Strike</th><th>Moneyness</th><th>PE IV</th><th>PE OI Chg</th><th>PE OI</th><th>PE Volume</th><th>PE Chg</th><th>PE LTP</th></tr>
+                  </thead>
+                  <tbody id="option-chain-body"><tr><td colspan="14" class="muted">Option chain data source not connected yet</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <div class="right-stack">
+            <section class="panel">
+              <div class="panel-head"><div class="panel-title">Summary Cards</div></div>
+              <div class="panel-body"><div class="stat-grid" id="option-summary"></div></div>
+            </section>
+            <section class="panel" style="margin-top:10px;">
+              <div class="panel-head"><div class="panel-title">OI Heatmap</div></div>
+              <div class="panel-body">
+                <div class="heatmap-grid" id="oi-heatmap"></div>
+                <div class="placeholder" id="oi-heatmap-message" style="margin-top:10px;">Option-chain OI heatmap data source not connected yet</div>
+              </div>
+            </section>
+            <section class="panel" style="margin-top:10px;">
+              <div class="panel-head"><div class="panel-title">Buildup Analysis</div></div>
+              <div class="panel-body">
+                <div class="stat-grid" id="buildup-grid"></div>
+                <div class="placeholder" id="buildup-message" style="margin-top:10px;">Requires live option-chain OI change data</div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="option-row">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Option Strategy Quick Builder</div></div>
+            <div class="panel-body">
+              <div class="strategy-grid">
+                <button class="tool-btn option-strategy-btn" type="button">Long Call</button>
+                <button class="tool-btn option-strategy-btn" type="button">Long Put</button>
+                <button class="tool-btn option-strategy-btn" type="button">Bull Call Spread</button>
+                <button class="tool-btn option-strategy-btn" type="button">Bear Put Spread</button>
+                <button class="tool-btn option-strategy-btn" type="button">Short Straddle</button>
+                <button class="tool-btn option-strategy-btn" type="button">Short Strangle</button>
+              </div>
+              <div class="placeholder" id="strategy-builder-message" style="margin-top:10px;">Option strategy builder connection coming soon</div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Historical Option Chain</div></div>
+            <div class="panel-body news-stack">
+              <div class="placeholder"><strong>Historical OI</strong><br>Historical option-chain data source not connected yet</div>
+              <div class="placeholder"><strong>Historical PCR</strong><br>Historical option-chain data source not connected yet</div>
+              <div class="placeholder"><strong>Historical Max Pain</strong><br>Historical option-chain data source not connected yet</div>
+            </div>
+          </section>
+        </section>
+      </section>
+      {% elif active_section == 'technical' %}
+      <section class="technical-stack" id="technical-signals">
+        <section class="panel">
+          <div class="technical-hero">
+            <div>
+              <div class="hero-kicker" id="technical-data-status">Loading technical signals...</div>
+              <div class="hero-symbol" id="technical-symbol">{{ symbol }}</div>
+              <div class="hero-name" id="technical-name">Loading instrument...</div>
+              <div class="badge-row">
+                <span class="badge" id="technical-exchange">{{ exchange }}</span>
+                <span class="badge" id="technical-timeframe">Timeframe 5m</span>
+                <span class="badge" id="technical-rating-badge">Neutral</span>
+              </div>
+            </div>
+            <div class="hero-price">
+              <div class="price-main mono" id="technical-price">--</div>
+              <div class="price-change mono" id="technical-change">--</div>
+              <div class="hero-meta" id="technical-updated">Last updated --</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Signal Timeframe</div><div class="status-line" id="page-status">Loading...</div></div>
+          <div class="panel-body">
+            <div class="time-row" id="timeframes"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Overall Signal Score</div></div>
+          <div class="panel-body">
+            <div id="technical-rating"></div>
+            <div class="score-grid" id="technical-score-grid"></div>
+          </div>
+        </section>
+
+        <section class="technical-layout">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Trend Signals</div></div>
+            <div class="panel-body"><div class="signal-grid" id="trend-signals-grid"></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Momentum Signals</div></div>
+            <div class="panel-body"><div class="signal-grid" id="momentum-signals-grid"></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Volume Signals</div></div>
+            <div class="panel-body"><div class="signal-grid" id="volume-signals-grid"></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Volatility / Risk Signals</div></div>
+            <div class="panel-body"><div class="signal-grid" id="risk-signals-grid"></div></div>
+          </section>
+        </section>
+
+        <section class="technical-layout">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Support &amp; Resistance</div></div>
+            <div class="panel-body"><div class="signal-grid" id="support-resistance-grid"></div></div>
+          </section>
+          <section class="panel" id="technical">
+            <div class="panel-head"><div class="panel-title">Technical Summary / Interpretation</div></div>
+            <div class="panel-body"><div class="interpretation-grid" id="technical-interpretation"></div></div>
+          </section>
+        </section>
+
+        <section class="technical-table-grid">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Multi-Timeframe Signal Summary</div></div>
+            <div class="panel-body">
+              <div class="option-table-wrap">
+                <table class="peer-table">
+                  <thead><tr><th>Timeframe</th><th>Trend</th><th>Momentum</th><th>Rating</th></tr></thead>
+                  <tbody id="multi-timeframe-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Signal History</div></div>
+            <div class="panel-body">
+              <div class="option-table-wrap">
+                <table class="peer-table">
+                  <thead><tr><th>Date/Time</th><th>Signal Type</th><th>Description</th><th>Strength</th><th>Price</th></tr></thead>
+                  <tbody id="signal-history-body"><tr><td colspan="5" class="muted">No technical signals detected from available candle data</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </section>
       </section>
       {% elif active_section == 'peers' %}
-      <section class="panel" id="peers">
-        <div class="panel-head"><div class="panel-title">Related Stocks / Peers</div></div>
-        <div class="panel-body">
-          <div class="placeholder" id="peers-message">Loading peers...</div>
-          <div class="option-table-wrap" style="margin-top:10px;">
-            <table class="peer-table">
-              <thead><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Chg %</th><th>Sector</th><th></th></tr></thead>
-              <tbody id="peers-body"></tbody>
-            </table>
+      <section class="peers-stack" id="peers">
+        <section class="panel">
+          <div class="peers-hero">
+            <div>
+              <div class="hero-kicker" id="peers-data-status">Loading peers...</div>
+              <div class="hero-symbol" id="peers-symbol">{{ symbol }}</div>
+              <div class="hero-name" id="peers-name">Loading instrument...</div>
+              <div class="badge-row">
+                <span class="badge" id="peers-exchange">{{ exchange }}</span>
+                <span class="badge" id="peers-sector">Sector --</span>
+                <span class="badge" id="peers-industry">Industry --</span>
+                <span class="badge" id="peers-group">Peer Group --</span>
+              </div>
+            </div>
+            <div class="hero-price">
+              <div class="price-main mono" id="peers-price">--</div>
+              <div class="price-change mono" id="peers-change">--</div>
+              <div class="hero-meta" id="peers-updated">Last updated --</div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <section class="peers-layout">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Peer Quote Table</div></div>
+            <div class="panel-body">
+              <div class="placeholder" id="peers-message">Loading peers...</div>
+              <div class="option-table-wrap" style="margin-top:10px;">
+                <table class="peer-table">
+                  <thead><tr><th>Symbol</th><th>Company Name</th><th>Exchange</th><th>Sector</th><th>LTP</th><th>Change</th><th>Change %</th><th>Volume</th><th>1D Return</th><th>1W Return</th><th>1M Return</th><th>Actions</th></tr></thead>
+                  <tbody id="peers-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+          <div class="right-stack">
+            <section class="panel">
+              <div class="panel-head"><div class="panel-title">Peer Group Summary</div></div>
+              <div class="panel-body"><div class="stat-grid" id="peer-summary-grid"></div></div>
+            </section>
+            <section class="panel" style="margin-top:10px;">
+              <div class="panel-head"><div class="panel-title">Peer Performance Cards</div></div>
+              <div class="panel-body"><div class="stat-grid" id="peer-performance-grid"></div></div>
+            </section>
+            <section class="panel" style="margin-top:10px;">
+              <div class="panel-head"><div class="panel-title">Sector Strength / Rotation</div></div>
+              <div class="panel-body"><div class="stat-grid" id="sector-strength-grid"></div></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="peers-layout">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Relative Performance Chart</div></div>
+            <div class="panel-body">
+              <div class="peer-bar-list" id="peer-performance-bars"></div>
+              <div class="placeholder" id="peer-performance-message" style="margin-top:10px;">Peer performance data source not fully available yet</div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Peer Valuation Compare</div></div>
+            <div class="panel-body">
+              <div class="placeholder">Fundamental peer comparison requires fundamentals data source</div>
+              <div class="option-table-wrap" style="margin-top:10px;">
+                <table class="peer-table">
+                  <thead><tr><th>Symbol</th><th>Market Cap</th><th>P/E</th><th>P/B</th><th>ROE</th><th>Dividend Yield</th><th>Debt/Equity</th></tr></thead>
+                  <tbody id="peer-valuation-body"><tr><td colspan="7" class="muted">Fundamental peer comparison requires fundamentals data source</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </section>
       </section>
       {% elif active_section == 'actions' %}
-      <section class="panel" id="action-hub">
-        <div class="panel-head"><div class="panel-title">Action Hub</div></div>
-        <div class="panel-body">
-          <div class="action-grid">
-            <button class="tool-btn" id="hub-watchlist-btn" type="button">Add to Watchlist</button>
-            <a class="tool-btn" id="hub-backtest-link" href="/dashboard">Use for Backtest</a>
-            <a class="tool-btn" id="hub-history-link" href="/historical-data">Open Historical Data</a>
-            <a class="tool-btn" id="hub-algo-link" href="/algo-trading">Open Algo Trading</a>
-            <a class="tool-btn" id="hub-optimizer-link" href="/research">Run Optimizer</a>
-            <a class="tool-btn" id="hub-portfolio-link" href="/portfolio">Open Portfolio</a>
-            <button class="tool-btn" id="create-alert-btn" type="button">Create Alert</button>
+      <section class="actions-stack" id="action-hub">
+        <section class="panel">
+          <div class="actions-hero">
+            <div>
+              <div class="hero-kicker" id="actions-workflow-status">Workflow hub ready</div>
+              <div class="hero-symbol" id="actions-symbol">{{ symbol }}</div>
+              <div class="hero-name" id="actions-name">Loading instrument...</div>
+              <div class="badge-row">
+                <span class="badge" id="actions-exchange">{{ exchange }}</span>
+                <span class="badge" id="actions-type">{{ asset_type }}</span>
+                <span class="badge">No live trading actions</span>
+              </div>
+            </div>
+            <div class="hero-price">
+              <div class="price-main mono" id="actions-price">--</div>
+              <div class="price-change mono" id="actions-change">--</div>
+              <div class="hero-meta" id="actions-updated">Last updated --</div>
+            </div>
           </div>
-          <div class="placeholder" id="action-hub-message" style="margin-top:10px;">Alerts engine not connected yet</div>
-        </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Quick Action Cards</div></div>
+          <div class="panel-body">
+            <div class="quick-action-grid">
+              <button class="quick-action-card" id="hub-watchlist-btn" type="button">Add to Watchlist<span class="quick-action-sub">Save symbol to default list</span></button>
+              <a class="quick-action-card" id="hub-backtest-link" href="/dashboard">Use for Backtest<span class="quick-action-sub">Open dashboard with context</span></a>
+              <a class="quick-action-card" id="hub-history-link" href="/historical-data">Open Historical Data<span class="quick-action-sub">Review candles and datasets</span></a>
+              <a class="quick-action-card" id="hub-algo-link" href="/algo-trading">Open Algo Trading<span class="quick-action-sub">Build rule workflows</span></a>
+              <a class="quick-action-card" id="hub-optimizer-link" href="/research">Run Optimizer<span class="quick-action-sub">Research strategy parameters</span></a>
+              <button class="quick-action-card" id="portfolio-add-btn" type="button">Add to Portfolio<span class="quick-action-sub">Portfolio write flow placeholder</span></button>
+              <button class="quick-action-card" id="create-alert-card-btn" type="button">Create Alert<span class="quick-action-sub">Configure alert placeholder</span></button>
+              <button class="quick-action-card" id="export-snapshot-btn" type="button">Export Snapshot<span class="quick-action-sub">Download current JSON context</span></button>
+            </div>
+            <div class="placeholder" id="action-hub-message" style="margin-top:10px;">Select a workflow action for {{ symbol }}.</div>
+          </div>
+        </section>
+
+        <section class="actions-layout">
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Backtest Workflow</div></div>
+            <div class="panel-body workflow-list">
+              <div class="workflow-step"><span>1</span><div>Fetch recent market data for the selected instrument.</div></div>
+              <div class="workflow-step"><span>2</span><div>Save fetched candles as a reusable dataset.</div></div>
+              <div class="workflow-step"><span>3</span><div>Open the Backtest Dashboard with symbol context.</div></div>
+              <a class="tool-btn" id="workflow-backtest-link" href="/dashboard">Use This Stock for Backtest</a>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Research Workflow</div></div>
+            <div class="panel-body">
+              <div class="action-grid">
+                <a class="tool-btn" href="/market-watch/{{ asset_type }}/{{ symbol }}/fundamentals">Open Fundamentals</a>
+                <a class="tool-btn" href="/market-watch/{{ asset_type }}/{{ symbol }}/technical">Open Technical Signals</a>
+                <a class="tool-btn" href="/market-watch/{{ asset_type }}/{{ symbol }}/peers">Open Peers</a>
+                <a class="tool-btn" href="/market-watch/{{ asset_type }}/{{ symbol }}/option-chain">Open Option Chain</a>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Algo Workflow</div></div>
+            <div class="panel-body workflow-list">
+              <div class="placeholder">Open Algo Trading with the selected symbol context. Query-prefill is optional and safe if unsupported.</div>
+              <a class="tool-btn" id="workflow-algo-link" href="/algo-trading">Open Algo Trading</a>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div class="panel-title">Portfolio Workflow</div></div>
+            <div class="panel-body">
+              <div class="action-grid">
+                <button class="tool-btn" id="portfolio-placeholder-btn" type="button">Add to Portfolio</button>
+                <a class="tool-btn" id="hub-portfolio-link" href="/portfolio">Open Portfolio Page</a>
+                <button class="tool-btn" id="portfolio-compare-btn" type="button">Compare in Portfolio</button>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Alert Workflow</div></div>
+          <div class="panel-body">
+            <div class="alert-form">
+              <select class="terminal-select" id="alert-type-select">
+                <option>Price Above</option>
+                <option>Price Below</option>
+                <option>% Change</option>
+                <option>Volume Spike</option>
+                <option>RSI Level</option>
+              </select>
+              <input class="terminal-select" id="alert-threshold-input" type="number" placeholder="Threshold value" />
+              <input class="terminal-select" id="alert-notes-input" type="text" placeholder="Notes" />
+              <button class="tool-btn" id="create-alert-btn" type="button">Create Alert</button>
+            </div>
+          </div>
+        </section>
       </section>
       {% endif %}
     </main>
@@ -498,6 +961,25 @@
         return slice.reduce((sum, v) => sum + v, 0) / slice.length;
       });
     }
+    function ema(values, period) {
+      const k = 2 / (period + 1);
+      let previous = null;
+      return values.map((value, index) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return null;
+        if (index < period - 1) return null;
+        if (previous === null) {
+          const seedSlice = values.slice(index - period + 1, index + 1).map(Number).filter(Number.isFinite);
+          previous = seedSlice.length === period ? seedSlice.reduce((sum, v) => sum + v, 0) / period : numeric;
+        } else {
+          previous = numeric * k + previous * (1 - k);
+        }
+        return previous;
+      });
+    }
+    function lastValue(values) {
+      return [...values].reverse().find((value) => value !== null && value !== undefined && Number.isFinite(Number(value)));
+    }
     function rsi(values, period = 14) {
       if (values.length <= period) return null;
       let gains = 0, losses = 0;
@@ -507,6 +989,28 @@
       }
       if (!losses) return 100;
       return 100 - (100 / (1 + gains / losses));
+    }
+    function atr(rows, period = 14) {
+      if (rows.length <= period) return null;
+      const trueRanges = rows.slice(1).map((row, index) => {
+        const prevClose = Number(rows[index].close);
+        const high = Number(row.high);
+        const low = Number(row.low);
+        return Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+      }).filter(Number.isFinite);
+      const recent = trueRanges.slice(-period);
+      return recent.length === period ? recent.reduce((sum, value) => sum + value, 0) / period : null;
+    }
+    function macd(values) {
+      if (values.length < 35) return { value: null, signal: null, status: "Neutral" };
+      const fast = ema(values, 12);
+      const slow = ema(values, 26);
+      const macdLine = values.map((_, index) => Number.isFinite(Number(fast[index])) && Number.isFinite(Number(slow[index])) ? fast[index] - slow[index] : null);
+      const signalLine = ema(macdLine.map((value) => value ?? NaN), 9);
+      const value = lastValue(macdLine);
+      const signal = lastValue(signalLine);
+      const status = Number.isFinite(value) && Number.isFinite(signal) ? (value > signal ? "Bullish" : value < signal ? "Bearish" : "Neutral") : "Neutral";
+      return { value, signal, status };
     }
     function previewCandles(count = 140) {
       const s = seed(DETAIL.symbol);
@@ -558,7 +1062,16 @@
       byId("hero-updated").textContent = `Last updated ${q.last_updated || new Date().toLocaleString("en-IN")}`;
       byId("asset-type").textContent = `${DETAIL.assetType} detail`;
       renderOverviewHero(q);
+      renderFundamentalsHero(q);
+      renderOptionChainHero(q);
+      renderTechnicalHero(q);
+      renderPeersHero(q);
+      renderActionsHero(q);
       renderOverviewStats();
+    }
+    function renderCards(id, rows) {
+      if (!byId(id)) return;
+      byId(id).innerHTML = rows.map(([label, value]) => `<div class="stat-card"><div class="stat-label">${label}</div><div class="stat-value mono">${value ?? "--"}</div></div>`).join("");
     }
     function renderOverviewHero(q) {
       if (!byId("overview-symbol")) return;
@@ -574,6 +1087,58 @@
       byId("hero-high").textContent = display(q.high);
       byId("hero-low").textContent = display(q.low);
       byId("hero-prev-close").textContent = display(q.previous_close);
+    }
+    function renderFundamentalsHero(q) {
+      if (!byId("fundamentals-symbol")) return;
+      byId("fundamentals-symbol").textContent = q.symbol || DETAIL.symbol;
+      byId("fundamentals-name").textContent = q.stock_name || q.name || "Selected instrument";
+      byId("fundamentals-exchange").textContent = q.exchange || DETAIL.exchange;
+      byId("fundamentals-price").textContent = display(q.latest_price);
+      byId("fundamentals-change").className = `price-change mono ${Number(q.change_pct) >= 0 ? "positive" : "negative"}`;
+      byId("fundamentals-change").textContent = `${display(q.change)} (${pct(q.change_pct)})`;
+      byId("fundamentals-updated").textContent = `Last updated ${q.last_updated || "--"}`;
+    }
+    function renderOptionChainHero(q) {
+      if (!byId("option-symbol")) return;
+      byId("option-symbol").textContent = q.symbol || DETAIL.symbol;
+      byId("option-name").textContent = q.stock_name || q.name || "Selected instrument";
+      byId("option-exchange").textContent = q.exchange || DETAIL.exchange;
+      byId("option-underlying-price").textContent = display(q.latest_price);
+      byId("option-underlying-change").className = `price-change mono ${Number(q.change_pct) >= 0 ? "positive" : "negative"}`;
+      byId("option-underlying-change").textContent = `${display(q.change)} (${pct(q.change_pct)})`;
+      byId("option-updated").textContent = `Last updated ${q.last_updated || "--"}`;
+    }
+    function renderTechnicalHero(q) {
+      if (!byId("technical-symbol")) return;
+      byId("technical-symbol").textContent = q.symbol || DETAIL.symbol;
+      byId("technical-name").textContent = q.stock_name || q.name || "Selected instrument";
+      byId("technical-exchange").textContent = q.exchange || DETAIL.exchange;
+      byId("technical-price").textContent = display(q.latest_price);
+      byId("technical-change").className = `price-change mono ${Number(q.change_pct) >= 0 ? "positive" : "negative"}`;
+      byId("technical-change").textContent = `${display(q.change)} (${pct(q.change_pct)})`;
+      byId("technical-updated").textContent = `Last updated ${q.last_updated || "--"}`;
+      byId("technical-timeframe").textContent = `Timeframe ${state.interval}`;
+    }
+    function renderPeersHero(q) {
+      if (!byId("peers-symbol")) return;
+      byId("peers-symbol").textContent = q.symbol || DETAIL.symbol;
+      byId("peers-name").textContent = q.stock_name || q.name || "Selected instrument";
+      byId("peers-exchange").textContent = q.exchange || DETAIL.exchange;
+      byId("peers-price").textContent = display(q.latest_price);
+      byId("peers-change").className = `price-change mono ${Number(q.change_pct) >= 0 ? "positive" : "negative"}`;
+      byId("peers-change").textContent = `${display(q.change)} (${pct(q.change_pct)})`;
+      byId("peers-updated").textContent = `Last updated ${q.last_updated || "--"}`;
+    }
+    function renderActionsHero(q) {
+      if (!byId("actions-symbol")) return;
+      byId("actions-symbol").textContent = q.symbol || DETAIL.symbol;
+      byId("actions-name").textContent = q.stock_name || q.name || "Selected instrument";
+      byId("actions-exchange").textContent = q.exchange || DETAIL.exchange;
+      byId("actions-type").textContent = DETAIL.assetType === "index" ? "Index" : "Stock";
+      byId("actions-price").textContent = display(q.latest_price);
+      byId("actions-change").className = `price-change mono ${Number(q.change_pct) >= 0 ? "positive" : "negative"}`;
+      byId("actions-change").textContent = `${display(q.change)} (${pct(q.change_pct)})`;
+      byId("actions-updated").textContent = `Last updated ${q.last_updated || "--"}`;
     }
     function renderOverviewStats() {
       if (!byId("overview-stats")) return;
@@ -669,19 +1234,81 @@
     }
     function renderActionLinks() {
       const query = `?symbol=${encodeURIComponent(DETAIL.symbol)}&exchange=${encodeURIComponent(state.quote?.exchange || DETAIL.exchange)}`;
-      ["backtest-link", "hub-backtest-link"].forEach((id) => { if (byId(id)) byId(id).href = `/dashboard${query}`; });
+      ["backtest-link", "hub-backtest-link", "workflow-backtest-link"].forEach((id) => { if (byId(id)) byId(id).href = `/dashboard${query}`; });
       ["historical-link", "hub-history-link"].forEach((id) => { if (byId(id)) byId(id).href = `/historical-data${query}`; });
-      ["algo-link", "hub-algo-link"].forEach((id) => { if (byId(id)) byId(id).href = `/algo-trading${query}`; });
+      ["algo-link", "hub-algo-link", "workflow-algo-link"].forEach((id) => { if (byId(id)) byId(id).href = `/algo-trading${query}`; });
       if (byId("hub-optimizer-link")) byId("hub-optimizer-link").href = `/research${query}`;
       if (byId("hub-portfolio-link")) byId("hub-portfolio-link").href = `/portfolio${query}`;
       if (byId("large-chart-link")) byId("large-chart-link").href = `/market-watch/chart${query}`;
     }
+    function setActionMessage(message, isError = false) {
+      if (byId("action-hub-message")) {
+        byId("action-hub-message").textContent = message;
+        byId("action-hub-message").className = `placeholder ${isError ? "negative" : ""}`.trim();
+      }
+      if (byId("actions-workflow-status")) byId("actions-workflow-status").textContent = message;
+      setStatus(message, isError);
+    }
+    async function addDetailToWatchlist() {
+      try {
+        setActionMessage("Adding to default watchlist...");
+        const watchlists = await fetchJson("/api/v1/watchlists");
+        const watchlist = watchlists[0];
+        if (!watchlist) {
+          setActionMessage("No watchlist available. Open Market Watch to create one.", true);
+          return;
+        }
+        const exchange = state.quote?.exchange || DETAIL.exchange;
+        if ((watchlist.items || []).some((item) => normalize(item.symbol) === normalize(DETAIL.symbol) && item.exchange === exchange)) {
+          setActionMessage(`${DETAIL.symbol} already exists in ${watchlist.name}.`, true);
+          return;
+        }
+        await postJson(`/api/v1/watchlists/${watchlist.id}/items`, {
+          symbol: DETAIL.symbol,
+          exchange,
+          symbol_token: token(DETAIL.symbol) || null,
+          stock_name: state.quote?.stock_name || state.quote?.name || DETAIL.symbol,
+        });
+        setActionMessage(`Added ${DETAIL.symbol} to ${watchlist.name}.`);
+      } catch (error) {
+        setActionMessage(error.message || "Could not add to watchlist.", true);
+      }
+    }
+    function exportSnapshot() {
+      const q = state.quote || fallbackQuote();
+      const payload = {
+        symbol: q.symbol || DETAIL.symbol,
+        name: q.stock_name || q.name || "Selected instrument",
+        exchange: q.exchange || DETAIL.exchange,
+        latest_price: q.latest_price ?? null,
+        change: q.change ?? null,
+        change_pct: q.change_pct ?? null,
+        timestamp: new Date().toISOString(),
+        stats: {
+          open: q.open ?? null,
+          high: q.high ?? null,
+          low: q.low ?? null,
+          previous_close: q.previous_close ?? null,
+          volume: q.volume ?? null,
+          value_traded: q.value_traded ?? null,
+          vwap: q.vwap ?? null,
+        },
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${DETAIL.symbol}-snapshot.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      setActionMessage(`Exported ${DETAIL.symbol} snapshot JSON.`);
+    }
     async function renderFundamentalsSection() {
-      if (!byId("fundamentals-message") && !byId("overview-snapshot-grid")) return;
+      if (!byId("fundamentals-message") && !byId("overview-snapshot-grid") && !byId("valuation-grid")) return;
       try {
         const data = await fetchJson(`/api/v1/market-watch/detail/${encodeURIComponent(DETAIL.symbol)}/fundamentals`);
         if (byId("fundamentals-message")) byId("fundamentals-message").textContent = data.message || "Fundamental data source not connected yet";
         renderOverviewSnapshot(data);
+        renderFundamentalsResearchPage(data);
         const fields = data.fields || {};
         const q = state.quote || {};
         const rows = [
@@ -693,7 +1320,52 @@
       } catch (error) {
         if (byId("fundamentals-message")) byId("fundamentals-message").textContent = "Fundamental data source not connected yet";
         renderOverviewSnapshot(null);
+        renderFundamentalsResearchPage(null);
       }
+    }
+    function renderFundamentalsResearchPage(data) {
+      if (!byId("valuation-grid")) return;
+      const fields = data?.fields || {};
+      const sector = data?.sector || fields.sector;
+      const industry = data?.industry || fields.industry;
+      const message = data?.message || "Fundamental data source not connected yet";
+      byId("fundamentals-data-status").textContent = message;
+      byId("fundamentals-sector").textContent = DETAIL.assetType === "index" ? "Category Index" : `Sector ${sector || "--"}`;
+      byId("fundamentals-industry").textContent = DETAIL.assetType === "index" ? "Methodology --" : `Industry ${industry || "--"}`;
+      if (byId("fundamentals-message")) byId("fundamentals-message").textContent = message;
+      renderCards("valuation-grid", [
+        ["Market Cap", fields.market_cap ?? "--"], ["P/E Ratio", fields.pe_ratio ?? "--"], ["P/B Ratio", fields.pb_ratio ?? "--"], ["EPS", fields.eps ?? "--"],
+        ["Book Value", fields.book_value ?? "--"], ["EV/EBITDA", fields.ev_ebitda ?? "--"], ["Dividend Yield", fields.dividend_yield ?? "--"], ["Face Value", fields.face_value ?? "--"],
+      ]);
+      renderCards("profitability-grid", [
+        ["ROE", fields.roe ?? "--"], ["ROCE", fields.roce ?? "--"], ["Net Profit Margin", fields.net_profit_margin ?? "--"], ["Operating Margin", fields.operating_margin ?? "--"],
+        ["EBITDA Margin", fields.ebitda_margin ?? "--"], ["Return on Assets", fields.return_on_assets ?? "--"],
+      ]);
+      renderCards("growth-grid", [
+        ["Revenue Growth YoY", fields.revenue_growth_yoy ?? "--"], ["Profit Growth YoY", fields.profit_growth_yoy ?? "--"], ["EPS Growth", fields.eps_growth ?? "--"],
+        ["Sales CAGR 3Y", fields.sales_cagr_3y ?? "--"], ["Profit CAGR 3Y", fields.profit_cagr_3y ?? "--"],
+      ]);
+      renderCards("balance-strength-grid", [
+        ["Debt/Equity", fields.debt_equity ?? "--"], ["Current Ratio", fields.current_ratio ?? "--"], ["Interest Coverage", fields.interest_coverage ?? "--"],
+        ["Cash & Equivalents", fields.cash_equivalents ?? "--"], ["Total Debt", fields.total_debt ?? "--"], ["Net Worth", fields.net_worth ?? "--"],
+      ]);
+      renderCards("shareholding-grid", [
+        ["Promoters", fields.promoters ?? "--"], ["FIIs", fields.fiis ?? "--"], ["DIIs", fields.diis ?? "--"], ["Public", fields.public_holding ?? "--"], ["Others", fields.others ?? "--"],
+      ]);
+      renderResearchWarnings(fields, data?.available);
+    }
+    function renderResearchWarnings(fields, available) {
+      if (!byId("research-warnings")) return;
+      if (!available) {
+        byId("research-warnings").innerHTML = `<div class="placeholder">Research warnings require fundamentals data source</div>`;
+        return;
+      }
+      const warnings = [];
+      if (Number(fields.debt_equity) > 2) warnings.push("Debt/equity is elevated.");
+      if (Number(fields.profit_growth_yoy) < 0) warnings.push("Profit growth is negative.");
+      if (Number(fields.roe) > 0 && Number(fields.roe) < 10) warnings.push("ROE is below preferred threshold.");
+      if (Number(fields.pe_ratio) > 50) warnings.push("Valuation appears expensive on P/E.");
+      byId("research-warnings").innerHTML = warnings.length ? warnings.map((item) => `<div class="research-warning">${item}</div>`).join("") : `<div class="placeholder">No automatic warnings from available fundamentals.</div>`;
     }
     function renderOverviewSnapshot(data) {
       if (!byId("overview-snapshot-grid")) return;
@@ -711,15 +1383,59 @@
       if (!byId("option-chain-message")) return;
       try {
         const data = await fetchJson(`/api/v1/market-watch/detail/${encodeURIComponent(DETAIL.symbol)}/option-chain`);
-        byId("option-chain-message").textContent = data.message || "Option chain data source not connected yet";
+        const message = data.message || "Option chain data source not connected yet";
+        byId("option-chain-message").textContent = message;
+        if (byId("option-data-status")) byId("option-data-status").textContent = message;
         const expiries = data.expiries || [];
         byId("expiry-select").innerHTML = expiries.length ? expiries.map((expiry) => `<option>${expiry}</option>`).join("") : "<option>Expiry unavailable</option>";
+        if (byId("option-expiry")) byId("option-expiry").textContent = expiries[0] || "Expiry unavailable";
         const summary = data.summary || {};
-        byId("option-summary").innerHTML = [["PCR", summary.pcr], ["Max Pain", summary.max_pain], ["Total CE OI", summary.total_ce_oi], ["Total PE OI", summary.total_pe_oi], ["ATM Strike", summary.atm_strike]].map(([label, value]) => `<div class="stat-card"><div class="stat-label">${label}</div><div class="stat-value mono">${value ?? "--"}</div></div>`).join("");
-        byId("option-chain-body").innerHTML = (data.rows || []).length ? data.rows.map((row) => `<tr><td>${row.ce_ltp ?? "--"}</td><td>${row.ce_change ?? "--"}</td><td>${row.ce_oi ?? "--"}</td><td>${row.ce_oi_change ?? "--"}</td><td>${row.ce_volume ?? "--"}</td><td>${row.ce_iv ?? "--"}</td><td>${row.strike ?? "--"}</td><td>${row.pe_ltp ?? "--"}</td><td>${row.pe_change ?? "--"}</td><td>${row.pe_oi ?? "--"}</td><td>${row.pe_oi_change ?? "--"}</td><td>${row.pe_volume ?? "--"}</td><td>${row.pe_iv ?? "--"}</td></tr>`).join("") : `<tr><td colspan="13" class="muted">${data.message || "Option chain data source not connected yet"}</td></tr>`;
+        if (byId("option-atm")) byId("option-atm").textContent = `ATM ${summary.atm_strike ?? "--"}`;
+        renderCards("option-summary", [
+          ["PCR", summary.pcr ?? "--"], ["Max Pain", summary.max_pain ?? "--"], ["ATM Strike", summary.atm_strike ?? "--"],
+          ["Total Call OI", summary.total_ce_oi ?? "--"], ["Total Put OI", summary.total_pe_oi ?? "--"],
+          ["Call OI Change", summary.total_ce_oi_change ?? "--"], ["Put OI Change", summary.total_pe_oi_change ?? "--"],
+          ["Highest Call OI Strike", summary.highest_call_oi_strike ?? "--"], ["Highest Put OI Strike", summary.highest_put_oi_strike ?? "--"],
+        ]);
+        renderOptionChainRows(data.rows || [], summary, message);
+        renderOptionHeatmap(data, message);
+        renderBuildupAnalysis(data);
       } catch (error) {
         byId("option-chain-message").textContent = "Option chain data source not connected yet";
+        if (byId("option-data-status")) byId("option-data-status").textContent = "Option chain data source not connected yet";
+        renderCards("option-summary", [["PCR", "--"], ["Max Pain", "--"], ["ATM Strike", "--"], ["Total Call OI", "--"], ["Total Put OI", "--"], ["Call OI Change", "--"], ["Put OI Change", "--"], ["Highest Call OI Strike", "--"], ["Highest Put OI Strike", "--"]]);
+        renderOptionChainRows([], {}, "Option chain data source not connected yet");
+        renderOptionHeatmap(null, "Option-chain OI heatmap data source not connected yet");
+        renderBuildupAnalysis(null);
       }
+    }
+    function renderOptionChainRows(rows, summary, message) {
+      if (!byId("option-chain-body")) return;
+      const atm = Number(summary?.atm_strike);
+      const maxCeOi = Math.max(...rows.map((row) => Number(row.ce_oi) || 0), 0);
+      const maxPeOi = Math.max(...rows.map((row) => Number(row.pe_oi) || 0), 0);
+      byId("option-chain-body").innerHTML = rows.length ? rows.map((row) => {
+        const strike = Number(row.strike);
+        const isAtm = Number.isFinite(atm) && strike === atm;
+        const moneyness = isAtm ? "ATM" : Number.isFinite(atm) && Number.isFinite(strike) ? (strike < atm ? "ITM / OTM" : "OTM / ITM") : "--";
+        const ceOiClass = maxCeOi && Number(row.ce_oi) === maxCeOi ? " high-oi" : "";
+        const peOiClass = maxPeOi && Number(row.pe_oi) === maxPeOi ? " high-oi" : "";
+        return `<tr class="${isAtm ? "atm-row" : ""}"><td class="call-cell">${row.ce_ltp ?? "--"}</td><td class="call-cell">${row.ce_change ?? "--"}</td><td class="call-cell">${row.ce_volume ?? "--"}</td><td class="call-cell${ceOiClass}">${row.ce_oi ?? "--"}</td><td class="call-cell">${row.ce_oi_change ?? "--"}</td><td class="call-cell">${row.ce_iv ?? "--"}</td><td class="strike-cell">${row.strike ?? "--"}</td><td class="strike-cell">${moneyness}</td><td class="put-cell">${row.pe_iv ?? "--"}</td><td class="put-cell">${row.pe_oi_change ?? "--"}</td><td class="put-cell${peOiClass}">${row.pe_oi ?? "--"}</td><td class="put-cell">${row.pe_volume ?? "--"}</td><td class="put-cell">${row.pe_change ?? "--"}</td><td class="put-cell">${row.pe_ltp ?? "--"}</td></tr>`;
+      }).join("") : `<tr><td colspan="14" class="muted">${message || "Option chain data source not connected yet"}</td></tr>`;
+    }
+    function renderOptionHeatmap(data, message) {
+      if (!byId("oi-heatmap")) return;
+      const summary = data?.summary || {};
+      byId("oi-heatmap").innerHTML = [
+        ["Call OI concentration", summary.highest_call_oi_strike ?? "--"],
+        ["Put OI concentration", summary.highest_put_oi_strike ?? "--"],
+        ["OI buildup zones", "--"],
+      ].map(([label, value]) => `<div class="heatmap-card"><div class="stat-label">${label}</div><div class="stat-value mono">${value}</div></div>`).join("");
+      if (byId("oi-heatmap-message")) byId("oi-heatmap-message").textContent = data?.available ? "" : (message || "Option-chain OI heatmap data source not connected yet");
+    }
+    function renderBuildupAnalysis(data) {
+      renderCards("buildup-grid", [["Long Buildup", "--"], ["Short Buildup", "--"], ["Long Unwinding", "--"], ["Short Covering", "--"]]);
+      if (byId("buildup-message")) byId("buildup-message").textContent = data?.available ? "Buildup analysis updated from live option-chain data" : "Requires live option-chain OI change data";
     }
     function localTechnicalSignals() {
       const closes = state.candles.map((r) => Number(r.close));
@@ -739,38 +1455,161 @@
       const score = (trend === "Bullish" ? 1 : trend === "Bearish" ? -1 : 0) + (ema50 && ema20 > ema50 ? 1 : ema50 ? -1 : 0) + (ema200 && latest > ema200 ? 1 : ema200 ? -1 : 0) + (latest >= resistance * 0.995 ? 1 : 0);
       return { available: true, message: null, support, resistance, overall_rating: score >= 3 ? "Strong Buy" : score >= 1 ? "Buy" : score <= -3 ? "Strong Sell" : score <= -1 ? "Sell" : "Neutral", signals: { trend, rsi: rsiValue, rsi_status: rsiValue >= 70 ? "Overbought" : rsiValue <= 30 ? "Oversold" : "Neutral", ema20, ema50, ema20_vs_ema50: ema50 ? (ema20 > ema50 ? "Above" : "Below") : "Insufficient data", ema200, price_vs_ema200: ema200 ? (latest > ema200 ? "Above" : "Below") : "Insufficient data", volume_spike: avgVol ? volumes.at(-1) > avgVol * 1.5 : false, breakout: latest >= resistance * 0.995, average_volume: avgVol } };
     }
-    async function renderTechnicalSignalsSection() {
-      if (!byId("technical-rating")) return;
-      let data = null;
-      try {
-        data = await fetchJson(`/api/v1/market-watch/detail/${encodeURIComponent(DETAIL.symbol)}/technical?exchange=${encodeURIComponent(state.quote?.exchange || DETAIL.exchange)}&symbol_token=${encodeURIComponent(token(DETAIL.symbol) || "")}`);
-      } catch (error) {
-        data = null;
+    function technicalScoreLabel(score) {
+      if (!Number.isFinite(score)) return "Neutral";
+      if (score >= 76) return "Strong Buy";
+      if (score >= 58) return "Buy";
+      if (score <= 24) return "Strong Sell";
+      if (score <= 42) return "Sell";
+      return "Neutral";
+    }
+    function computeTechnicalAnalysis() {
+      const rows = state.candles || [];
+      const closes = rows.map((row) => Number(row.close)).filter(Number.isFinite);
+      const highs = rows.map((row) => Number(row.high)).filter(Number.isFinite);
+      const lows = rows.map((row) => Number(row.low)).filter(Number.isFinite);
+      const volumes = rows.map((row) => Number(row.volume)).filter(Number.isFinite);
+      if (closes.length < 20 || highs.length < 20 || lows.length < 20) {
+        return { available: false, message: "Not enough candle data for full technical analysis", rating: "Neutral", events: [] };
       }
-      if (!data || !data.available) data = localTechnicalSignals();
-      const signals = data.signals || {};
-      byId("technical-rating").innerHTML = `<div class="rating-card"><div class="rating-label">Overall Technical Rating</div><div class="rating-value">${data.overall_rating || "Neutral"}</div>${data.message ? `<div class="muted" style="margin-top:5px;font-size:12px;">${data.message}</div>` : ""}</div>`;
-      const rows = [["Trend", signals.trend], ["RSI Status", `${fmt(signals.rsi, 1)} ${signals.rsi_status || ""}`.trim()], ["EMA 20 vs EMA 50", signals.ema20_vs_ema50], ["Price vs EMA 200", signals.price_vs_ema200], ["Volume Spike", signals.volume_spike ? "Yes" : "No"], ["Breakout Signal", signals.breakout ? "Yes" : "No"], ["Support", fmt(data.support)], ["Resistance", fmt(data.resistance)]];
-      byId("technical-signals-grid").innerHTML = rows.map(([label, value]) => `<div class="stat-card"><div class="stat-label">${label}</div><div class="stat-value mono">${value || "--"}</div></div>`).join("");
+      const latest = closes.at(-1);
+      const previous = closes.at(-2);
+      const ema20 = lastValue(ema(closes, 20));
+      const ema50 = lastValue(ema(closes, 50));
+      const ema200 = lastValue(ema(closes, 200));
+      const rsiValue = rsi(closes);
+      const macdData = macd(closes);
+      const avgVolume = volumes.length ? volumes.reduce((sum, value) => sum + value, 0) / volumes.length : null;
+      const currentVolume = volumes.at(-1);
+      const volumeSpike = avgVolume ? currentVolume > avgVolume * 1.5 : false;
+      const support = Math.min(...lows.slice(-20));
+      const resistance = Math.max(...highs.slice(-20));
+      const swingLow = Math.min(...lows.slice(-10));
+      const swingHigh = Math.max(...highs.slice(-10));
+      const atrValue = atr(rows);
+      const dailyRangePct = latest ? ((highs.at(-1) - lows.at(-1)) / latest) * 100 : null;
+      const returnSeries = closes.slice(1).map((value, index) => ((value - closes[index]) / closes[index]) * 100).filter(Number.isFinite);
+      const avgReturn = returnSeries.reduce((sum, value) => sum + value, 0) / Math.max(1, returnSeries.length);
+      const volatility = returnSeries.length ? Math.sqrt(returnSeries.reduce((sum, value) => sum + Math.pow(value - avgReturn, 2), 0) / returnSeries.length) : null;
+      const volatilityStatus = !Number.isFinite(volatility) ? "--" : volatility < 0.8 ? "Low" : volatility < 1.8 ? "Medium" : "High";
+      const trendDirection = ema20 && ema50 ? (latest > ema20 && ema20 > ema50 ? "Bullish" : latest < ema20 && ema20 < ema50 ? "Bearish" : "Sideways") : (latest > closes.at(-10) ? "Bullish" : latest < closes.at(-10) ? "Bearish" : "Sideways");
+      const rsiStatus = rsiValue >= 70 ? "Overbought" : rsiValue <= 30 ? "Oversold" : "Neutral";
+      const priceVsEma20 = ema20 ? (latest > ema20 ? "Above" : latest < ema20 ? "Below" : "At") : "--";
+      const ema20VsEma50 = ema20 && ema50 ? (ema20 > ema50 ? "Bullish" : ema20 < ema50 ? "Bearish" : "Neutral") : "--";
+      const priceVsEma200 = ema200 ? (latest > ema200 ? "Above" : latest < ema200 ? "Below" : "At") : "Data not loaded";
+      const volumeTrend = volumes.length > 10 && currentVolume > (volumes.slice(-10).reduce((sum, value) => sum + value, 0) / 10) ? "Rising" : "Normal";
+      const gapStatus = rows.length > 1 && Number.isFinite(Number(rows.at(-1).open)) ? (Number(rows.at(-1).open) > previous ? "Gap Up" : Number(rows.at(-1).open) < previous ? "Gap Down" : "No Gap") : "--";
+      const trendScore = trendDirection === "Bullish" ? 78 : trendDirection === "Bearish" ? 28 : 50;
+      const momentumScore = macdData.status === "Bullish" && rsiStatus !== "Overbought" ? 72 : macdData.status === "Bearish" || rsiStatus === "Overbought" ? 35 : 52;
+      const volumeScore = volumeSpike ? 70 : volumeTrend === "Rising" ? 60 : 50;
+      const volatilityScore = volatilityStatus === "High" ? 35 : volatilityStatus === "Medium" ? 55 : 68;
+      const overallScore = Math.round((trendScore + momentumScore + volumeScore + volatilityScore) / 4);
+      const events = [];
+      if (ema20 && ema50) {
+        const ema20Series = ema(closes, 20);
+        const ema50Series = ema(closes, 50);
+        const prev20 = ema20Series.at(-2), prev50 = ema50Series.at(-2);
+        if (prev20 && prev50 && prev20 <= prev50 && ema20 > ema50) events.push(["EMA bullish crossover", "EMA20 crossed above EMA50", "Strong"]);
+        if (prev20 && prev50 && prev20 >= prev50 && ema20 < ema50) events.push(["EMA bearish crossover", "EMA20 crossed below EMA50", "Strong"]);
+      }
+      if (rsiValue > 30 && rsi(closes.slice(0, -1)) <= 30) events.push(["RSI oversold recovery", "RSI moved back above 30", "Medium"]);
+      if (volumeSpike) events.push(["Volume spike", "Current volume is above 1.5x average volume", "Medium"]);
+      if (latest >= resistance * 0.995) events.push(["Breakout above resistance", "Price is testing recent resistance", "Medium"]);
+      return { available: true, latest, ema20, ema50, ema200, rsiValue, rsiStatus, macdData, currentVolume, avgVolume, volumeSpike, volumeTrend, support, resistance, swingLow, swingHigh, atrValue, dailyRangePct, volatilityStatus, gapStatus, trendDirection, priceVsEma20, ema20VsEma50, priceVsEma200, breakout: latest > resistance, breakdown: latest < support, trendScore, momentumScore, volumeScore, volatilityScore, overallScore, rating: technicalScoreLabel(overallScore), events };
+    }
+    function renderTechnicalSignalsSection() {
+      if (!byId("technical-rating")) return;
+      const data = computeTechnicalAnalysis();
+      if (byId("technical-timeframe")) byId("technical-timeframe").textContent = `Timeframe ${state.interval}`;
+      if (!data.available) {
+        byId("technical-data-status").textContent = data.message;
+        byId("technical-rating-badge").textContent = "Neutral";
+        byId("technical-rating").innerHTML = `<div class="placeholder">${data.message}</div>`;
+        ["technical-score-grid", "trend-signals-grid", "momentum-signals-grid", "volume-signals-grid", "risk-signals-grid", "support-resistance-grid"].forEach((id) => renderCards(id, [["Status", "--"]]));
+        byId("multi-timeframe-body").innerHTML = ["5m", "15m", "1H", "1D", "1W", "1M"].map((tf) => `<tr><td>${tf}</td><td>${tf === state.interval ? "Not enough data" : "Data not loaded"}</td><td>--</td><td>--</td></tr>`).join("");
+        byId("signal-history-body").innerHTML = `<tr><td colspan="5" class="muted">No technical signals detected from available candle data</td></tr>`;
+        byId("technical-interpretation").innerHTML = `<div class="placeholder">Technical interpretation requires candle data.</div>`;
+        return;
+      }
+      byId("technical-data-status").textContent = "Technical signals computed from loaded candle data";
+      byId("technical-rating-badge").textContent = data.rating;
+      byId("technical-rating").innerHTML = `<div class="rating-card"><div class="rating-label">Overall Technical Rating</div><div class="rating-value">${data.rating}</div></div>`;
+      renderCards("technical-score-grid", [["Trend Score", data.trendScore], ["Momentum Score", data.momentumScore], ["Volume Score", data.volumeScore], ["Volatility Score", data.volatilityScore], ["Overall / 100", data.overallScore]]);
+      renderCards("trend-signals-grid", [["Price vs EMA20", data.priceVsEma20], ["EMA20 vs EMA50", data.ema20VsEma50], ["Price vs EMA200", data.priceVsEma200], ["ADX Trend Strength", "--"], ["Trend Direction", data.trendDirection]]);
+      renderCards("momentum-signals-grid", [["RSI", `${fmt(data.rsiValue, 1)} ${data.rsiStatus}`], ["MACD Signal", data.macdData.status], ["Stochastic", "--"], ["Momentum Rating", data.momentumScore >= 60 ? "Bullish" : data.momentumScore <= 40 ? "Bearish" : "Neutral"]]);
+      renderCards("volume-signals-grid", [["Current Volume", compact(data.currentVolume)], ["Average Volume", compact(data.avgVolume)], ["Volume Spike", data.volumeSpike ? "Yes" : "No"], ["Volume Trend", data.volumeTrend], ["Delivery Volume", "--"]]);
+      renderCards("risk-signals-grid", [["ATR Estimate", fmt(data.atrValue)], ["Daily Range %", pct(data.dailyRangePct)], ["Volatility Status", data.volatilityStatus], ["Gap Status", data.gapStatus], ["Risk Flag", data.volatilityStatus === "High" ? "Elevated" : "Normal"]]);
+      renderCards("support-resistance-grid", [["Nearest Support", fmt(data.support)], ["Nearest Resistance", fmt(data.resistance)], ["Recent Swing Low", fmt(data.swingLow)], ["Recent Swing High", fmt(data.swingHigh)], ["Breakout Above Resistance", data.breakout ? "Yes" : "No"], ["Breakdown Below Support", data.breakdown ? "Yes" : "No"]]);
+      byId("multi-timeframe-body").innerHTML = ["5m", "15m", "1H", "1D", "1W", "1M"].map((tf) => tf === state.interval ? `<tr><td>${tf}</td><td>${data.trendDirection}</td><td>${data.macdData.status}</td><td>${data.rating}</td></tr>` : `<tr><td>${tf}</td><td>Data not loaded</td><td>--</td><td>--</td></tr>`).join("");
+      byId("signal-history-body").innerHTML = data.events.length ? data.events.map(([type, description, strength]) => `<tr><td>${state.candles.at(-1)?.datetime || "--"}</td><td>${type}</td><td>${description}</td><td>${strength}</td><td>${fmt(data.latest)}</td></tr>`).join("") : `<tr><td colspan="5" class="muted">No technical signals detected from available candle data</td></tr>`;
+      byId("technical-interpretation").innerHTML = [["Bullish Factors", data.trendDirection === "Bullish" || data.macdData.status === "Bullish" ? "Trend or momentum supports upside" : "--"], ["Bearish Factors", data.trendDirection === "Bearish" || data.macdData.status === "Bearish" ? "Trend or momentum is weak" : "--"], ["Neutral Factors", data.trendDirection === "Sideways" ? "Market is range-bound" : "--"], ["Warning Notes", data.volatilityStatus === "High" ? "High volatility detected" : "--"]].map(([label, value]) => `<div class="placeholder"><strong>${label}</strong><br>${value}</div>`).join("");
     }
     async function renderPeersSection() {
-      if (!byId("peers-message") && !byId("overview-peers-list")) return;
+      if (!byId("peers-message") && !byId("overview-peers-list") && !byId("peer-valuation-body")) return;
       try {
         const data = await fetchJson(`/api/v1/market-watch/detail/${encodeURIComponent(DETAIL.symbol)}/peers`);
         const peers = data.peers || [];
         if (byId("peers-message")) byId("peers-message").textContent = peers.length ? `${data.sector || "Mapped"} peers` : "Peer mapping not available yet";
-        const rows = await Promise.all(peers.map(async (peer) => {
+        const hydratedPeers = await Promise.all(peers.map(async (peer) => {
           let quote = {};
           try { quote = await postJson("/api/v1/market-watch/quote", { query: peer.symbol, exchange: peer.exchange || "NSE", symbol_token: token(peer.symbol) || null }); } catch (error) {}
-          return `<tr><td><strong>${peer.symbol}</strong></td><td>${peer.name || peer.symbol}</td><td class="mono">${fmt(quote.latest_price)}</td><td class="${Number.isFinite(Number(quote.change_pct)) ? cls(quote.change_pct) : "muted"} mono">${pct(quote.change_pct)}</td><td>${peer.sector || "--"}</td><td><a class="tool-btn" href="/market-watch/stock/${peer.symbol}">Open Detail</a></td></tr>`;
+          return { ...peer, quote };
         }));
-        if (byId("peers-body")) byId("peers-body").innerHTML = rows.length ? rows.join("") : `<tr><td colspan="6" class="muted">Peer mapping not available yet</td></tr>`;
+        if (byId("peers-body")) byId("peers-body").innerHTML = hydratedPeers.length ? hydratedPeers.map((peer) => {
+          const quote = peer.quote || {};
+          const changeClass = Number.isFinite(Number(quote.change_pct)) ? cls(quote.change_pct) : "muted";
+          const query = `?symbol=${encodeURIComponent(peer.symbol)}&exchange=${encodeURIComponent(peer.exchange || "NSE")}`;
+          return `<tr><td><a href="/market-watch/stock/${peer.symbol}"><strong>${peer.symbol}</strong></a></td><td>${peer.name || peer.symbol}</td><td>${peer.exchange || "NSE"}</td><td>${peer.sector || "--"}</td><td class="mono">${display(quote.latest_price)}</td><td class="mono ${changeClass}">${display(quote.change)}</td><td class="mono ${changeClass}">${pct(quote.change_pct)}</td><td class="mono">${display(quote.volume, compact)}</td><td class="mono ${changeClass}">${pct(quote.change_pct)}</td><td>--</td><td>--</td><td><a class="tool-btn" href="/market-watch/stock/${peer.symbol}">Open Detail</a> <button class="tool-btn peer-watchlist-btn" type="button">Add to Watchlist</button> <a class="tool-btn" href="/historical-data${query}">Historical</a> <a class="tool-btn" href="/dashboard${query}">Backtest</a></td></tr>`;
+        }).join("") : `<tr><td colspan="12" class="muted">Peer mapping not available yet</td></tr>`;
         await renderOverviewPeers(data);
+        renderPeerValuationCompare(data);
+        renderPeerSummary(data, hydratedPeers);
+        renderPeerPerformanceBars(hydratedPeers);
       } catch (error) {
         if (byId("peers-message")) byId("peers-message").textContent = "Peer mapping not available yet";
-        if (byId("peers-body")) byId("peers-body").innerHTML = `<tr><td colspan="6" class="muted">Peer mapping not available yet</td></tr>`;
+        if (byId("peers-body")) byId("peers-body").innerHTML = `<tr><td colspan="12" class="muted">Peer mapping not available yet</td></tr>`;
         renderOverviewPeers(null);
+        renderPeerValuationCompare(null);
+        renderPeerSummary(null, []);
+        renderPeerPerformanceBars([]);
       }
+    }
+    function renderPeerValuationCompare(data) {
+      if (!byId("peer-valuation-body")) return;
+      const peers = (data?.peers || []).slice(0, 8);
+      byId("peer-valuation-body").innerHTML = peers.length
+        ? peers.map((peer) => `<tr><td><strong>${peer.symbol}</strong></td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>`).join("")
+        : `<tr><td colspan="7" class="muted">Fundamental peer comparison requires fundamentals data source</td></tr>`;
+    }
+    function renderPeerSummary(data, hydratedPeers) {
+      if (!byId("peer-summary-grid")) return;
+      const peers = hydratedPeers || [];
+      const changes = peers.map((peer) => Number(peer.quote?.change_pct)).filter(Number.isFinite);
+      const avgChange = changes.length ? changes.reduce((sum, value) => sum + value, 0) / changes.length : null;
+      const sorted = peers.filter((peer) => Number.isFinite(Number(peer.quote?.change_pct))).sort((a, b) => Number(b.quote.change_pct) - Number(a.quote.change_pct));
+      const advancing = changes.filter((value) => value > 0).length;
+      const declining = changes.filter((value) => value < 0).length;
+      const unchanged = Math.max(0, peers.length - advancing - declining);
+      const strength = !Number.isFinite(avgChange) ? "--" : avgChange > 0.5 ? "Strong" : avgChange < -0.5 ? "Weak" : "Neutral";
+      renderCards("peer-summary-grid", [["Number of Peers", peers.length], ["Average Peer Change %", Number.isFinite(avgChange) ? pct(avgChange) : "--"], ["Best Performer", sorted[0]?.symbol || "--"], ["Worst Performer", sorted.at(-1)?.symbol || "--"], ["Selected Rank", "--"], ["Sector Strength", strength]]);
+      renderCards("peer-performance-grid", [["Top Peer", sorted[0]?.symbol || "--"], ["Weakest Peer", sorted.at(-1)?.symbol || "--"], ["Highest Volume", peers.slice().sort((a, b) => Number(b.quote?.volume || 0) - Number(a.quote?.volume || 0))[0]?.symbol || "--"], ["Most Volatile", "--"], ["Selected vs Peer Avg", Number.isFinite(avgChange) && Number.isFinite(Number(state.quote?.change_pct)) ? pct(Number(state.quote.change_pct) - avgChange) : "--"]]);
+      renderCards("sector-strength-grid", [["Sector", data?.sector || "--"], ["Sector Trend", strength], ["Avg Peer Change %", Number.isFinite(avgChange) ? pct(avgChange) : "--"], ["Advancing Peers", advancing], ["Declining Peers", declining], ["Unchanged Peers", unchanged]]);
+      if (byId("peers-sector")) byId("peers-sector").textContent = `Sector ${data?.sector || "--"}`;
+      if (byId("peers-industry")) byId("peers-industry").textContent = `Industry ${data?.industry || "--"}`;
+      if (byId("peers-group")) byId("peers-group").textContent = `${data?.sector || "Mapped"} Peer Group`;
+      if (byId("peers-data-status")) byId("peers-data-status").textContent = peers.length ? `${data?.sector || "Mapped"} peers` : "Peer mapping not available yet";
+    }
+    function renderPeerPerformanceBars(hydratedPeers) {
+      if (!byId("peer-performance-bars")) return;
+      const peers = hydratedPeers || [];
+      const changes = peers.map((peer) => Number(peer.quote?.change_pct)).filter(Number.isFinite);
+      const maxAbs = Math.max(...changes.map((value) => Math.abs(value)), 1);
+      byId("peer-performance-bars").innerHTML = peers.length ? peers.map((peer) => {
+        const change = Number(peer.quote?.change_pct);
+        const width = Number.isFinite(change) ? Math.max(4, Math.abs(change) / maxAbs * 100) : 0;
+        return `<div class="peer-bar"><span>${peer.symbol}</span><div class="peer-bar-track"><div class="peer-bar-fill ${change < 0 ? "negative" : ""}" style="width:${width}%"></div></div><span class="${Number.isFinite(change) ? cls(change) : "muted"} mono">${pct(change)}</span></div>`;
+      }).join("") : "";
+      if (byId("peer-performance-message")) byId("peer-performance-message").textContent = changes.length ? "Peer return bars use available quote change percentages." : "Peer performance data source not fully available yet";
     }
     async function renderOverviewPeers(data) {
       if (!byId("overview-peers-list")) return;
@@ -840,7 +1679,7 @@
         if (data?.rows?.length) {
           state.candles = data.rows;
           setStatus("Live candles loaded");
-        } else if (DETAIL.activeSection === "overview") {
+        } else if (["overview", "technical"].includes(DETAIL.activeSection)) {
           state.candles = [];
           setStatus("No candle data available for this instrument.", true);
         } else {
@@ -848,8 +1687,8 @@
           setStatus("Live candles unavailable; showing preview chart.");
         }
       } catch (error) {
-        state.candles = DETAIL.activeSection === "overview" ? [] : previewCandles();
-        setStatus(DETAIL.activeSection === "overview" ? "Candle data source not connected yet." : "Candles unavailable; showing preview chart.", true);
+        state.candles = ["overview", "technical"].includes(DETAIL.activeSection) ? [] : previewCandles();
+        setStatus(["overview", "technical"].includes(DETAIL.activeSection) ? "Candle data source not connected yet." : "Candles unavailable; showing preview chart.", true);
       }
       renderChart();
       renderTechnical();
@@ -881,11 +1720,26 @@
         }
       });
       ["add-watchlist-btn", "hub-watchlist-btn", "overview-watchlist-btn"].forEach((id) => {
-        if (byId(id)) byId(id).addEventListener("click", () => setStatus("Open Market Watch to add this instrument to a watchlist."));
+        if (byId(id)) byId(id).addEventListener("click", addDetailToWatchlist);
       });
       if (byId("create-alert-btn")) byId("create-alert-btn").addEventListener("click", () => {
-        byId("action-hub-message").textContent = "Alerts engine not connected yet";
-        setStatus("Alerts engine not connected yet");
+        setActionMessage("Alerts engine not connected yet", true);
+      });
+      if (byId("create-alert-card-btn")) byId("create-alert-card-btn").addEventListener("click", () => setActionMessage("Alerts engine not connected yet", true));
+      if (byId("portfolio-add-btn")) byId("portfolio-add-btn").addEventListener("click", () => setActionMessage("Portfolio add workflow is not connected yet", true));
+      if (byId("portfolio-placeholder-btn")) byId("portfolio-placeholder-btn").addEventListener("click", () => setActionMessage("Portfolio add workflow is not connected yet", true));
+      if (byId("portfolio-compare-btn")) byId("portfolio-compare-btn").addEventListener("click", () => setActionMessage("Portfolio comparison workflow is not connected yet", true));
+      if (byId("export-snapshot-btn")) byId("export-snapshot-btn").addEventListener("click", exportSnapshot);
+      if (byId("option-refresh-btn")) byId("option-refresh-btn").addEventListener("click", renderOptionChainSection);
+      document.querySelectorAll(".option-strategy-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          byId("strategy-builder-message").textContent = "Option strategy builder connection coming soon";
+        });
+      });
+      document.addEventListener("click", (event) => {
+        if (event.target.closest(".peer-watchlist-btn")) {
+          if (byId("peers-message")) byId("peers-message").textContent = "Watchlist connection from peer table coming soon";
+        }
       });
     }
     document.addEventListener("DOMContentLoaded", async () => {

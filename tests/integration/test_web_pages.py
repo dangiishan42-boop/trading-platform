@@ -48,7 +48,16 @@ def test_market_watch_stock_fundamentals_page_loads_only_fundamentals():
     response = client.get("/market-watch/stock/RELIANCE/fundamentals")
 
     assert response.status_code == 200
-    assert "Company Snapshot / Fundamentals" in response.text
+    assert "Valuation Snapshot" in response.text
+    assert "Profitability Ratios" in response.text
+    assert "Growth Metrics" in response.text
+    assert "Balance Sheet Strength" in response.text
+    assert "Quarterly Results" in response.text
+    assert "Annual P&amp;L" in response.text
+    assert "Cash Flow" in response.text
+    assert "Shareholding Pattern" in response.text
+    assert "Peer Valuation Compare" in response.text
+    assert "Research Notes / Warnings" in response.text
     assert "Fundamental data source not connected yet" in response.text
     assert '<section class="panel" id="chart">' not in response.text
     assert '<div class="panel-title">Option Chain</div>' not in response.text
@@ -61,10 +70,15 @@ def test_market_watch_stock_option_chain_page_loads_only_option_chain():
     response = client.get("/market-watch/stock/RELIANCE/option-chain")
 
     assert response.status_code == 200
-    assert '<div class="panel-title">Option Chain</div>' in response.text
+    assert "Option Chain Table" in response.text
+    assert "Summary Cards" in response.text
+    assert "OI Heatmap" in response.text
+    assert "Buildup Analysis" in response.text
+    assert "Option Strategy Quick Builder" in response.text
+    assert "Historical Option Chain" in response.text
     assert "Option chain data source not connected yet" in response.text
     assert '<section class="panel" id="chart">' not in response.text
-    assert "Company Snapshot / Fundamentals" not in response.text
+    assert "Valuation Snapshot" not in response.text
     assert '<section class="panel" id="technical-signals">' not in response.text
     assert '<section class="panel" id="peers">' not in response.text
     assert '<section class="panel" id="action-hub">' not in response.text
@@ -74,11 +88,18 @@ def test_market_watch_stock_technical_page_loads_only_technical():
     response = client.get("/market-watch/stock/RELIANCE/technical")
 
     assert response.status_code == 200
-    assert '<div class="panel-title">Technical Signals</div>' in response.text
-    assert "Derived Metrics" in response.text
+    assert "Overall Signal Score" in response.text
+    assert "Trend Signals" in response.text
+    assert "Momentum Signals" in response.text
+    assert "Volume Signals" in response.text
+    assert "Volatility / Risk Signals" in response.text
+    assert "Support &amp; Resistance" in response.text
+    assert "Multi-Timeframe Signal Summary" in response.text
+    assert "Signal History" in response.text
+    assert "Technical Summary / Interpretation" in response.text
     assert '<section class="panel" id="chart">' not in response.text
-    assert "Company Snapshot / Fundamentals" not in response.text
-    assert '<div class="panel-title">Option Chain</div>' not in response.text
+    assert "Valuation Snapshot" not in response.text
+    assert "Option Chain Table" not in response.text
     assert '<section class="panel" id="peers">' not in response.text
     assert '<section class="panel" id="action-hub">' not in response.text
 
@@ -87,26 +108,46 @@ def test_market_watch_stock_peers_page_loads_only_peers():
     response = client.get("/market-watch/stock/RELIANCE/peers")
 
     assert response.status_code == 200
-    assert "Related Stocks / Peers" in response.text
+    assert "Peer Quote Table" in response.text
+    assert "Peer Group Summary" in response.text
+    assert "Peer Performance Cards" in response.text
+    assert "Relative Performance Chart" in response.text
+    assert "Peer Valuation Compare" in response.text
+    assert "Sector Strength / Rotation" in response.text
     assert "Loading peers..." in response.text
     assert '<section class="panel" id="chart">' not in response.text
-    assert "Company Snapshot / Fundamentals" not in response.text
-    assert '<div class="panel-title">Option Chain</div>' not in response.text
-    assert '<section class="panel" id="technical-signals">' not in response.text
+    assert "Valuation Snapshot" not in response.text
+    assert "Option Chain Table" not in response.text
+    assert "Overall Signal Score" not in response.text
     assert '<section class="panel" id="action-hub">' not in response.text
+
+
+def test_market_watch_hdfcbank_peers_page_loads():
+    response = client.get("/market-watch/stock/HDFCBANK/peers")
+
+    assert response.status_code == 200
+    assert "Peer Quote Table" in response.text
+    assert "Peer Group Summary" in response.text
+    assert "Sector Strength / Rotation" in response.text
 
 
 def test_market_watch_stock_actions_page_loads_only_actions():
     response = client.get("/market-watch/stock/RELIANCE/actions")
 
     assert response.status_code == 200
-    assert '<div class="panel-title">Action Hub</div>' in response.text
+    assert "Quick Action Cards" in response.text
+    assert "Backtest Workflow" in response.text
+    assert "Research Workflow" in response.text
+    assert "Algo Workflow" in response.text
+    assert "Portfolio Workflow" in response.text
+    assert "Alert Workflow" in response.text
+    assert "Export Snapshot" in response.text
     assert "Alerts engine not connected yet" in response.text
     assert '<section class="panel" id="chart">' not in response.text
-    assert "Company Snapshot / Fundamentals" not in response.text
-    assert '<div class="panel-title">Option Chain</div>' not in response.text
-    assert '<section class="panel" id="technical-signals">' not in response.text
-    assert '<section class="panel" id="peers">' not in response.text
+    assert "Valuation Snapshot" not in response.text
+    assert "Option Chain Table" not in response.text
+    assert "Overall Signal Score" not in response.text
+    assert "Peer Quote Table" not in response.text
 
 
 def test_market_watch_index_detail_page_loads():
@@ -130,14 +171,86 @@ def test_market_watch_index_overview_page_loads_professional_summary():
     assert "Latest News / Corporate Actions" in response.text
 
 
+def test_market_watch_index_fundamentals_page_loads_professional_placeholders():
+    response = client.get("/market-watch/index/NIFTY50/fundamentals")
+
+    assert response.status_code == 200
+    assert "Valuation Snapshot" in response.text
+    assert "Profitability Ratios" in response.text
+    assert "Quarterly Results" in response.text
+    assert "Peer Valuation Compare" in response.text
+    assert "Research Notes / Warnings" in response.text
+    assert "Fundamental data source not connected yet" in response.text
+    assert '<section class="panel" id="chart">' not in response.text
+    assert '<div class="panel-title">Option Chain</div>' not in response.text
+
+
+def test_market_watch_index_option_chain_page_loads_professional_terminal():
+    response = client.get("/market-watch/index/NIFTY50/option-chain")
+
+    assert response.status_code == 200
+    assert "Option Chain Table" in response.text
+    assert "Summary Cards" in response.text
+    assert "OI Heatmap" in response.text
+    assert "Buildup Analysis" in response.text
+    assert "Historical option-chain data source not connected yet" in response.text
+    assert "Option chain data source not connected yet" in response.text
+    assert '<section class="panel" id="chart">' not in response.text
+    assert "Valuation Snapshot" not in response.text
+
+
+def test_market_watch_index_technical_page_loads_professional_dashboard():
+    response = client.get("/market-watch/index/NIFTY50/technical")
+
+    assert response.status_code == 200
+    assert "Overall Signal Score" in response.text
+    assert "Trend Signals" in response.text
+    assert "Momentum Signals" in response.text
+    assert "Support &amp; Resistance" in response.text
+    assert "Multi-Timeframe Signal Summary" in response.text
+    assert '<section class="panel" id="chart">' not in response.text
+    assert "Option Chain Table" not in response.text
+    assert "Valuation Snapshot" not in response.text
+
+
+def test_market_watch_index_peers_page_loads_professional_comparison():
+    response = client.get("/market-watch/index/NIFTY50/peers")
+
+    assert response.status_code == 200
+    assert "Peer Quote Table" in response.text
+    assert "Peer Group Summary" in response.text
+    assert "Peer Valuation Compare" in response.text
+    assert "Peer mapping not available yet" in response.text
+    assert '<section class="panel" id="chart">' not in response.text
+    assert "Option Chain Table" not in response.text
+    assert "Overall Signal Score" not in response.text
+
+
+def test_market_watch_index_actions_page_loads_workflow_hub():
+    response = client.get("/market-watch/index/NIFTY50/actions")
+
+    assert response.status_code == 200
+    assert "Quick Action Cards" in response.text
+    assert "Backtest Workflow" in response.text
+    assert "Research Workflow" in response.text
+    assert "Algo Workflow" in response.text
+    assert "Portfolio Workflow" in response.text
+    assert "Alert Workflow" in response.text
+    assert '<section class="panel" id="chart">' not in response.text
+    assert "Valuation Snapshot" not in response.text
+    assert "Option Chain Table" not in response.text
+    assert "Overall Signal Score" not in response.text
+    assert "Peer Quote Table" not in response.text
+
+
 def test_market_watch_index_detail_sub_pages_load():
     for section, expected in [
         ("overview", "Advanced Candlestick Chart"),
-        ("fundamentals", "Company Snapshot / Fundamentals"),
-        ("option-chain", '<div class="panel-title">Option Chain</div>'),
-        ("technical", '<div class="panel-title">Technical Signals</div>'),
-        ("peers", "Related Stocks / Peers"),
-        ("actions", '<div class="panel-title">Action Hub</div>'),
+        ("fundamentals", "Valuation Snapshot"),
+        ("option-chain", "Option Chain Table"),
+        ("technical", "Overall Signal Score"),
+        ("peers", "Peer Quote Table"),
+        ("actions", "Quick Action Cards"),
     ]:
         response = client.get(f"/market-watch/index/NIFTY50/{section}")
 
