@@ -14,6 +14,16 @@ def test_market_watch_page_loads():
     assert "Advanced Chart" in response.text
 
 
+def test_screener_page_loads():
+    response = client.get("/screener")
+
+    assert response.status_code == 200
+    assert "Enterprise grade stock screener" in response.text
+    assert "Filter Builder" in response.text
+    assert "Scan Summary" in response.text
+    assert "Market Cap Breakdown" in response.text
+
+
 def test_market_watch_stock_detail_page_loads():
     response = client.get("/market-watch/stock/RELIANCE")
 

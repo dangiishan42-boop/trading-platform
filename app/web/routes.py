@@ -68,6 +68,18 @@ def market_watch_page(request: Request):
     )
 
 
+@router.get("/screener")
+def screener_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="screener/index.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - Screener",
+        },
+    )
+
+
 @router.get("/market-watch/chart")
 def market_watch_large_chart_page(request: Request):
     return templates.TemplateResponse(

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <style>
+    :root {
+      --bg: #040812;
+      --side: #07111f;
+      --panel: #07111f;
+      --panel-2: #0b1524;
+      --panel-3: #101c2d;
+      --line: #1d3555;
+      --line-2: #2c527d;
+      --text: #d8e5f5;
+      --muted: #7f90a7;
+      --purple: #8b5cf6;
+      --blue: #2f81f7;
+      --green: #00d084;
+      --red: #ff4d5e;
+      --amber: #f5b84b;
+      --sidebar: 220px;
+      --rightbar: 320px;
+      --shadow: 0 16px 42px rgba(0, 0, 0, .34);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    body { overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .mono { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+    .muted { color: var(--muted); }
+    .terminal {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      background: radial-gradient(circle at 38% -16%, rgba(139, 92, 246, .18), transparent 32%), linear-gradient(180deg, #06101d, #03060d 62%);
+    }
+    .sidebar { position: sticky; top: 0; height: 100vh; overflow: hidden; background: linear-gradient(180deg, #091729, #050a13); border-right: 1px solid var(--line); display: flex; flex-direction: column; z-index: 5; }
+    .side-brand { display: flex; gap: 10px; align-items: center; padding: 14px 12px; border-bottom: 1px solid var(--line); }
+    .brand-logo { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; font-weight: 950; box-shadow: 0 0 24px rgba(139,92,246,.42); }
+    .brand-title { font-size: 14px; font-weight: 900; }
+    .brand-sub { margin-top: 2px; font-size: 11px; color: var(--muted); }
+    .nav { padding: 9px; overflow: auto; display: grid; gap: 4px; }
+    .nav-item { display: grid; grid-template-columns: 27px minmax(0, 1fr); gap: 8px; align-items: center; min-height: 31px; padding: 6px 8px; border-radius: 7px; border: 1px solid transparent; color: #aebbd0; font-size: 12px; font-weight: 780; }
+    .nav-item:hover { background: #0d1c30; border-color: rgba(47,129,247,.25); color: #fff; }
+    .nav-item.active { color: #fff; background: linear-gradient(135deg, rgba(139,92,246,.72), rgba(47,129,247,.58)); border-color: rgba(139,92,246,.72); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+    .nav-icon { color: #8ebeff; font-size: 11px; font-weight: 950; }
+    .side-status { margin: auto 10px 10px; padding: 11px; border: 1px solid var(--line); border-radius: 8px; background: #081322; }
+    .side-status-title { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 900; }
+    .side-status-open { margin-top: 6px; color: var(--green); font-size: 22px; font-weight: 950; }
+    .side-clock { margin-top: 5px; color: #9fb0c7; font-size: 11px; line-height: 1.45; }
+    .main { min-width: 0; padding: 10px; display: grid; gap: 10px; }
+    .ticker-bar { min-width: 0; min-height: 54px; display: grid; grid-template-columns: minmax(0, 1fr) auto; border: 1px solid var(--line); border-radius: 8px; background: rgba(8,17,29,.96); box-shadow: var(--shadow); overflow: hidden; }
+    .ticker-strip { display: grid; grid-template-columns: repeat(4, minmax(126px, 1fr)); min-width: 0; overflow: hidden; }
+    .ticker-card { display: grid; grid-template-columns: minmax(0,1fr) 48px; gap: 6px; align-items: center; padding: 7px 9px; border-right: 1px solid rgba(31,53,82,.84); background: linear-gradient(180deg, rgba(17,31,51,.76), rgba(7,17,31,.92)); }
+    .ticker-name { color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .ticker-value { margin-top: 1px; font-size: 13px; font-weight: 950; }
+    .ticker-chg { font-size: 11px; font-weight: 900; }
+    .spark { width: 48px; height: 26px; }
+    .top-actions { display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-left: 1px solid var(--line); background: #081322; white-space: nowrap; }
+    .top-search { width: 230px; height: 32px; border: 1px solid var(--line-2); border-radius: 7px; background: #050b14; color: var(--text); outline: none; padding: 0 10px; font-size: 12px; font-weight: 800; }
+    .icon-btn { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 7px; background: #0b1828; color: #d8e5f5; display: grid; place-items: center; font-weight: 900; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--purple), var(--blue)); font-size: 12px; font-weight: 950; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) var(--rightbar); gap: 10px; align-items: start; }
+    .content { min-width: 0; display: grid; gap: 10px; }
+    .rightbar { min-width: 0; display: grid; gap: 10px; position: sticky; top: 10px; }
+    .page-head { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(180deg, #0b1524, #07111f); box-shadow: var(--shadow); }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 24px; line-height: 1.1; font-weight: 950; }
+    h2 { font-size: 13px; font-weight: 950; text-transform: uppercase; color: #edf5ff; }
+    .subtitle { margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .btn { min-height: 32px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: 7px; background: #0b1828; color: var(--text); font-size: 12px; font-weight: 900; }
+    .btn:hover { border-color: var(--blue); }
+    .btn-primary { border-color: rgba(139,92,246,.75); background: linear-gradient(135deg, var(--purple), var(--blue)); color: #fff; box-shadow: 0 0 20px rgba(139,92,246,.2); }
+    .btn-danger { border-color: rgba(255,77,94,.45); color: #ffd4da; }
+    .panel { min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(180deg, var(--panel-2), var(--panel)); box-shadow: var(--shadow); overflow: hidden; }
+    .panel-head { min-height: 38px; padding: 9px 10px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(10,20,34,.72); }
+    .panel-body { padding: 10px; }
+    .top-grid { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 10px; }
+    .field { display: grid; gap: 5px; }
+    label { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 950; }
+    select, input { width: 100%; min-height: 31px; border: 1px solid var(--line-2); border-radius: 6px; background: #050b14; color: var(--text); outline: none; padding: 0 8px; font-size: 12px; font-weight: 800; }
+    select:focus, input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
+    .universe-form { display: grid; gap: 9px; }
+    .stat-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 8px; border: 1px solid rgba(44,82,125,.58); border-radius: 7px; background: #081322; font-size: 12px; }
+    .stat-row strong { font-size: 14px; }
+    .tabs { display: flex; gap: 14px; overflow: auto; }
+    .tab { position: relative; padding: 0 0 8px; color: var(--muted); font-size: 12px; font-weight: 950; white-space: nowrap; }
+    .tab.active { color: #fff; }
+    .tab.active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: linear-gradient(90deg, var(--purple), var(--blue)); }
+    .builder { display: grid; grid-template-columns: 190px minmax(0, 1fr); min-height: 370px; }
+    .categories { border-right: 1px solid var(--line); padding: 8px; background: #081322; display: grid; gap: 4px; align-content: start; }
+    .cat { padding: 7px 8px; border-radius: 6px; color: #aebbd0; font-size: 12px; font-weight: 850; }
+    .cat.active, .cat:hover { background: rgba(139,92,246,.15); color: #fff; }
+    .filter-area { min-width: 0; padding: 8px; display: grid; gap: 8px; align-content: start; }
+    .filter-grid { display: grid; grid-template-columns: 1.1fr 1.4fr 1.1fr .8fr .8fr .7fr 34px; gap: 6px; align-items: center; }
+    .filter-header { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 950; }
+    .filter-row { padding: 6px; border: 1px solid rgba(44,82,125,.42); border-radius: 7px; background: rgba(5,11,20,.7); }
+    .delete-row { width: 31px; height: 31px; border: 1px solid rgba(255,77,94,.4); border-radius: 6px; background: rgba(255,77,94,.08); color: #ff9ba6; font-weight: 950; }
+    .note { border: 1px solid rgba(245,184,75,.35); background: rgba(245,184,75,.08); color: #ffd88a; border-radius: 7px; padding: 8px; font-size: 11px; font-weight: 760; line-height: 1.45; }
+    .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .toolbar-left, .toolbar-right { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+    .table-wrap { overflow: auto; max-height: 460px; }
+    table { width: 100%; border-collapse: collapse; min-width: 1120px; }
+    th, td { padding: 8px 9px; border-bottom: 1px solid rgba(31,53,82,.72); text-align: left; font-size: 12px; white-space: nowrap; }
+    th { position: sticky; top: 0; z-index: 2; background: #0b1524; color: var(--muted); text-transform: uppercase; font-size: 10px; font-weight: 950; }
+    tbody tr:hover { background: rgba(139,92,246,.08); }
+    td a { color: #9cc7ff; font-weight: 950; }
+    .checkbox { width: 15px; height: 15px; accent-color: var(--purple); }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .mini-metric { padding: 8px; border: 1px solid rgba(44,82,125,.52); border-radius: 7px; background: #081322; }
+    .mini-label { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 950; }
+    .mini-value { margin-top: 4px; font-size: 14px; font-weight: 950; }
+    .bar-list { display: grid; gap: 8px; }
+    .bar-row { display: grid; grid-template-columns: 92px minmax(0,1fr) 34px; gap: 8px; align-items: center; font-size: 11px; color: #b8c6d8; }
+    .bar-track { height: 8px; border-radius: 99px; background: #050b14; border: 1px solid rgba(44,82,125,.42); overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--purple), var(--blue)); }
+    .sector-row { display: grid; grid-template-columns: 12px minmax(0,1fr) auto; gap: 8px; align-items: center; padding: 6px 0; font-size: 12px; border-bottom: 1px solid rgba(31,53,82,.48); }
+    .swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+    .saved-list { display: grid; gap: 6px; }
+    .saved-item { display: flex; justify-content: space-between; gap: 8px; align-items: center; min-height: 30px; padding: 7px; border: 1px solid rgba(44,82,125,.42); border-radius: 7px; background: #081322; color: #dbe8f7; font-size: 12px; font-weight: 850; }
+    .bottom-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .chart { min-height: 160px; display: grid; align-items: end; gap: 7px; }
+    .hist { height: 138px; display: flex; align-items: end; gap: 8px; padding-top: 8px; }
+    .hist-bar { flex: 1; min-width: 0; display: grid; align-items: end; gap: 6px; height: 100%; }
+    .hist-fill { min-height: 4px; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, var(--purple), var(--blue)); border: 1px solid rgba(139,92,246,.36); }
+    .hist-label { color: var(--muted); font-size: 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .donut-wrap { display: grid; grid-template-columns: 126px minmax(0,1fr); gap: 10px; align-items: center; }
+    .donut { width: 122px; height: 122px; border-radius: 50%; background: conic-gradient(#8b5cf6 0 50%, #2f81f7 50% 74%, #00d084 74% 88%, #f5b84b 88% 96%, #ff4d5e 96% 100%); position: relative; }
+    .donut::after { content: ""; position: absolute; inset: 24px; border-radius: 50%; background: #07111f; border: 1px solid var(--line); }
+    .status { min-height: 28px; display: flex; align-items: center; padding: 7px 9px; border: 1px solid rgba(44,82,125,.52); border-radius: 7px; background: #081322; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .status.ok { color: var(--green); border-color: rgba(0,208,132,.35); }
+    .status.err { color: #ff9ba6; border-color: rgba(255,77,94,.35); }
+    .modal-backdrop { position: fixed; inset: 0; display: none; place-items: center; background: rgba(0,0,0,.62); z-index: 20; padding: 16px; }
+    .modal-backdrop.open { display: grid; }
+    .modal { width: min(420px, 100%); border: 1px solid var(--line-2); border-radius: 8px; background: #07111f; box-shadow: 0 24px 80px rgba(0,0,0,.55); }
+    .modal-head, .modal-body, .modal-actions { padding: 12px; }
+    .modal-head { border-bottom: 1px solid var(--line); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--line); }
+    @media (max-width: 1320px) { .workspace { grid-template-columns: 1fr; } .rightbar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); } .bottom-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 920px) { .terminal { grid-template-columns: 1fr; } .sidebar { position: static; height: auto; } .nav { grid-template-columns: repeat(2, minmax(0,1fr)); } .ticker-bar, .page-head, .top-grid, .builder { grid-template-columns: 1fr; } .ticker-strip { grid-template-columns: repeat(2, minmax(0,1fr)); } .top-actions { border-left: 0; border-top: 1px solid var(--line); } .filter-grid { grid-template-columns: 1fr; } .rightbar { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="brand-logo">TP</div>
+        <div><div class="brand-title">Trading Platform</div><div class="brand-sub">Professional Trading Platform</div></div>
+      </div>
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="nav-item" href="/dashboard"><span class="nav-icon">DB</span><span>Dashboard</span></a>
+        <a class="nav-item" href="/market-watch"><span class="nav-icon">MW</span><span>Market Watch</span></a>
+        <a class="nav-item" href="/research"><span class="nav-icon">NI</span><span>News & Insights</span></a>
+        <a class="nav-item active" href="/screener"><span class="nav-icon">SC</span><span>Screener</span></a>
+        <a class="nav-item" href="/market-watch#heatmap"><span class="nav-icon">HM</span><span>Heatmap</span></a>
+        <a class="nav-item" href="/market-watch/chart"><span class="nav-icon">CH</span><span>Charts</span></a>
+        <a class="nav-item" href="/dashboard"><span class="nav-icon">BT</span><span>Backtesting</span></a>
+        <a class="nav-item" href="/algo-trading"><span class="nav-icon">ST</span><span>Strategies</span></a>
+        <a class="nav-item" href="/algo-trading"><span class="nav-icon">AT</span><span>Algo Trading</span></a>
+        <a class="nav-item" href="/portfolio"><span class="nav-icon">PF</span><span>Portfolio</span></a>
+        <a class="nav-item" href="/portfolio"><span class="nav-icon">PS</span><span>Positions</span></a>
+        <a class="nav-item" href="/portfolio"><span class="nav-icon">OR</span><span>Orders</span></a>
+        <a class="nav-item" href="/portfolio"><span class="nav-icon">HO</span><span>Holdings</span></a>
+        <a class="nav-item" href="/research"><span class="nav-icon">OP</span><span>Optimizer</span></a>
+        <a class="nav-item" href="/research"><span class="nav-icon">EV</span><span>Events Calendar</span></a>
+        <a class="nav-item" href="/historical-data"><span class="nav-icon">DD</span><span>Data Downloader</span></a>
+        <a class="nav-item" href="/docs"><span class="nav-icon">PR</span><span>Profile</span></a>
+        <a class="nav-item" href="/docs"><span class="nav-icon">SE</span><span>Settings</span></a>
+        <a class="nav-item" href="/"><span class="nav-icon">LO</span><span>Logout</span></a>
+      </nav>
+      <div class="side-status">
+        <div class="side-status-title">Market Status</div>
+        <div class="side-status-open">OPEN</div>
+        <div class="side-clock mono" id="side-clock">Asia/Kolkata session<br />Local preview data</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="ticker-bar" aria-label="Market ticker">
+        <div class="ticker-strip">
+          <div class="ticker-card"><div><div class="ticker-name">NIFTY 50</div><div class="ticker-value mono">22,419.95</div><div class="ticker-chg positive">+0.62%</div></div><svg class="spark" viewBox="0 0 48 26"><path d="M1 20 L9 16 L17 18 L25 10 L34 12 L47 4" fill="none" stroke="#00d084" stroke-width="2"/></svg></div>
+          <div class="ticker-card"><div><div class="ticker-name">SENSEX</div><div class="ticker-value mono">73,912.18</div><div class="ticker-chg positive">+0.48%</div></div><svg class="spark" viewBox="0 0 48 26"><path d="M1 18 L10 15 L18 17 L27 12 L36 8 L47 9" fill="none" stroke="#00d084" stroke-width="2"/></svg></div>
+          <div class="ticker-card"><div><div class="ticker-name">NIFTY BANK</div><div class="ticker-value mono">48,082.35</div><div class="ticker-chg negative">-0.21%</div></div><svg class="spark" viewBox="0 0 48 26"><path d="M1 8 L10 11 L18 9 L27 14 L36 15 L47 20" fill="none" stroke="#ff4d5e" stroke-width="2"/></svg></div>
+          <div class="ticker-card"><div><div class="ticker-name">INDIA VIX</div><div class="ticker-value mono">13.42</div><div class="ticker-chg negative">-1.18%</div></div><svg class="spark" viewBox="0 0 48 26"><path d="M1 6 L8 12 L16 9 L25 17 L35 14 L47 21" fill="none" stroke="#ff4d5e" stroke-width="2"/></svg></div>
+        </div>
+        <div class="top-actions">
+          <input class="top-search" placeholder="Search stocks, indices..." />
+          <button class="icon-btn" title="Notifications">!</button>
+          <button class="icon-btn" title="Theme">M</button>
+          <div class="avatar">AK</div>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="content">
+          <section class="page-head">
+            <div>
+              <h1>Screener</h1>
+              <p class="subtitle">Enterprise grade stock screener with advanced filters and analytics</p>
+            </div>
+            <div class="actions">
+              <button class="btn" id="reset-all-btn">Reset All</button>
+              <button class="btn" id="save-screen-btn">Save Screen</button>
+              <button class="btn btn-primary" id="run-scan-btn">Run Scan</button>
+            </div>
+          </section>
+
+          <section class="top-grid">
+            <aside class="panel">
+              <div class="panel-head"><h2>Universe</h2></div>
+              <div class="panel-body universe-form">
+                <div class="field"><label for="universe-select">Universe</label><select id="universe-select"><option>Indian Equities</option><option>NIFTY 50</option><option>NIFTY 100</option><option>NIFTY 500</option><option>All NSE</option><option>All BSE</option></select></div>
+                <div class="field"><label for="exchange-select">Exchange</label><select id="exchange-select"><option>NSE</option><option>BSE</option><option>NSE + BSE</option></select></div>
+                <div class="stat-row"><span>Total Stocks</span><strong class="mono" id="total-stocks">10</strong></div>
+                <div class="stat-row"><span>Filtered Stocks</span><strong class="mono" id="filtered-stocks">0</strong></div>
+                <div class="stat-row"><span>% of Universe</span><strong class="mono" id="universe-pct">0%</strong></div>
+              </div>
+            </aside>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div class="tabs"><div class="tab active">Filter Builder</div><div class="tab">Factor Screen</div><div class="tab">Ranking</div><div class="tab">Statistics</div><div class="tab">Historical Results</div></div>
+              </div>
+              <div class="builder">
+                <div class="categories" id="category-list"></div>
+                <div class="filter-area">
+                  <div class="note" id="source-note">Loading screener capabilities...</div>
+                  <div class="filter-grid filter-header"><span>Category</span><span>Metric</span><span>Condition</span><span>Value</span><span>Value 2 Optional</span><span>Logical</span><span></span></div>
+                  <div id="filter-rows"></div>
+                  <div class="actions" style="justify-content:flex-start;">
+                    <button class="btn" id="add-filter-btn">Add Filter</button>
+                    <button class="btn btn-danger" id="clear-filters-btn">Clear All</button>
+                    <button class="btn btn-primary" id="run-scan-builder-btn">Run Scan</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head table-toolbar">
+              <div class="toolbar-left"><h2 id="results-title">RESULTS (0)</h2><span class="status" id="scan-status">Ready</span></div>
+              <div class="toolbar-right">
+                <button class="btn" title="View">View</button><button class="btn">Columns</button><button class="btn" id="export-btn">Export</button><button class="btn">Add to Watchlist</button><button class="btn" id="save-screen-table-btn">Save Screen</button>
+                <select id="sort-by"><option>Market Cap</option><option>% Change</option><option>Volume</option><option>P/E</option><option>ROE</option><option>RSI</option></select>
+                <select id="sort-direction"><option value="desc">Desc</option><option value="asc">Asc</option></select>
+                <button class="btn" id="refresh-btn">Refresh</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th><input class="checkbox" type="checkbox" /></th><th>#</th><th>Symbol</th><th>Name</th><th>Sector</th><th>LTP (₹)</th><th>% Change</th><th>Volume</th><th>Market Cap (₹ Cr)</th><th>P/E (TTM)</th><th>ROE (%)</th><th>EPS Growth YoY (%)</th><th>RSI (14)</th><th>Debt / Equity</th></tr></thead>
+                <tbody id="results-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="bottom-grid">
+            <div class="panel"><div class="panel-head"><h2>Market Cap Breakdown</h2></div><div class="panel-body"><div class="donut-wrap"><div class="donut"></div><div class="bar-list" id="market-cap-breakdown"></div></div></div></div>
+            <div class="panel"><div class="panel-head"><h2>P/E Ratio Distribution</h2></div><div class="panel-body"><div class="hist" id="pe-distribution"></div></div></div>
+            <div class="panel"><div class="panel-head"><h2>ROE Distribution</h2></div><div class="panel-body"><div class="hist" id="roe-distribution"></div></div></div>
+          </section>
+        </div>
+
+        <aside class="rightbar">
+          <section class="panel"><div class="panel-head"><h2>Scan Summary</h2></div><div class="panel-body"><div class="summary-grid" id="scan-summary"></div></div></section>
+          <section class="panel"><div class="panel-head"><h2>Filter Distribution Chart</h2></div><div class="panel-body"><div class="bar-list" id="filter-distribution"></div></div></section>
+          <section class="panel"><div class="panel-head"><h2>Top Sectors in Results</h2></div><div class="panel-body" id="sector-breakdown"></div></section>
+          <section class="panel"><div class="panel-head"><h2>Top Stocks by Market Cap</h2></div><div class="panel-body"><div class="bar-list" id="top-market-cap"></div></div></section>
+          <section class="panel"><div class="panel-head"><h2>Saved Screens</h2></div><div class="panel-body"><div class="saved-list" id="saved-screens"></div><button class="btn" style="width:100%;margin-top:8px;">View All Saved Screens</button></div></section>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="save-modal">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head"><h2>Save Screen</h2></div>
+      <div class="modal-body"><div class="field"><label for="screen-name">Screen Name</label><input id="screen-name" placeholder="e.g. Quality momentum large caps" /></div></div>
+      <div class="modal-actions"><button class="btn" id="cancel-save-btn">Cancel</button><button class="btn btn-primary" id="confirm-save-btn">Save Screen</button></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const state = { capabilities: null, results: [], summary: {}, distributions: {}, sectors: [], saved: [] };
+    const defaultFilters = [
+      ["Overview", "Market Cap (₹ Cr)", "Greater Than", 5000, "", "AND"],
+      ["Valuation", "P/E Ratio (TTM)", "Less Than", 25, "", "AND"],
+      ["Profitability", "ROE (%)", "Greater Than", 15, "", "AND"],
+      ["Growth", "EPS Growth YoY (%)", "Greater Than", 10, "", "AND"],
+      ["Technical Indicators", "Price Above 200 EMA", "Is True", true, "", "AND"],
+      ["Technical Indicators", "RSI (14)", "Less Than", 70, "", "AND"],
+      ["Price & Volume", "Volume (20D Avg)", "Greater Than", 1000000, "", "AND"],
+      ["Fundamentals", "Debt to Equity", "Less Than", 1, "", "AND"],
+    ];
+    const metricOptions = ["LTP", "% Change", "Volume", "Relative Volume", "Market Cap", "Market Cap (₹ Cr)", "52W High Distance", "52W Low Distance", "P/E Ratio", "P/E Ratio (TTM)", "P/B Ratio", "ROE", "ROE (%)", "ROCE", "EPS Growth", "EPS Growth YoY (%)", "Sales Growth", "Debt to Equity", "Dividend Yield", "RSI", "RSI (14)", "MACD Signal", "Price Above EMA20", "Price Above EMA50", "Price Above EMA200", "Price Above 200 EMA", "Volume Spike", "Breakout 20D", "Breakout 52W", "Volume (20D Avg)"];
+    const conditions = ["Greater Than", "Less Than", "Between", "Equal To", "Is True", "Is False"];
+    const categories = ["Overview", "Price & Volume", "Fundamentals", "Technical Indicators", "Performance", "Valuation", "Profitability", "Growth", "Dividend", "Liquidity", "Analyst Estimates", "Custom Formulas"];
+    const colors = ["#8b5cf6", "#2f81f7", "#00d084", "#f5b84b", "#ff4d5e", "#7dd3fc"];
+
+    function optionHtml(options, selected) { return options.map((item) => `<option ${String(item) === String(selected) ? "selected" : ""}>${item}</option>`).join(""); }
+    function fmt(value, digits = 2) { return Number(value ?? 0).toLocaleString("en-IN", { maximumFractionDigits: digits }); }
+    function pct(value) { return `${Number(value ?? 0).toFixed(2)}%`; }
+    function cls(value) { return Number(value) >= 0 ? "positive" : "negative"; }
+
+    function renderCategories() {
+      $("category-list").innerHTML = categories.map((item, index) => `<div class="cat ${index === 0 ? "active" : ""}">${item}</div>`).join("");
+    }
+
+    function addFilterRow(data = ["Overview", "LTP", "Greater Than", "", "", "AND"]) {
+      const [category, metric, condition, value, value2, logical] = data;
+      const row = document.createElement("div");
+      row.className = "filter-grid filter-row";
+      row.innerHTML = `
+        <select class="filter-category">${optionHtml(categories, category)}</select>
+        <select class="filter-metric">${optionHtml(metricOptions, metric)}</select>
+        <select class="filter-condition">${optionHtml(conditions, condition)}</select>
+        <input class="filter-value" value="${value ?? ""}" />
+        <input class="filter-value-2" value="${value2 ?? ""}" />
+        <select class="filter-logical">${optionHtml(["AND", "OR"], logical)}</select>
+        <button class="delete-row" title="Delete filter" type="button">X</button>`;
+      row.querySelector(".delete-row").addEventListener("click", () => row.remove());
+      $("filter-rows").appendChild(row);
+    }
+
+    function resetFilters() {
+      $("filter-rows").innerHTML = "";
+      defaultFilters.forEach(addFilterRow);
+    }
+
+    function collectFilters() {
+      return Array.from(document.querySelectorAll(".filter-row")).map((row) => ({
+        category: row.querySelector(".filter-category").value,
+        metric: row.querySelector(".filter-metric").value,
+        condition: row.querySelector(".filter-condition").value,
+        value: row.querySelector(".filter-value").value,
+        value_2: row.querySelector(".filter-value-2").value,
+        logical: row.querySelector(".filter-logical").value,
+      }));
+    }
+
+    function requestPayload() {
+      return {
+        universe: $("universe-select").value,
+        exchange: $("exchange-select").value,
+        filters: collectFilters(),
+        sort_by: $("sort-by").value,
+        sort_direction: $("sort-direction").value,
+      };
+    }
+
+    function setStatus(message, kind = "") {
+      $("scan-status").textContent = message;
+      $("scan-status").className = `status ${kind}`.trim();
+    }
+
+    async function loadCapabilities() {
+      const res = await fetch("/api/v1/screener/capabilities");
+      state.capabilities = await res.json();
+      $("source-note").textContent = state.capabilities.data_source_note;
+    }
+
+    async function runScan() {
+      setStatus("Running scan...");
+      $("run-scan-btn").disabled = true;
+      $("run-scan-builder-btn").disabled = true;
+      try {
+        const res = await fetch("/api/v1/screener/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestPayload()) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Screener run failed");
+        state.results = data.results || [];
+        state.summary = data.summary || {};
+        state.distributions = data.distributions || {};
+        state.sectors = data.sector_breakdown || [];
+        state.saved = mergeSaved(data.saved_screens || []);
+        renderAll();
+        setStatus("Completed", "ok");
+      } catch (error) {
+        setStatus(error.message || "Screener run failed", "err");
+      } finally {
+        $("run-scan-btn").disabled = false;
+        $("run-scan-builder-btn").disabled = false;
+      }
+    }
+
+    function renderAll() {
+      renderResults();
+      renderSummary();
+      renderBars("filter-distribution", state.distributions.filters || []);
+      renderBreakdown("market-cap-breakdown", state.distributions.market_cap || []);
+      renderHistogram("pe-distribution", state.distributions.pe || []);
+      renderHistogram("roe-distribution", state.distributions.roe || []);
+      renderSectors();
+      renderTopMarketCap();
+      renderSavedScreens();
+    }
+
+    function renderResults() {
+      $("results-title").textContent = `RESULTS (${state.results.length})`;
+      $("filtered-stocks").textContent = String(state.summary.matches ?? state.results.length);
+      $("total-stocks").textContent = String(state.summary.total_stocks ?? 10);
+      const pctOfUniverse = state.summary.total_stocks ? (state.results.length / state.summary.total_stocks) * 100 : 0;
+      $("universe-pct").textContent = `${pctOfUniverse.toFixed(0)}%`;
+      $("results-body").innerHTML = state.results.map((row, index) => `
+        <tr>
+          <td><input class="checkbox" type="checkbox" /></td><td class="mono">${index + 1}</td>
+          <td><a href="/market-watch/stock/${row.symbol}">${row.symbol}</a></td><td>${row.name}</td><td>${row.sector}</td>
+          <td class="mono">${fmt(row.ltp)}</td><td class="mono ${cls(row.change_pct)}">${pct(row.change_pct)}</td>
+          <td class="mono">${fmt(row.volume, 0)}</td><td class="mono">${fmt(row.market_cap_cr, 0)}</td>
+          <td class="mono">${fmt(row.pe_ttm)}</td><td class="mono">${fmt(row.roe_pct)}</td><td class="mono">${fmt(row.eps_growth_yoy_pct)}</td>
+          <td class="mono">${fmt(row.rsi_14)}</td><td class="mono">${fmt(row.debt_equity)}</td>
+        </tr>`).join("");
+    }
+
+    function renderSummary() {
+      const items = [
+        ["Matches", state.summary.matches ?? 0],
+        ["Avg Market Cap", `₹${fmt(state.summary.avg_market_cap_cr, 0)} Cr`],
+        ["Avg % Change", pct(state.summary.avg_change_pct)],
+        ["Total Volume", fmt(state.summary.total_volume, 0)],
+        ["Last Run", state.summary.last_run || "--"],
+        ["Duration", `${state.summary.duration_ms ?? "--"} ms`],
+        ["Status", state.summary.status || "--"],
+        ["Universe", state.summary.universe || $("universe-select").value],
+      ];
+      $("scan-summary").innerHTML = items.map(([label, value]) => `<div class="mini-metric"><div class="mini-label">${label}</div><div class="mini-value mono">${value}</div></div>`).join("");
+    }
+
+    function renderBars(id, items) {
+      const max = Math.max(...items.map((item) => Number(item.value) || 0), 1);
+      $(id).innerHTML = items.map((item) => `<div class="bar-row"><span>${item.label}</span><div class="bar-track"><div class="bar-fill" style="width:${(Number(item.value) / max) * 100}%"></div></div><span class="mono">${item.value}</span></div>`).join("");
+    }
+
+    function renderBreakdown(id, items) {
+      $(id).innerHTML = items.map((item, index) => `<div class="sector-row"><span class="swatch" style="background:${colors[index % colors.length]}"></span><span>${item.label}</span><strong class="mono">${item.value}</strong></div>`).join("");
+    }
+
+    function renderHistogram(id, items) {
+      const max = Math.max(...items.map((item) => Number(item.value) || 0), 1);
+      $(id).innerHTML = items.map((item) => `<div class="hist-bar"><div class="hist-fill" style="height:${Math.max(7, (Number(item.value) / max) * 100)}%"></div><div class="hist-label">${item.label}</div></div>`).join("");
+    }
+
+    function renderSectors() {
+      $("sector-breakdown").innerHTML = state.sectors.map((item, index) => `<div class="sector-row"><span class="swatch" style="background:${colors[index % colors.length]}"></span><span>${item.label}</span><strong class="mono">${item.value}</strong></div>`).join("");
+    }
+
+    function renderTopMarketCap() {
+      const items = (state.distributions.top_market_cap || []).map((row) => ({ label: row.name, value: Math.round(row.market_cap_cr / 1000) }));
+      renderBars("top-market-cap", items);
+    }
+
+    function localSaved() {
+      try { return JSON.parse(localStorage.getItem("screener.savedScreens") || "[]"); } catch { return []; }
+    }
+
+    function mergeSaved(apiItems) {
+      const merged = [...apiItems];
+      localSaved().forEach((item) => { if (!merged.some((saved) => saved.id === item.id)) merged.push(item); });
+      return merged;
+    }
+
+    function renderSavedScreens() {
+      $("saved-screens").innerHTML = state.saved.map((item) => `<div class="saved-item"><span>${item.name}</span><button class="btn" data-load-screen="${item.id}">Load</button></div>`).join("");
+      document.querySelectorAll("[data-load-screen]").forEach((button) => button.addEventListener("click", () => loadSavedScreen(button.dataset.loadScreen)));
+    }
+
+    function openSaveModal() { $("screen-name").value = ""; $("save-modal").classList.add("open"); $("screen-name").focus(); }
+    function closeSaveModal() { $("save-modal").classList.remove("open"); }
+
+    async function saveScreen() {
+      const name = $("screen-name").value.trim();
+      if (!name) return;
+      const payload = { name, config: requestPayload() };
+      try {
+        const res = await fetch("/api/v1/screener/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const saved = await res.json();
+        if (!res.ok) throw new Error(saved.detail || "Unable to save screen");
+        state.saved = mergeSaved([saved, ...state.saved]);
+      } catch {
+        const local = localSaved();
+        local.unshift({ id: `local-${Date.now()}`, name, config: payload.config });
+        localStorage.setItem("screener.savedScreens", JSON.stringify(local));
+        state.saved = mergeSaved(state.saved);
+      }
+      closeSaveModal();
+      renderSavedScreens();
+    }
+
+    function loadSavedScreen(id) {
+      const saved = state.saved.find((item) => item.id === id);
+      if (!saved || !saved.config || !saved.config.filters) return;
+      $("universe-select").value = saved.config.universe || "Indian Equities";
+      $("exchange-select").value = saved.config.exchange || "NSE";
+      $("filter-rows").innerHTML = "";
+      saved.config.filters.forEach((item) => addFilterRow([item.category, item.metric, item.condition, item.value, item.value_2, item.logical]));
+      runScan();
+    }
+
+    function exportCsv() {
+      const header = ["Symbol","Name","Sector","LTP","% Change","Volume","Market Cap Cr","P/E","ROE","EPS Growth","RSI","Debt Equity"];
+      const rows = state.results.map((r) => [r.symbol, r.name, r.sector, r.ltp, r.change_pct, r.volume, r.market_cap_cr, r.pe_ttm, r.roe_pct, r.eps_growth_yoy_pct, r.rsi_14, r.debt_equity]);
+      const csv = [header, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "screener-results.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      $("side-clock").innerHTML = `${now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: false })}<br />Local preview data`;
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      renderCategories();
+      resetFilters();
+      updateClock();
+      setInterval(updateClock, 30000);
+      $("add-filter-btn").addEventListener("click", () => addFilterRow());
+      $("clear-filters-btn").addEventListener("click", () => { $("filter-rows").innerHTML = ""; });
+      $("reset-all-btn").addEventListener("click", () => { resetFilters(); $("universe-select").value = "Indian Equities"; $("exchange-select").value = "NSE"; runScan(); });
+      ["run-scan-btn", "run-scan-builder-btn", "refresh-btn"].forEach((id) => $(id).addEventListener("click", runScan));
+      ["save-screen-btn", "save-screen-table-btn"].forEach((id) => $(id).addEventListener("click", openSaveModal));
+      $("cancel-save-btn").addEventListener("click", closeSaveModal);
+      $("confirm-save-btn").addEventListener("click", saveScreen);
+      $("export-btn").addEventListener("click", exportCsv);
+      $("sort-by").addEventListener("change", runScan);
+      $("sort-direction").addEventListener("change", runScan);
+      await loadCapabilities();
+      await runScan();
+    });
+  </script>
+</body>
+</html>

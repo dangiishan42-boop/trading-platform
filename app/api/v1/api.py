@@ -3,7 +3,7 @@ from app.api.v1.endpoints import (
     auth, dashboard, data_upload, data_preview, indicators, strategies,
     strategy_builder, backtest_run, backtest_history, results, reports,
     charts, portfolio, watchlist, risk, optimization, monte_carlo, market_regime, strategy_scorecard, market_watch, settings, users,
-    historical_data, algo, instruments
+    historical_data, algo, instruments, screener
 )
 
 router = APIRouter()
@@ -13,6 +13,6 @@ for child in [
     backtest_run.router, backtest_history.router, results.router,
     reports.router, charts.router, portfolio.router, watchlist.router,
     risk.router, optimization.router, monte_carlo.router, market_regime.router, strategy_scorecard.router, market_watch.router, settings.router, users.router,
-    historical_data.router, algo.router, instruments.router
+    historical_data.router, algo.router, instruments.router, screener.router
 ]:
     router.include_router(child)
