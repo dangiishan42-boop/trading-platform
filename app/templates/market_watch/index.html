@@ -364,6 +364,12 @@
       text-align: left;
       font-weight: 950;
     }
+    .watchlist-row { cursor: pointer; }
+    .watchlist-row:hover td { background: rgba(47,129,247,0.12); }
+    .watchlist-refreshing {
+      opacity: 0.72;
+      pointer-events: none;
+    }
     .remove-btn {
       min-height: 25px;
       border: 1px solid rgba(255,77,94,0.48);
@@ -741,9 +747,10 @@
                 <button class="tool-btn" id="rename-watchlist-btn" type="button">Rename</button>
                 <button class="tool-btn" id="delete-watchlist-btn" type="button">Delete</button>
               </div>
+              <button class="tool-btn" id="refresh-watchlist-btn" type="button">Refresh Prices</button>
               <div class="watchlist-message" id="watchlist-message"></div>
             </div>
-            <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Chg %</th><th>Action</th></tr></thead><tbody id="watchlist-body"></tbody></table></div>
+            <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Chg</th><th>Chg %</th><th>Action</th></tr></thead><tbody id="watchlist-body"></tbody></table></div>
           </section>
           <section class="panel" id="stocks">
             <div class="panel-head"><div class="panel-title">Top Gainers</div></div>
@@ -828,6 +835,8 @@
       instruments: [],
       watchlists: [],
       activeWatchlistId: null,
+      watchlistQuotes: {},
+      watchlistLoading: false,
       indicators: { ema20: true, ema50: true, volumeSma: false },
       footer: { percent: false, log: false, auto: true },
     };
@@ -852,6 +861,7 @@
     function cls(value) { return Number(value) >= 0 ? "positive" : "negative"; }
     function seed(symbol) { return [...String(symbol)].reduce((sum, ch) => sum + ch.charCodeAt(0), 0); }
     function mappedToken(symbol) { return STATIC_SYMBOL_MAP[normalize(symbol)] || ""; }
+    function watchlistQuoteKey(item) { return `${item.exchange || "NSE"}:${normalize(item.symbol)}`; }
     function fallbackQuote(symbol = state.symbol) {
       const s = seed(symbol);
       const prev = 400 + (s % 4200);
@@ -1138,25 +1148,56 @@
       const body = byId("watchlist-body");
       const count = watchlist ? watchlist.items.length : 0;
       byId("watchlist-count").textContent = `${count} ${count === 1 ? "item" : "items"}`;
+      byId("refresh-watchlist-btn").classList.toggle("watchlist-refreshing", state.watchlistLoading);
       if (!watchlist) {
-        body.innerHTML = `<tr><td colspan="4"><div class="watchlist-empty">No watchlist available.</div></td></tr>`;
+        body.innerHTML = `<tr><td colspan="5"><div class="watchlist-empty">No watchlist available.</div></td></tr>`;
         return;
       }
       if (!watchlist.items.length) {
-        body.innerHTML = `<tr><td colspan="4"><div class="watchlist-empty">No symbols in ${escapeHtml(watchlist.name)} yet.</div></td></tr>`;
+        body.innerHTML = `<tr><td colspan="5"><div class="watchlist-empty">No symbols in ${escapeHtml(watchlist.name)} yet.</div></td></tr>`;
         return;
       }
       body.innerHTML = watchlist.items.map((item) => {
-        const q = fallbackQuote(item.symbol);
-        return `<tr>
+        const q = state.watchlistQuotes[watchlistQuoteKey(item)] || {};
+        const hasPrice = Number.isFinite(Number(q.latest_price));
+        const hasChange = Number.isFinite(Number(q.change));
+        const hasChangePct = Number.isFinite(Number(q.change_pct));
+        return `<tr class="watchlist-row" data-watchlist-load="${item.id}">
           <td><button class="symbol-cell-btn" type="button" data-watchlist-load="${item.id}">${escapeHtml(item.symbol)}</button><div class="muted">${escapeHtml(item.exchange)} ${escapeHtml(item.display_name || "")}</div></td>
-          <td class="mono">${fmt(q.latest_price)}</td>
-          <td class="${cls(q.change_pct)} mono">${pct(q.change_pct)}</td>
+          <td class="mono">${hasPrice ? fmt(q.latest_price) : "--"}</td>
+          <td class="${hasChange ? cls(q.change) : "muted"} mono">${hasChange ? fmt(q.change) : "--"}</td>
+          <td class="${hasChangePct ? cls(q.change_pct) : "muted"} mono">${hasChangePct ? pct(q.change_pct) : "--"}</td>
           <td><button class="remove-btn" type="button" data-watchlist-remove="${item.id}">Remove</button></td>
         </tr>`;
       }).join("");
     }
-    async function loadWatchlists() {
+    async function hydrateActiveWatchlistQuotes() {
+      const watchlist = activeWatchlist();
+      if (!watchlist || !watchlist.items.length) return;
+      state.watchlistLoading = true;
+      renderWatchlist();
+      setWatchlistMessage("Refreshing watchlist prices...");
+      const quotePairs = await Promise.all(watchlist.items.map(async (item) => {
+        try {
+          const quote = await postJson("/api/v1/market-watch/quote", {
+            query: item.symbol,
+            exchange: item.exchange || "NSE",
+            symbol_token: item.token || mappedToken(item.symbol) || null,
+          });
+          return [watchlistQuoteKey(item), quote];
+        } catch (error) {
+          return [watchlistQuoteKey(item), null];
+        }
+      }));
+      quotePairs.forEach(([key, quote]) => {
+        state.watchlistQuotes[key] = quote;
+      });
+      state.watchlistLoading = false;
+      renderWatchlist();
+      const failed = quotePairs.filter(([, quote]) => !quote).length;
+      setWatchlistMessage(failed ? `${failed} quote${failed === 1 ? "" : "s"} unavailable. Symbols kept in watchlist.` : "Watchlist prices refreshed.");
+    }
+    async function loadWatchlists({ hydrate = true } = {}) {
       try {
         const previousId = state.activeWatchlistId;
         state.watchlists = await fetchJson("/api/v1/watchlists");
@@ -1165,6 +1206,7 @@
           : (state.watchlists[0] && state.watchlists[0].id);
         renderWatchlist();
         setWatchlistMessage(state.watchlists.length ? "" : "No watchlists available.", false);
+        if (hydrate) await hydrateActiveWatchlistQuotes();
       } catch (error) {
         setWatchlistMessage(`Could not load watchlists: ${error.message}`, true);
       }
@@ -1191,6 +1233,7 @@
         const updated = await putJson(`/api/v1/watchlists/${watchlist.id}`, { name: name.trim() });
         state.watchlists = state.watchlists.map((item) => item.id === updated.id ? updated : item);
         renderWatchlist();
+        await hydrateActiveWatchlistQuotes();
         setWatchlistMessage(`Renamed to ${updated.name}`);
       } catch (error) {
         setWatchlistMessage(error.message, true);
@@ -1207,6 +1250,7 @@
         renderWatchlist();
         setWatchlistMessage(`Deleted ${watchlist.name}`);
         if (!state.watchlists.length) await loadWatchlists();
+        else await hydrateActiveWatchlistQuotes();
       } catch (error) {
         setWatchlistMessage(error.message, true);
       }
@@ -1227,14 +1271,13 @@
         return;
       }
       try {
-        const item = await postJson(`/api/v1/watchlists/${watchlist.id}/items`, {
+        await postJson(`/api/v1/watchlists/${watchlist.id}/items`, {
           symbol,
           exchange: state.exchange,
           token: state.token || mappedToken(symbol) || null,
           display_name: (state.quote && state.quote.stock_name) || SYMBOL_NAMES[symbol] || symbol,
         });
-        watchlist.items.push(item);
-        renderWatchlist();
+        await loadWatchlists();
         setWatchlistMessage(`Added ${symbol} to ${watchlist.name}`);
       } catch (error) {
         setWatchlistMessage(error.message, true);
@@ -1248,6 +1291,7 @@
         await deleteJson(`/api/v1/watchlists/${watchlist.id}/items/${itemId}`);
         watchlist.items = watchlist.items.filter((candidate) => String(candidate.id) !== String(itemId));
         renderWatchlist();
+        await hydrateActiveWatchlistQuotes();
         setWatchlistMessage(item ? `Removed ${item.symbol}` : "Removed symbol");
       } catch (error) {
         setWatchlistMessage(error.message, true);
@@ -1299,15 +1343,21 @@
         renderWatchlist();
         const watchlist = activeWatchlist();
         setWatchlistMessage(watchlist ? `Using ${watchlist.name}` : "");
+        hydrateActiveWatchlistQuotes();
       });
       byId("new-watchlist-btn").addEventListener("click", createWatchlist);
       byId("rename-watchlist-btn").addEventListener("click", renameWatchlist);
       byId("delete-watchlist-btn").addEventListener("click", deleteActiveWatchlist);
+      byId("refresh-watchlist-btn").addEventListener("click", hydrateActiveWatchlistQuotes);
       byId("watchlist-body").addEventListener("click", (event) => {
-        const loadButton = event.target.closest("[data-watchlist-load]");
         const removeButton = event.target.closest("[data-watchlist-remove]");
-        if (loadButton) loadWatchlistItem(loadButton.dataset.watchlistLoad);
-        if (removeButton) removeWatchlistItem(removeButton.dataset.watchlistRemove);
+        if (removeButton) {
+          event.stopPropagation();
+          removeWatchlistItem(removeButton.dataset.watchlistRemove);
+          return;
+        }
+        const loadTarget = event.target.closest("[data-watchlist-load]");
+        if (loadTarget) loadWatchlistItem(loadTarget.dataset.watchlistLoad);
       });
       byId("snapshot-btn").addEventListener("click", () => setStatus("Snapshot captured for current chart view"));
       byId("indicator-btn").addEventListener("click", () => setStatus("EMA 20 and EMA 50 overlays are available"));

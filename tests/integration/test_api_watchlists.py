@@ -66,6 +66,36 @@ def test_add_watchlist_item():
         _delete_watchlist(watchlist["id"])
 
 
+def test_list_watchlists_returns_saved_item_after_refresh():
+    watchlist = _create_watchlist()
+    try:
+        add_response = client.post(
+            f"/api/v1/watchlists/{watchlist['id']}/items",
+            json={
+                "symbol": "HDFCBANK",
+                "exchange": "NSE",
+                "token": "1333",
+                "display_name": "HDFC Bank",
+            },
+        )
+
+        list_response = client.get("/api/v1/watchlists")
+        refreshed = next(item for item in list_response.json() if item["id"] == watchlist["id"])
+
+        assert add_response.status_code == 201
+        assert list_response.status_code == 200
+        assert refreshed["items"] == [
+            {
+                **add_response.json(),
+                "created_at": refreshed["items"][0]["created_at"],
+            }
+        ]
+        assert refreshed["items"][0]["symbol"] == "HDFCBANK"
+        assert refreshed["items"][0]["display_name"] == "HDFC Bank"
+    finally:
+        _delete_watchlist(watchlist["id"])
+
+
 def test_prevent_duplicate_watchlist_item():
     watchlist = _create_watchlist()
     item_payload = {
@@ -112,3 +142,12 @@ def test_delete_watchlist():
 
     assert delete_response.status_code == 204
     assert all(item["name"] != watchlist["name"] for item in list_response.json())
+
+
+def test_market_watch_page_includes_watchlist_quote_hydration_fallback():
+    response = client.get("/market-watch")
+
+    assert response.status_code == 200
+    assert "Refresh Prices" in response.text
+    assert "hydrateActiveWatchlistQuotes" in response.text
+    assert "Symbols kept in watchlist" in response.text
