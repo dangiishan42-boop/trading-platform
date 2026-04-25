@@ -10,6 +10,7 @@ from app.config.constants import ANGEL_INDEX_DETAILS, ANGEL_SYMBOL_DETAILS
 from app.core.exceptions import InvalidRequestError
 from app.schemas.data_schema import AngelDataFetchRequest
 from app.services.data.angel_smartapi_service import AngelSmartApiService
+from app.services.data.data_resampler_service import DataResamplerService
 from app.services.data.instrument_master_service import InstrumentMasterService
 
 
@@ -21,31 +22,36 @@ class ResolvedMarketSymbol:
     symbol_token: str
 
 
+@dataclass(frozen=True)
+class MarketWatchIntervalConfig:
+    angel_interval: str
+    lookback: timedelta
+    resample_rule: str | None = None
+
+
 class MarketWatchService:
-    INTERVAL_TO_ANGEL = {
-        "1m": "ONE_MINUTE",
-        "5m": "FIVE_MINUTE",
-        "15m": "FIFTEEN_MINUTE",
-        "30m": "THIRTY_MINUTE",
-        "1H": "ONE_HOUR",
-        "1D": "ONE_DAY",
-    }
-    DEFAULT_LOOKBACK = {
-        "1m": timedelta(hours=6),
-        "5m": timedelta(days=2),
-        "15m": timedelta(days=5),
-        "30m": timedelta(days=10),
-        "1H": timedelta(days=30),
-        "1D": timedelta(days=365),
+    INTERVAL_CONFIG = {
+        "1m": MarketWatchIntervalConfig("ONE_MINUTE", timedelta(hours=6)),
+        "3m": MarketWatchIntervalConfig("ONE_MINUTE", timedelta(hours=12), "3min"),
+        "5m": MarketWatchIntervalConfig("FIVE_MINUTE", timedelta(days=2)),
+        "15m": MarketWatchIntervalConfig("FIFTEEN_MINUTE", timedelta(days=5)),
+        "30m": MarketWatchIntervalConfig("THIRTY_MINUTE", timedelta(days=10)),
+        "1H": MarketWatchIntervalConfig("ONE_HOUR", timedelta(days=30)),
+        "4H": MarketWatchIntervalConfig("ONE_HOUR", timedelta(days=90), "4h"),
+        "1D": MarketWatchIntervalConfig("ONE_DAY", timedelta(days=365)),
+        "1W": MarketWatchIntervalConfig("ONE_DAY", timedelta(days=365 * 3), "W"),
+        "1M": MarketWatchIntervalConfig("ONE_DAY", timedelta(days=365 * 5), "ME"),
     }
 
     def __init__(
         self,
         angel: AngelSmartApiService | None = None,
         instruments: InstrumentMasterService | None = None,
+        resampler: DataResamplerService | None = None,
     ) -> None:
         self.angel = angel or AngelSmartApiService()
         self.instruments = instruments or InstrumentMasterService()
+        self.resampler = resampler or DataResamplerService()
 
     def resolve_symbol(
         self,
@@ -119,6 +125,7 @@ class MarketWatchService:
         resolved = self.resolve_symbol(query, exchange, symbol_token, session=session)
         request = self._candle_request(resolved, interval, fromdate, todate)
         frame = self.angel.fetch_frame(request)
+        frame = self._prepare_interval_frame(frame, interval)
         return {
             "symbol": resolved.symbol,
             "stock_name": resolved.stock_name,
@@ -238,18 +245,34 @@ class MarketWatchService:
         fromdate: datetime | None,
         todate: datetime | None,
     ) -> AngelDataFetchRequest:
-        normalized_interval = self.INTERVAL_TO_ANGEL.get(interval)
-        if not normalized_interval:
+        interval_config = self.INTERVAL_CONFIG.get(interval)
+        if not interval_config:
             raise InvalidRequestError("Unsupported market-watch interval")
         end = todate or datetime.now()
-        start = fromdate or (end - self.DEFAULT_LOOKBACK[interval])
+        start = fromdate or (end - interval_config.lookback)
         return AngelDataFetchRequest(
             exchange=resolved.exchange,
             symbol_token=resolved.symbol_token,
-            interval=normalized_interval,
+            interval=interval_config.angel_interval,
             fromdate=start,
             todate=end,
         )
+
+    def _prepare_interval_frame(self, frame: pd.DataFrame, interval: str) -> pd.DataFrame:
+        interval_config = self.INTERVAL_CONFIG.get(interval)
+        if not interval_config or not interval_config.resample_rule:
+            return frame
+
+        prepared = frame.copy()
+        prepared["Date"] = pd.to_datetime(prepared["Date"], errors="coerce")
+        if getattr(prepared["Date"].dt, "tz", None) is not None:
+            prepared["Date"] = prepared["Date"].dt.tz_localize(None)
+        for column in ("Open", "High", "Low", "Close", "Volume"):
+            prepared[column] = pd.to_numeric(prepared[column], errors="coerce")
+        prepared = prepared.dropna(subset=["Date", "Open", "High", "Low", "Close", "Volume"])
+        if prepared.empty:
+            return prepared
+        return self.resampler.resample(prepared.sort_values("Date"), interval_config.resample_rule)
 
     def _frame_rows(self, frame: pd.DataFrame) -> list[dict[str, Any]]:
         rows = []

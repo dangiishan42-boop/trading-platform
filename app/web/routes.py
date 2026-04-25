@@ -34,6 +34,20 @@ def market_watch_page(request: Request):
     )
 
 
+@router.get("/market-watch/chart")
+def market_watch_large_chart_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="market_watch/index.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - Advanced Chart",
+            "angel_symbol_map": ANGEL_SYMBOL_TO_TOKEN,
+            "chart_only": True,
+        },
+    )
+
+
 @router.get("/dashboard")
 def dashboard_page(request: Request):
     strategies = StrategyRegistry().available()

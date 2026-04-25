@@ -21,6 +21,14 @@ def test_dashboard_page_still_loads():
     assert "Optimization Results" in response.text
 
 
+def test_market_watch_large_chart_page_loads():
+    response = client.get("/market-watch/chart")
+
+    assert response.status_code == 200
+    assert "Advanced Chart" in response.text
+    assert "Open Large Chart" in response.text
+
+
 def test_market_watch_quote_uses_service(monkeypatch):
     class FakeMarketWatchService:
         def quote(self, query, exchange, symbol_token):

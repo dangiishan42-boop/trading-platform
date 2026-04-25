@@ -6,7 +6,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-MarketWatchInterval = Literal["1m", "5m", "15m", "30m", "1H", "1D"]
+MarketWatchInterval = Literal["1m", "3m", "5m", "15m", "30m", "1H", "4H", "1D", "1W", "1M"]
 
 
 class MarketWatchSymbolRequest(BaseModel):
