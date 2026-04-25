@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ title }}</title>
   <style>
-    :root { --bg:#f4f7fb; --panel:#fff; --line:#dbe4ef; --text:#172033; --muted:#64748b; --blue:#2563eb; --green:#16a34a; --red:#dc2626; }
-    * { box-sizing: border-box; }
+    :root { --bg:#f4f7fb; --panel:#fff; --line:#dbe4ef; --text:#172033; --muted:#64748b; --blue:#2563eb; --green:#16a34a; --red:#dc2626; --ink:#102449; --soft:#f8fbff; }
+    * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:0; }
     a { color:inherit; text-decoration:none; }
     .app-shell { display:grid; grid-template-columns:260px minmax(0,1fr); min-height:100vh; }
-    .sidebar { position:sticky; top:0; height:100vh; padding:22px 16px; background:#102449; color:#fff; display:flex; flex-direction:column; gap:18px; }
+    .sidebar { position:sticky; top:0; height:100vh; padding:22px 16px; background:var(--ink); color:#fff; display:flex; flex-direction:column; gap:18px; }
     .sidebar-brand { display:flex; gap:12px; align-items:center; padding:4px 4px 12px; }
     .brand-badge { width:40px; height:40px; border-radius:8px; background:rgba(255,255,255,.14); display:grid; place-items:center; font-weight:900; }
     .brand-title { font-weight:850; line-height:1.25; }
@@ -20,43 +20,54 @@
     .nav-item.active { background:rgba(37,99,235,.42); border-color:rgba(147,197,253,.45); color:#fff; }
     .sidebar-footer { margin-top:auto; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.06); color:rgba(255,255,255,.78); font-size:12px; line-height:1.5; }
     .content { min-width:0; padding:22px; }
-    .shell { width:min(1480px,100%); margin:0 auto; display:grid; gap:18px; }
+    .shell { width:min(1500px,100%); margin:0 auto; display:grid; gap:18px; }
     .hero, .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px; box-shadow:0 10px 24px rgba(15,23,42,.06); }
     .hero h1 { margin:0; font-size:28px; }
-    .hero p { margin:8px 0 0; color:var(--muted); }
+    .hero p { margin:8px 0 0; color:var(--muted); max-width:920px; }
     .grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
     .grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
     .grid-4 { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
     .section-head { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:14px; }
     .section-head h2 { margin:0; font-size:18px; }
+    .section-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
     label { display:block; color:var(--muted); font-size:12px; font-weight:800; margin-bottom:6px; }
     input, select { width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; min-height:42px; font:inherit; background:#fff; }
+    input[type="checkbox"] { width:auto; min-height:0; }
     .btn { border:1px solid var(--line); border-radius:8px; padding:10px 13px; background:#fff; color:var(--text); cursor:pointer; font-weight:750; min-height:40px; }
     .btn-primary { background:var(--blue); border-color:var(--blue); color:#fff; }
     .btn-danger { background:#fff1f2; border-color:#fecaca; color:#991b1b; }
     .btn:disabled { opacity:.55; cursor:not-allowed; }
-    .rule-row { display:grid; grid-template-columns:minmax(90px,.7fr) minmax(120px,1fr) minmax(120px,1fr) minmax(100px,.8fr) minmax(80px,.6fr) minmax(90px,.7fr) auto; gap:10px; align-items:end; margin-top:10px; }
-    .metric-card { border:1px solid var(--line); border-radius:8px; padding:14px; background:#fbfdff; }
-    .metric-label { color:var(--muted); font-size:12px; font-weight:800; }
-    .metric-value { margin-top:7px; font-size:24px; font-weight:900; overflow-wrap:anywhere; }
-    .positive { color:var(--green); } .negative { color:var(--red); }
     .notice { padding:10px 12px; border-radius:8px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; font-size:13px; }
     .notice.danger { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
     .notice.success { background:#f0fdf4; border-color:#bbf7d0; color:#166534; }
+    .builder-card { border:1px solid var(--line); border-radius:8px; padding:14px; background:var(--soft); margin-top:12px; }
+    .builder-card-head { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .leg-meta { display:grid; grid-template-columns:minmax(180px,1fr) 130px; gap:10px; width:min(520px,100%); }
+    .condition-row { display:grid; grid-template-columns:92px 120px 110px 132px 116px 96px 120px 96px 96px auto; gap:10px; align-items:end; margin-top:10px; }
+    .condition-row.compact { grid-template-columns:120px 110px 132px 116px 96px 120px 96px auto; }
+    .chip-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .chip { border:1px solid #cbd5e1; background:#fff; border-radius:999px; padding:6px 10px; color:var(--muted); font-size:12px; font-weight:800; }
+    .metric-card { border:1px solid var(--line); border-radius:8px; padding:14px; background:var(--soft); }
+    .metric-label { color:var(--muted); font-size:12px; font-weight:800; }
+    .metric-value { margin-top:7px; font-size:24px; font-weight:900; overflow-wrap:anywhere; }
+    .positive { color:var(--green); }
+    .negative { color:var(--red); }
     .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:8px; }
-    table { width:100%; min-width:900px; border-collapse:collapse; }
+    table { width:100%; min-width:1040px; border-collapse:collapse; }
     th,td { padding:11px 12px; border-bottom:1px solid #e7eef7; text-align:left; font-size:13px; }
     th { color:var(--muted); background:#f8fbff; font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
-    .chart-box { width:100%; min-height:260px; border:1px solid var(--line); border-radius:8px; display:grid; place-items:center; background:#fff; overflow:hidden; }
+    .chart-box { width:100%; min-height:260px; border:1px solid var(--line); border-radius:8px; display:grid; place-items:center; background:#fff; overflow:hidden; color:var(--muted); }
     .chart-box svg { width:100%; height:260px; display:block; }
-    @media (max-width: 1100px) { .app-shell { grid-template-columns:1fr; } .sidebar { position:static; height:auto; } .nav-list { grid-template-columns:repeat(3,minmax(0,1fr)); } .sidebar-footer { display:none; } .rule-row,.grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; } }
-    @media (max-width: 560px) { .content { padding:12px; } .nav-list { grid-template-columns:1fr; } }
+    .muted { color:var(--muted); font-size:13px; }
+    @media (max-width: 1280px) { .condition-row, .condition-row.compact { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    @media (max-width: 1100px) { .app-shell { grid-template-columns:1fr; } .sidebar { position:static; height:auto; } .nav-list { grid-template-columns:repeat(3,minmax(0,1fr)); } .sidebar-footer { display:none; } .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; } }
+    @media (max-width: 640px) { .content { padding:12px; } .nav-list,.condition-row,.condition-row.compact,.leg-meta { grid-template-columns:1fr; } .builder-card-head,.section-head { align-items:stretch; flex-direction:column; } }
   </style>
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="sidebar-brand"><div class="brand-badge">AT</div><div><div class="brand-title">Trading Platform</div><div class="brand-sub">Algo simulation</div></div></div>
+      <div class="sidebar-brand"><div class="brand-badge">AT</div><div><div class="brand-title">Trading Platform</div><div class="brand-sub">Custom algo builder</div></div></div>
       <nav class="nav-list" aria-label="Primary navigation">
         <a class="nav-item" href="/">Market Watch</a>
         <a class="nav-item" href="/dashboard">Backtest Dashboard</a>
@@ -65,54 +76,96 @@
         <a class="nav-item active" href="/algo-trading">Algo Trading</a>
         <a class="nav-item" href="/historical-data">Historical Data</a>
       </nav>
-      <div class="sidebar-footer">Rule-based strategy simulation only. Live broker order placement is intentionally disabled.</div>
+      <div class="sidebar-footer">Strategy simulation and rule validation only. Live broker order placement is intentionally disabled.</div>
     </aside>
 
     <main class="content">
       <div class="shell">
         <section class="hero">
-          <h1>Algo Trading</h1>
-          <p>Build rule-based buy, sell, and exit signals, then simulate them on historical data. This page is not connected to live order execution.</p>
+          <h1>Custom Algo Strategy Builder</h1>
+          <p>Create multi-leg entry logic, indicator exits, stop/target rules, risk controls, and historical simulations from existing data. This is an analytical simulator, not live auto-trading.</p>
         </section>
 
         <section class="panel">
-          <div class="section-head"><h2>Symbol Selection</h2><span class="notice">Simulation mode only</span></div>
+          <div class="section-head"><h2>Underlying / Symbol</h2><span class="notice">Simulation mode only</span></div>
           <div class="grid-4">
-            <div><label for="algo-symbol">Stock Search</label><input id="algo-symbol" list="algo-symbol-options" value="RELIANCE" placeholder="RELIANCE, TCS, INFY" /><datalist id="algo-symbol-options"></datalist></div>
+            <div><label for="algo-strategy-name">Strategy Name</label><input id="algo-strategy-name" placeholder="e.g. Weekly RSI breakout" /></div>
+            <div><label for="saved-algo-strategy">Load Saved Strategy</label><select id="saved-algo-strategy"><option value="">Select saved strategy</option></select></div>
+            <div style="align-self:end;"><button class="btn" type="button" id="load-algo-strategy-btn">Load</button></div>
+            <div style="align-self:end;"><button class="btn btn-primary" type="button" id="save-algo-strategy-btn">Save Algo Strategy</button></div>
+            <div><label for="algo-symbol">Stock Search</label><input id="algo-symbol" list="algo-symbol-options" value="RELIANCE" placeholder="HDFC Bank, RELIANCE, TCS" /><datalist id="algo-symbol-options"></datalist></div>
             <div><label for="algo-exchange">Exchange</label><input id="algo-exchange" value="NSE" /></div>
-            <div><label for="algo-timeframe">Timeframe</label><input id="algo-timeframe" value="1D" /></div>
+            <div><label for="algo-timeframe">Base Timeframe</label><input id="algo-timeframe" value="1D" /></div>
             <div><label for="algo-source">Data Source</label><select id="algo-source"><option value="sample">Sample</option><option value="upload">Uploaded CSV</option></select></div>
             <div><label for="algo-file-name">Uploaded File Name</label><input id="algo-file-name" placeholder="Required for uploaded CSV" /></div>
             <div><label for="algo-from-date">From Date</label><input id="algo-from-date" type="datetime-local" /></div>
             <div><label for="algo-to-date">To Date</label><input id="algo-to-date" type="datetime-local" /></div>
           </div>
+          <div id="algo-save-status" class="notice" style="margin-top:14px;">Saved algo strategies can be loaded and edited before simulation.</div>
         </section>
 
         <section class="panel">
-          <div class="section-head"><h2>Algo Rule Builder</h2><button class="btn" type="button" id="add-rule-btn">Add Rule</button></div>
-          <label><input id="require-all-conditions" type="checkbox" checked style="width:auto; min-height:0;" /> Take trade only when all conditions are fulfilled</label>
-          <div id="rule-rows"></div>
+          <div class="section-head">
+            <h2>Entry Rule Builder / Algo Rule Builder</h2>
+            <div class="section-actions">
+              <button class="btn" type="button" id="validate-strategy-btn">Validate Logic</button>
+              <button class="btn" type="button" id="add-leg-btn">Add Leg</button>
+            </div>
+          </div>
+          <label><input id="require-all-conditions" type="checkbox" checked /> Take trade only when all conditions inside a leg are fulfilled</label>
+          <div class="chip-row"><span class="chip">Multi-leg confirmations</span><span class="chip">AND / OR connectors</span><span class="chip">Per-condition timeframe</span><span class="chip">Indicator-to-indicator comparisons</span></div>
+          <div id="legs-container"></div>
+          <div id="validation-status" class="notice" style="margin-top:14px;">Validation warnings will appear here.</div>
         </section>
 
         <section class="panel">
-          <div class="section-head"><h2>Risk Controls</h2></div>
-          <div class="grid-3">
+          <div class="section-head"><h2>Trade Action Builder &amp; Risk Controls</h2></div>
+          <div class="grid-4">
+            <div><label for="algo-entry-action">Entry Action</label><select id="algo-entry-action"><option>Buy</option><option>Long</option><option>Sell</option><option>Short</option></select></div>
+            <div><label for="algo-sizing-mode">Position Sizing</label><select id="algo-sizing-mode"><option value="capital_pct">Capital Allocation %</option><option value="quantity">Quantity Sizing</option><option value="fixed_quantity">Fixed Quantity</option><option value="risk_pct">Risk Per Trade %</option></select></div>
             <div><label for="algo-capital">Capital</label><input id="algo-capital" type="number" min="1" step="0.01" value="100000" /></div>
+            <div><label for="algo-capital-pct">Capital Allocation %</label><input id="algo-capital-pct" type="number" min="1" max="100" step="0.1" value="25" /></div>
+            <div><label for="algo-quantity">Quantity</label><input id="algo-quantity" type="number" min="1" step="1" value="1" /></div>
+            <div><label for="algo-fixed-quantity">Fixed Quantity</label><input id="algo-fixed-quantity" type="number" min="1" step="1" value="1" /></div>
+            <div><label for="algo-risk-pct">Risk Per Trade %</label><input id="algo-risk-pct" type="number" min="0" max="100" step="0.1" value="1" /></div>
+            <div><label for="algo-position-size">Legacy Position Size</label><input id="algo-position-size" type="number" min="1" step="0.01" value="25000" /></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <h2>Exit Strategy Builder</h2>
+            <button class="btn" type="button" id="add-exit-rule-btn">Add Exit Condition</button>
+          </div>
+          <div class="grid-4">
+            <div><label for="algo-stop-type">Stop Loss</label><select id="algo-stop-type"><option value="fixed_pct">Fixed %</option><option value="atr">ATR Based</option><option value="trailing_pct">Trailing Stop</option><option value="none">None</option></select></div>
             <div><label for="algo-stop-loss">Stop Loss %</label><input id="algo-stop-loss" type="number" min="0" step="0.1" value="2" /></div>
-            <div><label for="algo-target">Target %</label><input id="algo-target" type="number" min="0" step="0.1" value="4" /></div>
-            <div><label for="algo-position-size">Position Size</label><input id="algo-position-size" type="number" min="1" step="0.01" value="25000" /></div>
-            <div><label for="algo-max-trades">Max Trades / Day</label><input id="algo-max-trades" type="number" min="1" max="100" value="5" /></div>
+            <div><label for="algo-atr-multiplier">ATR Multiplier</label><input id="algo-atr-multiplier" type="number" min="0" step="0.1" value="2" /></div>
+            <div><label for="algo-trailing-stop">Trailing Stop %</label><input id="algo-trailing-stop" type="number" min="0" step="0.1" value="2" /></div>
+            <div><label for="algo-target-type">Target</label><select id="algo-target-type"><option value="fixed_pct">Fixed %</option><option value="multi_target">Multi Target</option><option value="none">None</option></select></div>
+            <div><label for="algo-target">Fixed Target %</label><input id="algo-target" type="number" min="0" step="0.1" value="4" /></div>
+            <div><label for="algo-max-bars">Time Exit Bars</label><input id="algo-max-bars" type="number" min="1" placeholder="Optional" /></div>
+            <div><label><input id="algo-reversal-exit" type="checkbox" checked /> Signal reversal exit</label></div>
+          </div>
+          <div class="builder-card">
+            <div class="builder-card-head"><strong>Partial / Multi Targets</strong><button class="btn" type="button" id="add-target-btn">Add Target</button></div>
+            <div id="target-rows"></div>
+          </div>
+          <div class="builder-card">
+            <div class="builder-card-head"><strong>Indicator-Based Exit Conditions</strong><span class="muted">Optional exits evaluated alongside stops and targets.</span></div>
+            <div id="exit-rule-rows"></div>
           </div>
         </section>
 
         <section class="panel">
           <div class="section-head"><h2>Simulation Settings</h2></div>
-          <div class="grid-3">
+          <div class="grid-4">
+            <div><label for="algo-max-trades">Max Trades / Day</label><input id="algo-max-trades" type="number" min="1" max="100" value="5" /></div>
             <div><label for="algo-commission">Commission %</label><input id="algo-commission" type="number" min="0" step="0.01" value="0.1" /></div>
             <div><label for="algo-slippage">Slippage %</label><input id="algo-slippage" type="number" min="0" step="0.01" value="0.05" /></div>
             <div style="align-self:end;"><button class="btn btn-primary" type="button" id="run-simulation-btn">Run Simulation</button></div>
           </div>
-          <div id="algo-status" class="notice" style="margin-top:14px;">Build 3 to 10 rules, then run the simulation.</div>
+          <div id="algo-status" class="notice" style="margin-top:14px;">Build strategy logic, validate it, then run the historical simulation.</div>
         </section>
 
         <section class="panel">
@@ -120,7 +173,11 @@
           <div class="grid-4">
             <div class="metric-card"><div class="metric-label">Signals</div><div class="metric-value" id="algo-signals">--</div></div>
             <div class="metric-card"><div class="metric-label">Trades</div><div class="metric-value" id="algo-trades">--</div></div>
+            <div class="metric-card"><div class="metric-label">Wins / Losses</div><div class="metric-value" id="algo-wins-losses">--</div></div>
             <div class="metric-card"><div class="metric-label">Win Rate</div><div class="metric-value" id="algo-win-rate">--</div></div>
+            <div class="metric-card"><div class="metric-label">Gross Profit</div><div class="metric-value positive" id="algo-gross-profit">--</div></div>
+            <div class="metric-card"><div class="metric-label">Gross Loss</div><div class="metric-value negative" id="algo-gross-loss">--</div></div>
+            <div class="metric-card"><div class="metric-label">Expectancy</div><div class="metric-value" id="algo-expectancy">--</div></div>
             <div class="metric-card"><div class="metric-label">Max Drawdown</div><div class="metric-value" id="algo-drawdown">--</div></div>
           </div>
         </section>
@@ -135,7 +192,7 @@
           <div id="algo-equity-chart" class="chart-box" style="margin-top:16px;">Equity curve will appear after simulation.</div>
           <div class="table-wrap" style="margin-top:16px;">
             <table>
-              <thead><tr><th>Entry</th><th>Exit</th><th>Entry Price</th><th>Exit Price</th><th>Qty</th><th>PnL</th><th>Return</th><th>Reason</th></tr></thead>
+              <thead><tr><th>Entry</th><th>Exit</th><th>Entry Price</th><th>Exit Price</th><th>Qty</th><th>PnL</th><th>Return</th><th>Entry Reason</th><th>Exit Reason</th><th>Stop</th><th>Target</th></tr></thead>
               <tbody id="algo-trade-table-body"></tbody>
             </table>
           </div>
@@ -146,57 +203,126 @@
 
   <script>
     const SYMBOL_MAP = {{ angel_symbol_map | tojson }};
-    const SOURCES = ["Price", "EMA", "RSI", "MACD", "Volume"];
+    const SOURCES = ["Price", "Open", "High", "Low", "Volume", "RSI", "EMA", "SMA", "MACD", "VWAP", "ATR"];
     const OPERATORS = [">", "<", ">=", "<=", "crosses above", "crosses below"];
-    const SIGNAL_TYPES = ["buy", "sell", "exit"];
     const CONNECTORS = ["AND", "OR"];
-    let ruleCount = 0;
+    const TIMEFRAMES = ["Intraday", "Daily", "Weekly", "Monthly"];
+    const savedStrategies = new Map();
+    let legCounter = 0;
 
     function byId(id) { return document.getElementById(id); }
     function fmt(value, digits = 2) { const n = Number(value); return Number.isFinite(n) ? n.toFixed(digits) : "--"; }
     function pct(value) { return `${fmt(value)}%`; }
     function money(value) { return fmt(value); }
     function setStatus(message, type = "") { const el = byId("algo-status"); el.textContent = message; el.className = `notice ${type}`.trim(); }
+    function setSaveStatus(message, type = "") { const el = byId("algo-save-status"); el.textContent = message; el.className = `notice ${type}`.trim(); }
+    function setValidation(message, type = "") { const el = byId("validation-status"); el.textContent = message; el.className = `notice ${type}`.trim(); }
     function options(values, selected = "") { return values.map((value) => `<option value="${value}" ${value === selected ? "selected" : ""}>${value}</option>`).join(""); }
+    function numberOrNull(value) { return value === "" || value === null || value === undefined ? null : Number(value); }
 
-    function addRule(defaults = {}) {
-      if (ruleCount >= 10) { setStatus("You can add up to 10 rule rows.", "danger"); return; }
-      ruleCount += 1;
+    function conditionRow(defaults = {}, compact = false) {
       const row = document.createElement("div");
-      row.className = "rule-row";
-      row.dataset.ruleRow = String(ruleCount);
+      row.className = compact ? "condition-row compact" : "condition-row";
+      row.dataset.conditionRow = "true";
       row.innerHTML = `
-        <div><label>Signal</label><select data-rule-signal>${options(SIGNAL_TYPES, defaults.signal_type || "buy")}</select></div>
-        <div><label>Condition Source</label><select data-rule-source>${options(SOURCES, defaults.source || "Price")}</select></div>
+        ${compact ? "" : `<div><label>Connector</label><select data-rule-connector>${options(CONNECTORS, defaults.connector || "AND")}</select></div>`}
+        <div><label>Source</label><select data-rule-source>${options(SOURCES, defaults.source || "Price")}</select></div>
+        <div><label>Timeframe</label><select data-rule-timeframe>${options(TIMEFRAMES, defaults.timeframe || "Daily")}</select></div>
         <div><label>Operator</label><select data-rule-operator>${options(OPERATORS, defaults.operator || ">")}</select></div>
         <div><label>Value</label><input data-rule-value type="number" step="0.01" value="${defaults.value ?? 100}" /></div>
-        <div><label>Period</label><input data-rule-period type="number" min="1" max="300" value="${defaults.period ?? ""}" placeholder="EMA" /></div>
-        <div><label>Connector</label><select data-rule-connector>${options(CONNECTORS, defaults.connector || "AND")}</select></div>
-        <button class="btn btn-danger" type="button" data-remove-rule>Remove</button>
+        <div><label>Period</label><input data-rule-period type="number" min="1" max="300" value="${defaults.period ?? ""}" placeholder="14" /></div>
+        <div><label>Compare To</label><select data-rule-compare-source><option value="">Number</option>${options(SOURCES, defaults.compare_source || "")}</select></div>
+        <div><label>Compare Period</label><input data-rule-compare-period type="number" min="1" max="300" value="${defaults.compare_period ?? ""}" placeholder="50" /></div>
+        <button class="btn btn-danger" type="button" data-remove-condition>Remove</button>
       `;
-      row.querySelector("[data-remove-rule]").addEventListener("click", () => {
-        row.remove();
-        ruleCount -= 1;
-      });
-      byId("rule-rows").appendChild(row);
+      row.querySelector("[data-remove-condition]").addEventListener("click", () => row.remove());
+      return row;
     }
 
-    function getRules() {
-      const rows = [...document.querySelectorAll("[data-rule-row]")];
-      if (rows.length < 1) throw new Error("Add at least one rule row.");
-      return rows.map((row) => ({
-        signal_type: row.querySelector("[data-rule-signal]").value,
+    function addCondition(container, defaults = {}, compact = false) {
+      if (document.querySelectorAll("[data-condition-row]").length >= 50) {
+        setStatus("You can add up to 50 conditions for this v1 builder.", "danger");
+        return;
+      }
+      container.appendChild(conditionRow(defaults, compact));
+    }
+
+    function addLeg(defaults = {}) {
+      legCounter += 1;
+      const card = document.createElement("div");
+      card.className = "builder-card";
+      card.dataset.legCard = "true";
+      card.innerHTML = `
+        <div class="builder-card-head">
+          <div class="leg-meta">
+            <div><label>Leg Name</label><input data-leg-name value="${defaults.name || `Leg ${legCounter}`}" /></div>
+            <div><label>Join With Previous</label><select data-leg-connector>${options(CONNECTORS, defaults.connector || "AND")}</select></div>
+          </div>
+          <div class="section-actions">
+            <button class="btn" type="button" data-add-leg-condition>Add Condition</button>
+            <button class="btn btn-danger" type="button" data-remove-leg>Remove Leg</button>
+          </div>
+        </div>
+        <div data-leg-conditions></div>
+      `;
+      const container = card.querySelector("[data-leg-conditions]");
+      (defaults.conditions && defaults.conditions.length ? defaults.conditions : [{ source: "RSI", timeframe: "Weekly", operator: ">", value: 30, period: 14 }]).forEach((rule) => addCondition(container, rule));
+      card.querySelector("[data-add-leg-condition]").addEventListener("click", () => addCondition(container, { source: "Price", operator: ">", value: 100 }));
+      card.querySelector("[data-remove-leg]").addEventListener("click", () => card.remove());
+      byId("legs-container").appendChild(card);
+    }
+
+    function addTarget(defaults = {}) {
+      const row = document.createElement("div");
+      row.className = "grid-3";
+      row.style.marginTop = "10px";
+      row.dataset.targetRow = "true";
+      row.innerHTML = `
+        <div><label>Target %</label><input data-target-pct type="number" min="0" step="0.1" value="${defaults.target_pct ?? 5}" /></div>
+        <div><label>Exit Quantity %</label><input data-exit-pct type="number" min="1" max="100" step="0.1" value="${defaults.exit_pct ?? 50}" /></div>
+        <div style="align-self:end;"><button class="btn btn-danger" type="button" data-remove-target>Remove</button></div>
+      `;
+      row.querySelector("[data-remove-target]").addEventListener("click", () => row.remove());
+      byId("target-rows").appendChild(row);
+    }
+
+    function getConditions(container, signalType = "buy") {
+      return [...container.querySelectorAll("[data-condition-row]")].map((row, index) => ({
+        signal_type: signalType,
         source: row.querySelector("[data-rule-source]").value,
+        timeframe: row.querySelector("[data-rule-timeframe]").value,
         operator: row.querySelector("[data-rule-operator]").value,
         value: Number(row.querySelector("[data-rule-value]").value || 0),
-        period: row.querySelector("[data-rule-period]").value ? Number(row.querySelector("[data-rule-period]").value) : null,
-        connector: row.querySelector("[data-rule-connector]").value,
+        connector: row.querySelector("[data-rule-connector]")?.value || (index === 0 ? "AND" : "AND"),
+        period: numberOrNull(row.querySelector("[data-rule-period]").value),
+        compare_source: row.querySelector("[data-rule-compare-source]").value || null,
+        compare_period: numberOrNull(row.querySelector("[data-rule-compare-period]").value),
       }));
+    }
+
+    function getLegs() {
+      const legs = [...document.querySelectorAll("[data-leg-card]")].map((card, index) => ({
+        name: card.querySelector("[data-leg-name]").value.trim() || `Leg ${index + 1}`,
+        connector: card.querySelector("[data-leg-connector]").value,
+        conditions: getConditions(card.querySelector("[data-leg-conditions]"), "buy"),
+      })).filter((leg) => leg.conditions.length);
+      if (!legs.length) throw new Error("Add at least one entry leg with conditions.");
+      return legs;
+    }
+
+    function getTargets() {
+      return [...document.querySelectorAll("[data-target-row]")].map((row) => ({
+        target_pct: Number(row.querySelector("[data-target-pct]").value || 0),
+        exit_pct: Number(row.querySelector("[data-exit-pct]").value || 100),
+      })).filter((target) => target.target_pct > 0 && target.exit_pct > 0);
     }
 
     function payload() {
       const stopLoss = byId("algo-stop-loss").value;
       const target = byId("algo-target").value;
+      const maxBars = byId("algo-max-bars").value;
+      const legs = getLegs();
+      const conditions = legs.flatMap((leg) => leg.conditions);
       return {
         source: byId("algo-source").value,
         file_name: byId("algo-file-name").value.trim() || null,
@@ -205,8 +331,30 @@
         timeframe: byId("algo-timeframe").value.trim() || "1D",
         from_date: byId("algo-from-date").value || null,
         to_date: byId("algo-to-date").value || null,
-        conditions: getRules(),
+        conditions,
+        legs,
         require_all_conditions: byId("require-all-conditions").checked,
+        position: {
+          action: byId("algo-entry-action").value,
+          sizing_mode: byId("algo-sizing-mode").value,
+          capital_allocation_pct: Number(byId("algo-capital-pct").value || 25),
+          quantity: numberOrNull(byId("algo-quantity").value),
+          fixed_quantity: numberOrNull(byId("algo-fixed-quantity").value),
+          risk_per_trade_pct: numberOrNull(byId("algo-risk-pct").value),
+        },
+        exits: {
+          stop_type: byId("algo-stop-type").value,
+          stop_loss_pct: stopLoss ? Number(stopLoss) : null,
+          atr_multiplier: numberOrNull(byId("algo-atr-multiplier").value),
+          trailing_stop_pct: numberOrNull(byId("algo-trailing-stop").value),
+          target_type: byId("algo-target-type").value,
+          target_pct: target ? Number(target) : null,
+          targets: getTargets(),
+          exit_conditions: getConditions(byId("exit-rule-rows"), "exit"),
+          exit_type: "indicator",
+          max_bars_in_trade: maxBars ? Number(maxBars) : null,
+          signal_reversal_exit: byId("algo-reversal-exit").checked,
+        },
         initial_capital: Number(byId("algo-capital").value || 100000),
         stop_loss_pct: stopLoss ? Number(stopLoss) : null,
         target_pct: target ? Number(target) : null,
@@ -215,6 +363,138 @@
         commission_pct: Number(byId("algo-commission").value || 0),
         slippage_pct: Number(byId("algo-slippage").value || 0),
       };
+    }
+
+    function strategyConfig() {
+      return { ...payload(), strategy_name: byId("algo-strategy-name").value.trim() };
+    }
+
+    function clearBuilder() {
+      byId("legs-container").innerHTML = "";
+      byId("target-rows").innerHTML = "";
+      byId("exit-rule-rows").innerHTML = "";
+      legCounter = 0;
+    }
+
+    function applyStrategyConfig(config = {}) {
+      byId("algo-strategy-name").value = config.strategy_name || config.name || "";
+      byId("algo-source").value = config.source || "sample";
+      byId("algo-file-name").value = config.file_name || "";
+      byId("algo-symbol").value = config.symbol || "RELIANCE";
+      byId("algo-exchange").value = config.exchange || "NSE";
+      byId("algo-timeframe").value = config.timeframe || "1D";
+      byId("algo-from-date").value = config.from_date || "";
+      byId("algo-to-date").value = config.to_date || "";
+      byId("require-all-conditions").checked = config.require_all_conditions !== false;
+      byId("algo-capital").value = config.initial_capital ?? 100000;
+      byId("algo-position-size").value = config.position_size ?? 25000;
+      byId("algo-max-trades").value = config.max_trades_per_day ?? 5;
+      byId("algo-commission").value = config.commission_pct ?? 0.1;
+      byId("algo-slippage").value = config.slippage_pct ?? 0.05;
+      const position = config.position || {};
+      byId("algo-entry-action").value = position.action || "Buy";
+      byId("algo-sizing-mode").value = position.sizing_mode || "capital_pct";
+      byId("algo-capital-pct").value = position.capital_allocation_pct ?? 25;
+      byId("algo-quantity").value = position.quantity ?? 1;
+      byId("algo-fixed-quantity").value = position.fixed_quantity ?? 1;
+      byId("algo-risk-pct").value = position.risk_per_trade_pct ?? 1;
+      const exits = config.exits || {};
+      byId("algo-stop-type").value = exits.stop_type || "fixed_pct";
+      byId("algo-stop-loss").value = exits.stop_loss_pct ?? config.stop_loss_pct ?? 2;
+      byId("algo-atr-multiplier").value = exits.atr_multiplier ?? 2;
+      byId("algo-trailing-stop").value = exits.trailing_stop_pct ?? 2;
+      byId("algo-target-type").value = exits.target_type || "fixed_pct";
+      byId("algo-target").value = exits.target_pct ?? config.target_pct ?? 4;
+      byId("algo-max-bars").value = exits.max_bars_in_trade ?? "";
+      byId("algo-reversal-exit").checked = exits.signal_reversal_exit !== false;
+      clearBuilder();
+      const legacyConditions = config.conditions || [];
+      const legs = config.legs && config.legs.length ? config.legs : [{ name: "Entry", connector: "AND", conditions: legacyConditions.filter((rule) => rule.signal_type !== "exit") }];
+      legs.forEach((leg) => addLeg(leg));
+      (exits.targets && exits.targets.length ? exits.targets : [{ target_pct: 5, exit_pct: 50 }, { target_pct: 10, exit_pct: 50 }]).forEach(addTarget);
+      (exits.exit_conditions || legacyConditions.filter((rule) => rule.signal_type === "exit")).forEach((rule) => addCondition(byId("exit-rule-rows"), rule, true));
+      if (!document.querySelectorAll("[data-leg-card]").length) addDefaultBuilder();
+    }
+
+    function addDefaultBuilder() {
+      addLeg({
+        name: "Trend Confirmation",
+        connector: "AND",
+        conditions: [
+          { source: "RSI", timeframe: "Weekly", operator: ">", value: 30, period: 14, connector: "AND" },
+          { source: "RSI", timeframe: "Monthly", operator: ">", value: 30, period: 14, connector: "AND" },
+          { source: "Price", timeframe: "Daily", operator: "crosses above", value: 0, compare_source: "EMA", compare_period: 50, connector: "AND" },
+        ],
+      });
+      addTarget({ target_pct: 5, exit_pct: 50 });
+      addTarget({ target_pct: 10, exit_pct: 50 });
+      addCondition(byId("exit-rule-rows"), { source: "RSI", timeframe: "Daily", operator: "<", value: 45, period: 14 }, true);
+    }
+
+    async function loadSavedStrategies() {
+      try {
+        const response = await fetch("/api/v1/algo/strategies");
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Unable to load saved algo strategies");
+        savedStrategies.clear();
+        const select = byId("saved-algo-strategy");
+        select.innerHTML = '<option value="">Select saved strategy</option>';
+        (data || []).forEach((strategy) => {
+          savedStrategies.set(String(strategy.id), strategy);
+          const option = document.createElement("option");
+          option.value = String(strategy.id);
+          option.textContent = `${strategy.name} (${strategy.symbol}, ${strategy.timeframe})`;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        setSaveStatus(error.message || "Unable to load saved algo strategies", "danger");
+      }
+    }
+
+    function loadSelectedStrategy() {
+      const strategy = savedStrategies.get(String(byId("saved-algo-strategy").value));
+      if (!strategy) { setSaveStatus("Select a saved strategy to load.", "danger"); return; }
+      applyStrategyConfig({ ...strategy.config, strategy_name: strategy.name });
+      setSaveStatus(`Loaded ${strategy.name}. Fields remain editable.`, "success");
+    }
+
+    async function saveAlgoStrategy() {
+      let config;
+      try { config = strategyConfig(); } catch (error) { setSaveStatus(error.message || "Fix the algo strategy before saving.", "danger"); return; }
+      const name = byId("algo-strategy-name").value.trim();
+      if (!name) { setSaveStatus("Enter a strategy name before saving.", "danger"); return; }
+      try {
+        const response = await fetch("/api/v1/algo/strategies", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, config }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Unable to save algo strategy");
+        setSaveStatus(`Saved algo strategy: ${data.name}`, "success");
+        await loadSavedStrategies();
+        byId("saved-algo-strategy").value = String(data.id);
+      } catch (error) {
+        setSaveStatus(error.message || "Unable to save algo strategy", "danger");
+      }
+    }
+
+    async function validateStrategy() {
+      let body;
+      try { body = payload(); } catch (error) { setValidation(error.message, "danger"); return; }
+      try {
+        const response = await fetch("/api/v1/algo/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ config: body }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Validation failed");
+        const issues = [...(data.errors || []), ...(data.warnings || [])];
+        setValidation(issues.length ? issues.join(" ") : "Strategy logic looks valid for simulation.", issues.length ? "danger" : "success");
+      } catch (error) {
+        setValidation(error.message || "Validation failed", "danger");
+      }
     }
 
     function renderChart(points = []) {
@@ -234,7 +514,11 @@
     function renderResult(data) {
       byId("algo-signals").textContent = data.signal_count;
       byId("algo-trades").textContent = data.metrics.total_trades;
+      byId("algo-wins-losses").textContent = `${data.wins} / ${data.losses}`;
       byId("algo-win-rate").textContent = pct(data.win_rate);
+      byId("algo-gross-profit").textContent = money(data.gross_profit);
+      byId("algo-gross-loss").textContent = money(data.gross_loss);
+      byId("algo-expectancy").textContent = money(data.expectancy);
       byId("algo-drawdown").textContent = pct(data.max_drawdown);
       byId("algo-net-profit").textContent = money(data.estimated_net_profit);
       byId("algo-net-profit").className = `metric-value ${Number(data.estimated_net_profit) >= 0 ? "positive" : "negative"}`;
@@ -245,7 +529,7 @@
       tbody.innerHTML = "";
       (data.trades || []).forEach((trade) => {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${trade.entry_time}</td><td>${trade.exit_time}</td><td>${money(trade.entry_price)}</td><td>${money(trade.exit_price)}</td><td>${trade.quantity}</td><td class="${Number(trade.pnl) >= 0 ? "positive" : "negative"}">${money(trade.pnl)}</td><td>${pct(trade.return_pct)}</td><td>${trade.exit_reason}</td>`;
+        row.innerHTML = `<td>${trade.entry_time}</td><td>${trade.exit_time}</td><td>${money(trade.entry_price)}</td><td>${money(trade.exit_price)}</td><td>${trade.quantity}</td><td class="${Number(trade.pnl) >= 0 ? "positive" : "negative"}">${money(trade.pnl)}</td><td>${pct(trade.return_pct)}</td><td>${trade.entry_reason || ""}</td><td>${trade.exit_reason || ""}</td><td>${trade.stop_loss_hit ? "Yes" : "No"}</td><td>${trade.target_hit ? "Yes" : "No"}</td>`;
         tbody.appendChild(row);
       });
     }
@@ -254,13 +538,14 @@
       let body;
       try { body = payload(); } catch (error) { setStatus(error.message, "danger"); return; }
       byId("run-simulation-btn").disabled = true;
-      setStatus("Running algo rule simulation...");
+      setStatus("Running algo strategy simulation...");
       try {
         const res = await fetch("/api/v1/algo/simulate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || "Simulation failed");
         renderResult(data);
-        setStatus(`Simulation complete. ${data.signal_count} signals evaluated into ${data.metrics.total_trades} trades.`, "success");
+        const warnings = data.validation_warnings && data.validation_warnings.length ? ` Warnings: ${data.validation_warnings.join(" ")}` : "";
+        setStatus(`Simulation complete. ${data.signal_count} signals evaluated into ${data.metrics.total_trades} trades.${warnings}`, data.validation_warnings?.length ? "danger" : "success");
       } catch (error) {
         setStatus(error.message || "Simulation failed", "danger");
       } finally {
@@ -275,11 +560,15 @@
         option.value = symbol;
         list.appendChild(option);
       });
-      addRule({ signal_type: "buy", source: "Price", operator: ">", value: 100, connector: "AND" });
-      addRule({ signal_type: "sell", source: "RSI", operator: ">", value: 70, connector: "OR" });
-      addRule({ signal_type: "exit", source: "RSI", operator: "<", value: 45, connector: "OR" });
-      byId("add-rule-btn").addEventListener("click", () => addRule());
+      addDefaultBuilder();
+      byId("add-leg-btn").addEventListener("click", () => addLeg({ name: `Leg ${legCounter + 1}` }));
+      byId("add-target-btn").addEventListener("click", () => addTarget());
+      byId("add-exit-rule-btn").addEventListener("click", () => addCondition(byId("exit-rule-rows"), { source: "RSI", operator: "<", value: 45, period: 14 }, true));
+      byId("validate-strategy-btn").addEventListener("click", validateStrategy);
       byId("run-simulation-btn").addEventListener("click", simulate);
+      byId("save-algo-strategy-btn").addEventListener("click", saveAlgoStrategy);
+      byId("load-algo-strategy-btn").addEventListener("click", loadSelectedStrategy);
+      loadSavedStrategies();
     });
   </script>
 </body>

@@ -8,6 +8,7 @@ from app.database.session import engine
 from app.database.seed_data import seed_builtin_strategies
 from app.models.strategy_model import SavedStrategy
 from app.models.strategy_config_model import SavedStrategyConfiguration
+from app.models.algo_strategy_model import SavedAlgoStrategy
 from app.models.backtest_model import BacktestRun
 from app.models.dataset_model import UploadedDataset
 from app.models.result_model import BacktestResultRecord

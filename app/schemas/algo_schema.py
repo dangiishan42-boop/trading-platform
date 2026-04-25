@@ -4,21 +4,64 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.schemas.backtest_schema import BacktestMetrics, BacktestTrade, DataSource, EquityPoint, PositionSizingMode
+from app.schemas.backtest_schema import BacktestMetrics, DataSource, EquityPoint, PositionSizingMode
 
-AlgoConditionSource = Literal["Price", "EMA", "RSI", "MACD", "Volume"]
+AlgoConditionSource = Literal["Price", "Open", "High", "Low", "Volume", "RSI", "EMA", "SMA", "MACD", "VWAP", "ATR"]
 AlgoOperator = Literal[">", "<", ">=", "<=", "crosses above", "crosses below"]
 AlgoConnector = Literal["AND", "OR"]
 AlgoSignalType = Literal["buy", "sell", "exit"]
+AlgoRuleTimeframe = Literal["Intraday", "Daily", "Weekly", "Monthly"]
+AlgoEntryAction = Literal["Buy", "Sell", "Long", "Short"]
+AlgoSizingMode = Literal["capital_pct", "quantity", "fixed_quantity", "risk_pct"]
+AlgoStopType = Literal["none", "fixed_pct", "atr", "trailing_pct"]
+AlgoTargetType = Literal["none", "fixed_pct", "multi_target"]
+AlgoExitType = Literal["indicator", "time", "signal_reversal"]
 
 
 class AlgoRuleCondition(BaseModel):
     signal_type: AlgoSignalType = "buy"
     source: AlgoConditionSource = "Price"
+    timeframe: AlgoRuleTimeframe = "Daily"
     operator: AlgoOperator = ">"
     value: float = 0.0
     connector: AlgoConnector = "AND"
     period: int | None = Field(default=None, ge=1, le=300)
+    compare_source: AlgoConditionSource | None = None
+    compare_period: int | None = Field(default=None, ge=1, le=300)
+
+
+class AlgoStrategyLeg(BaseModel):
+    name: str = "Leg 1"
+    conditions: list[AlgoRuleCondition] = Field(default_factory=list, max_length=50)
+    connector: AlgoConnector = "AND"
+
+
+class AlgoPositionSettings(BaseModel):
+    action: AlgoEntryAction = "Buy"
+    sizing_mode: AlgoSizingMode = "capital_pct"
+    capital_allocation_pct: float = Field(default=25.0, gt=0, le=100)
+    quantity: int | None = Field(default=None, ge=1)
+    fixed_quantity: int | None = Field(default=None, ge=1)
+    risk_per_trade_pct: float | None = Field(default=None, gt=0, le=100)
+
+
+class AlgoTargetLevel(BaseModel):
+    target_pct: float = Field(gt=0)
+    exit_pct: float = Field(default=100.0, gt=0, le=100)
+
+
+class AlgoExitSettings(BaseModel):
+    stop_type: AlgoStopType = "fixed_pct"
+    stop_loss_pct: float | None = Field(default=2.0, gt=0)
+    atr_multiplier: float | None = Field(default=2.0, gt=0)
+    trailing_stop_pct: float | None = Field(default=None, gt=0)
+    target_type: AlgoTargetType = "fixed_pct"
+    target_pct: float | None = Field(default=4.0, gt=0)
+    targets: list[AlgoTargetLevel] = Field(default_factory=list, max_length=3)
+    exit_conditions: list[AlgoRuleCondition] = Field(default_factory=list, max_length=30)
+    exit_type: AlgoExitType = "indicator"
+    max_bars_in_trade: int | None = Field(default=None, ge=1, le=10000)
+    signal_reversal_exit: bool = True
 
 
 class AlgoSimulationRequest(BaseModel):
@@ -29,8 +72,11 @@ class AlgoSimulationRequest(BaseModel):
     timeframe: str = Field(default="1D", min_length=1, max_length=20)
     from_date: str | None = None
     to_date: str | None = None
-    conditions: list[AlgoRuleCondition] = Field(min_length=1, max_length=10)
+    conditions: list[AlgoRuleCondition] = Field(default_factory=list, max_length=50)
+    legs: list[AlgoStrategyLeg] = Field(default_factory=list, max_length=10)
     require_all_conditions: bool = True
+    position: AlgoPositionSettings = Field(default_factory=AlgoPositionSettings)
+    exits: AlgoExitSettings = Field(default_factory=AlgoExitSettings)
     initial_capital: float = Field(default=100000, gt=0)
     stop_loss_pct: float | None = Field(default=None, gt=0, lt=100)
     target_pct: float | None = Field(default=None, gt=0)
@@ -60,6 +106,8 @@ class AlgoSimulationRequest(BaseModel):
     def validate_source(self):
         if self.source == "upload" and not self.file_name:
             raise ValueError("file_name is required when source is upload")
+        if not self.conditions and not any(leg.conditions for leg in self.legs):
+            raise ValueError("at least one condition or strategy leg is required")
         return self
 
 
@@ -75,8 +123,14 @@ class AlgoSimulationResponse(BaseModel):
     estimated_loss: float
     win_rate: float
     max_drawdown: float
+    wins: int = 0
+    losses: int = 0
+    gross_profit: float = 0.0
+    gross_loss: float = 0.0
+    expectancy: float = 0.0
+    validation_warnings: list[str] = Field(default_factory=list)
     metrics: BacktestMetrics
-    trades: list[BacktestTrade]
+    trades: list[dict[str, Any]]
     equity_curve: list[EquityPoint]
 
 
@@ -85,5 +139,35 @@ class AlgoCapabilitiesResponse(BaseModel):
     operators: list[str]
     logical_connectors: list[str]
     signal_types: list[str]
+    timeframes: list[str] = Field(default_factory=list)
+    entry_actions: list[str] = Field(default_factory=list)
+    sizing_modes: list[str] = Field(default_factory=list)
+    stop_types: list[str] = Field(default_factory=list)
+    target_types: list[str] = Field(default_factory=list)
     max_rule_rows: int
     live_execution_enabled: bool = False
+
+
+class AlgoValidationRequest(BaseModel):
+    config: dict[str, Any] = Field(default_factory=dict)
+
+
+class AlgoValidationResponse(BaseModel):
+    valid: bool
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+
+
+class SaveAlgoStrategyRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    config: dict[str, Any] = Field(default_factory=dict)
+
+
+class SavedAlgoStrategyEntry(BaseModel):
+    id: int
+    name: str
+    symbol: str
+    exchange: str
+    timeframe: str
+    config: dict[str, Any]
+    created_at: str
