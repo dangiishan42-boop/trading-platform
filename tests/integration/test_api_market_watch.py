@@ -81,3 +81,45 @@ def test_market_watch_candles_uses_service(monkeypatch):
     payload = response.json()
     assert payload["symbol"] == "TCS"
     assert payload["rows"][0]["close"] == 2
+
+
+def test_market_watch_fundamentals_placeholder_endpoint():
+    response = client.get("/api/v1/market-watch/detail/RELIANCE/fundamentals")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["symbol"] == "RELIANCE"
+    assert payload["available"] is False
+    assert payload["message"] == "Fundamental data source not connected yet"
+    assert "market_cap" in payload["fields"]
+
+
+def test_market_watch_option_chain_placeholder_endpoint():
+    response = client.get("/api/v1/market-watch/detail/NIFTY50/option-chain")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["symbol"] == "NIFTY50"
+    assert payload["available"] is False
+    assert payload["message"] == "Option chain data source not connected yet"
+    assert "pcr" in payload["summary"]
+
+
+def test_market_watch_technical_detail_endpoint_returns_structured_response():
+    response = client.get("/api/v1/market-watch/detail/RELIANCE/technical")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["symbol"] == "RELIANCE"
+    assert "signals" in payload
+    assert "overall_rating" in payload
+
+
+def test_market_watch_peers_endpoint_returns_peer_list():
+    response = client.get("/api/v1/market-watch/detail/HDFCBANK/peers")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["symbol"] == "HDFCBANK"
+    assert payload["sector"] == "Banking"
+    assert any(peer["symbol"] == "ICICIBANK" for peer in payload["peers"])

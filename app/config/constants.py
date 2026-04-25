@@ -37,3 +37,45 @@ ANGEL_INDEX_DETAILS = {
     "SENSEX": {"name": "SENSEX", "exchange": "BSE", "token": None},
     "NIFTY IT": {"name": "NIFTY IT", "exchange": "NSE", "token": None},
 }
+MARKET_WATCH_PEERS = {
+    "HDFCBANK": {
+        "sector": "Banking",
+        "industry": "Private Sector Bank",
+        "peers": ["ICICIBANK", "SBIN", "AXISBANK", "KOTAKBANK"],
+    },
+    "ICICIBANK": {
+        "sector": "Banking",
+        "industry": "Private Sector Bank",
+        "peers": ["HDFCBANK", "SBIN", "AXISBANK", "KOTAKBANK"],
+    },
+    "SBIN": {
+        "sector": "Banking",
+        "industry": "Public Sector Bank",
+        "peers": ["HDFCBANK", "ICICIBANK", "AXISBANK", "KOTAKBANK"],
+    },
+    "AXISBANK": {
+        "sector": "Banking",
+        "industry": "Private Sector Bank",
+        "peers": ["HDFCBANK", "ICICIBANK", "SBIN", "KOTAKBANK"],
+    },
+    "RELIANCE": {
+        "sector": "Energy",
+        "industry": "Oil, Gas & Diversified",
+        "peers": ["ONGC", "IOC", "BPCL"],
+    },
+    "TCS": {
+        "sector": "Information Technology",
+        "industry": "IT Services",
+        "peers": ["INFY", "WIPRO", "HCLTECH", "TECHM"],
+    },
+    "INFY": {
+        "sector": "Information Technology",
+        "industry": "IT Services",
+        "peers": ["TCS", "WIPRO", "HCLTECH", "TECHM"],
+    },
+    "WIPRO": {
+        "sector": "Information Technology",
+        "industry": "IT Services",
+        "peers": ["TCS", "INFY", "HCLTECH", "TECHM"],
+    },
+}

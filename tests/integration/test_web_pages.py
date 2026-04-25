@@ -20,7 +20,7 @@ def test_market_watch_stock_detail_page_loads():
     assert response.status_code == 200
     assert "RELIANCE" in response.text
     assert "Advanced Candlestick Chart" in response.text
-    assert "Financial data source not connected yet" in response.text
+    assert "Fundamental data source not connected yet" in response.text
 
 
 def test_market_watch_index_detail_page_loads():
@@ -29,7 +29,7 @@ def test_market_watch_index_detail_page_loads():
     assert response.status_code == 200
     assert "NIFTY50" in response.text
     assert "Advanced Candlestick Chart" in response.text
-    assert "Financial data source not connected yet" in response.text
+    assert "Fundamental data source not connected yet" in response.text
 
 
 def test_backtest_dashboard_page_loads_focused_layout():

@@ -56,6 +56,26 @@ def indices():
     return MarketWatchService().indices()
 
 
+@router.get("/detail/{symbol}/fundamentals")
+def detail_fundamentals(symbol: str):
+    return MarketWatchService().fundamentals_placeholder(symbol)
+
+
+@router.get("/detail/{symbol}/option-chain")
+def detail_option_chain(symbol: str):
+    return MarketWatchService().option_chain_placeholder(symbol)
+
+
+@router.get("/detail/{symbol}/peers")
+def detail_peers(symbol: str):
+    return MarketWatchService().peers(symbol)
+
+
+@router.get("/detail/{symbol}/technical")
+def detail_technical(symbol: str, exchange: str = "NSE", symbol_token: str | None = None, session: Session = Depends(get_session)):
+    return MarketWatchService().technical_detail(symbol, exchange, symbol_token, session=session)
+
+
 @router.post("/use-for-backtest", response_model=MarketWatchBacktestDatasetResponse)
 def use_for_backtest(payload: MarketWatchCandleRequest, session: Session = Depends(get_session)):
     service = MarketWatchService()
