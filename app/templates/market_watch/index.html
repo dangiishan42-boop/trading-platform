@@ -273,6 +273,7 @@
       align-items: start;
     }
     .col { min-width: 0; display: grid; gap: 10px; align-content: start; }
+    .center-col { align-self: start; }
     .panel {
       min-width: 0;
       border: 1px solid var(--line);
@@ -383,7 +384,7 @@
     }
     .remove-btn:hover { border-color: var(--red); color: #fff; background: rgba(255,77,94,0.2); }
 
-    .chart-card { min-height: 660px; display: grid; grid-template-rows: auto auto minmax(430px,1fr) auto auto; }
+    .chart-card { min-height: 650px; display: grid; grid-template-rows: auto auto minmax(440px,1fr) auto auto; }
     .chart-head {
       display: grid;
       grid-template-columns: minmax(230px, 0.8fr) minmax(360px, 1.2fr) auto;
@@ -426,7 +427,7 @@
       border-bottom: 1px solid var(--line);
       background: #081322;
     }
-    .chart-frame { display: grid; grid-template-columns: 42px minmax(0,1fr); min-height: 430px; background: #050b14; }
+    .chart-frame { display: grid; grid-template-columns: 42px minmax(0,1fr); min-height: 440px; background: #050b14; }
     .draw-strip {
       border-right: 1px solid var(--line);
       background: #07111f;
@@ -450,14 +451,14 @@
     .draw-btn:hover, .draw-btn.active { color: #fff; border-color: var(--blue); background: rgba(47,129,247,0.22); }
     .chart-area {
       position: relative;
-      min-height: 430px;
+      min-height: 440px;
       background:
         linear-gradient(rgba(255,255,255,0.034) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.034) 1px, transparent 1px),
         #050b14;
       background-size: 100% 58px, 82px 100%;
     }
-    .chart-svg { display: block; width: 100%; height: 430px; min-height: 430px; }
+    .chart-svg { display: block; width: 100%; height: 440px; min-height: 440px; }
     .cross-v, .cross-h {
       position: absolute;
       pointer-events: none;
@@ -527,9 +528,11 @@
     .alert-item, .news-item { border: 1px solid rgba(31,53,82,0.75); border-radius: 7px; background: rgba(5,11,20,0.5); padding: 8px; font-size: 12px; }
     .bottom-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
+      align-items: stretch;
     }
+    .bottom-grid .panel { min-height: 146px; }
     .donut-wrap { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; align-items: center; }
     .donut { width: 112px; height: 112px; }
 
@@ -734,6 +737,37 @@
               </div>
             </div>
           </section>
+
+          <section class="bottom-grid">
+            <section class="panel">
+              <div class="panel-head"><div class="panel-title">Market Breadth</div></div>
+              <div class="panel-body"><div class="donut-wrap"><svg class="donut" id="breadth-donut" viewBox="0 0 120 120"></svg><div id="breadth-text"></div></div></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div class="panel-title">Sector Performance</div></div>
+              <div class="panel-body" id="sector-performance-bottom"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div class="panel-title">FII / DII Activity</div></div>
+              <div class="panel-body"><div class="activity-bars" id="activity-bars-bottom"></div></div>
+            </section>
+            <section class="panel" id="futures">
+              <div class="panel-head"><div class="panel-title">Index Futures</div></div>
+              <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>Expiry</th><th>LTP</th><th>Chg</th><th>Basis</th></tr></thead><tbody id="futures-body"></tbody></table></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div class="panel-title">Latest News</div></div>
+              <div class="panel-body"><div class="news-list" id="news-list"></div></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div class="panel-title">Most Active By Volume</div></div>
+              <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Volume</th><th>Chg %</th></tr></thead><tbody id="active-volume-body"></tbody></table></div>
+            </section>
+            <section class="panel" id="currency">
+              <div class="panel-head"><div class="panel-title">Currency Watch</div></div>
+              <div class="panel-body"><table class="table"><tbody id="currency-body"></tbody></table></div>
+            </section>
+          </section>
         </div>
 
         <div class="col right-col">
@@ -768,36 +802,6 @@
         </div>
       </section>
 
-      <section class="bottom-grid">
-        <section class="panel">
-          <div class="panel-head"><div class="panel-title">Market Breadth</div></div>
-          <div class="panel-body"><div class="donut-wrap"><svg class="donut" id="breadth-donut" viewBox="0 0 120 120"></svg><div id="breadth-text"></div></div></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><div class="panel-title">Sector Performance</div></div>
-          <div class="panel-body" id="sector-performance-bottom"></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><div class="panel-title">FII / DII Activity</div></div>
-          <div class="panel-body"><div class="activity-bars" id="activity-bars-bottom"></div></div>
-        </section>
-        <section class="panel" id="futures">
-          <div class="panel-head"><div class="panel-title">Index Futures</div></div>
-          <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>Expiry</th><th>LTP</th><th>Chg</th><th>Basis</th></tr></thead><tbody id="futures-body"></tbody></table></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><div class="panel-title">Latest News</div></div>
-          <div class="panel-body"><div class="news-list" id="news-list"></div></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><div class="panel-title">Most Active By Volume</div></div>
-          <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Volume</th><th>Chg %</th></tr></thead><tbody id="active-volume-body"></tbody></table></div>
-        </section>
-        <section class="panel" id="currency">
-          <div class="panel-head"><div class="panel-title">Currency Watch</div></div>
-          <div class="panel-body"><table class="table"><tbody id="currency-body"></tbody></table></div>
-        </section>
-      </section>
     </main>
   </div>
 
