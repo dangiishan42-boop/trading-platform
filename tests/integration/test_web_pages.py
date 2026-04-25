@@ -20,12 +20,28 @@ def test_market_watch_stock_detail_page_loads():
     assert response.status_code == 200
     assert "RELIANCE" in response.text
     assert "Advanced Candlestick Chart" in response.text
-    assert "Overview Stats" in response.text
+    assert "Key Price Stats" in response.text
+    assert "Technical Snapshot" in response.text
+    assert "Peer Quick Compare" in response.text
+    assert "Latest News / Corporate Actions" in response.text
     assert "Company Snapshot / Fundamentals" not in response.text
     assert '<div class="panel-title">Option Chain</div>' not in response.text
-    assert '<div class="panel-title">Technical Signals</div>' not in response.text
-    assert "Related Stocks / Peers" not in response.text
-    assert '<div class="panel-title">Action Hub</div>' not in response.text
+    assert '<section class="panel" id="technical-signals">' not in response.text
+    assert '<section class="panel" id="peers">' not in response.text
+    assert '<section class="panel" id="action-hub">' not in response.text
+
+
+def test_market_watch_stock_overview_page_loads_professional_summary():
+    response = client.get("/market-watch/stock/RELIANCE/overview")
+
+    assert response.status_code == 200
+    assert "Key Price Stats" in response.text
+    assert "Performance" in response.text
+    assert "Technical Snapshot" in response.text
+    assert "Company Snapshot" in response.text
+    assert "Trading Actions" in response.text
+    assert "Peer Quick Compare" in response.text
+    assert "News data source not connected yet" in response.text
 
 
 def test_market_watch_stock_fundamentals_page_loads_only_fundamentals():
@@ -34,11 +50,11 @@ def test_market_watch_stock_fundamentals_page_loads_only_fundamentals():
     assert response.status_code == 200
     assert "Company Snapshot / Fundamentals" in response.text
     assert "Fundamental data source not connected yet" in response.text
-    assert "Advanced Candlestick Chart" not in response.text
+    assert '<section class="panel" id="chart">' not in response.text
     assert '<div class="panel-title">Option Chain</div>' not in response.text
-    assert '<div class="panel-title">Technical Signals</div>' not in response.text
-    assert "Related Stocks / Peers" not in response.text
-    assert '<div class="panel-title">Action Hub</div>' not in response.text
+    assert '<section class="panel" id="technical-signals">' not in response.text
+    assert '<section class="panel" id="peers">' not in response.text
+    assert '<section class="panel" id="action-hub">' not in response.text
 
 
 def test_market_watch_stock_option_chain_page_loads_only_option_chain():
@@ -47,11 +63,11 @@ def test_market_watch_stock_option_chain_page_loads_only_option_chain():
     assert response.status_code == 200
     assert '<div class="panel-title">Option Chain</div>' in response.text
     assert "Option chain data source not connected yet" in response.text
-    assert "Advanced Candlestick Chart" not in response.text
+    assert '<section class="panel" id="chart">' not in response.text
     assert "Company Snapshot / Fundamentals" not in response.text
-    assert '<div class="panel-title">Technical Signals</div>' not in response.text
-    assert "Related Stocks / Peers" not in response.text
-    assert '<div class="panel-title">Action Hub</div>' not in response.text
+    assert '<section class="panel" id="technical-signals">' not in response.text
+    assert '<section class="panel" id="peers">' not in response.text
+    assert '<section class="panel" id="action-hub">' not in response.text
 
 
 def test_market_watch_stock_technical_page_loads_only_technical():
@@ -60,11 +76,11 @@ def test_market_watch_stock_technical_page_loads_only_technical():
     assert response.status_code == 200
     assert '<div class="panel-title">Technical Signals</div>' in response.text
     assert "Derived Metrics" in response.text
-    assert "Advanced Candlestick Chart" not in response.text
+    assert '<section class="panel" id="chart">' not in response.text
     assert "Company Snapshot / Fundamentals" not in response.text
     assert '<div class="panel-title">Option Chain</div>' not in response.text
-    assert "Related Stocks / Peers" not in response.text
-    assert '<div class="panel-title">Action Hub</div>' not in response.text
+    assert '<section class="panel" id="peers">' not in response.text
+    assert '<section class="panel" id="action-hub">' not in response.text
 
 
 def test_market_watch_stock_peers_page_loads_only_peers():
@@ -73,11 +89,11 @@ def test_market_watch_stock_peers_page_loads_only_peers():
     assert response.status_code == 200
     assert "Related Stocks / Peers" in response.text
     assert "Loading peers..." in response.text
-    assert "Advanced Candlestick Chart" not in response.text
+    assert '<section class="panel" id="chart">' not in response.text
     assert "Company Snapshot / Fundamentals" not in response.text
     assert '<div class="panel-title">Option Chain</div>' not in response.text
-    assert '<div class="panel-title">Technical Signals</div>' not in response.text
-    assert '<div class="panel-title">Action Hub</div>' not in response.text
+    assert '<section class="panel" id="technical-signals">' not in response.text
+    assert '<section class="panel" id="action-hub">' not in response.text
 
 
 def test_market_watch_stock_actions_page_loads_only_actions():
@@ -86,11 +102,11 @@ def test_market_watch_stock_actions_page_loads_only_actions():
     assert response.status_code == 200
     assert '<div class="panel-title">Action Hub</div>' in response.text
     assert "Alerts engine not connected yet" in response.text
-    assert "Advanced Candlestick Chart" not in response.text
+    assert '<section class="panel" id="chart">' not in response.text
     assert "Company Snapshot / Fundamentals" not in response.text
     assert '<div class="panel-title">Option Chain</div>' not in response.text
-    assert '<div class="panel-title">Technical Signals</div>' not in response.text
-    assert "Related Stocks / Peers" not in response.text
+    assert '<section class="panel" id="technical-signals">' not in response.text
+    assert '<section class="panel" id="peers">' not in response.text
 
 
 def test_market_watch_index_detail_page_loads():
@@ -99,8 +115,19 @@ def test_market_watch_index_detail_page_loads():
     assert response.status_code == 200
     assert "NIFTY50" in response.text
     assert "Advanced Candlestick Chart" in response.text
-    assert "Overview Stats" in response.text
+    assert "Key Price Stats" in response.text
     assert "Company Snapshot / Fundamentals" not in response.text
+
+
+def test_market_watch_index_overview_page_loads_professional_summary():
+    response = client.get("/market-watch/index/NIFTY50/overview")
+
+    assert response.status_code == 200
+    assert "NIFTY50" in response.text
+    assert "Key Price Stats" in response.text
+    assert "Technical Snapshot" in response.text
+    assert "Company Snapshot" in response.text
+    assert "Latest News / Corporate Actions" in response.text
 
 
 def test_market_watch_index_detail_sub_pages_load():
