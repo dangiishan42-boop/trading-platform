@@ -10,6 +10,7 @@ from app.config.constants import ANGEL_INDEX_DETAILS, ANGEL_SYMBOL_DETAILS
 from app.core.exceptions import InvalidRequestError
 from app.schemas.data_schema import AngelDataFetchRequest
 from app.services.data.angel_smartapi_service import AngelSmartApiService
+from app.services.data.instrument_master_service import InstrumentMasterService
 
 
 @dataclass(frozen=True)
@@ -38,10 +39,30 @@ class MarketWatchService:
         "1D": timedelta(days=365),
     }
 
-    def __init__(self, angel: AngelSmartApiService | None = None) -> None:
+    def __init__(
+        self,
+        angel: AngelSmartApiService | None = None,
+        instruments: InstrumentMasterService | None = None,
+    ) -> None:
         self.angel = angel or AngelSmartApiService()
+        self.instruments = instruments or InstrumentMasterService()
 
-    def resolve_symbol(self, query: str | None, exchange: str = "NSE", symbol_token: str | None = None) -> ResolvedMarketSymbol:
+    def resolve_symbol(
+        self,
+        query: str | None,
+        exchange: str = "NSE",
+        symbol_token: str | None = None,
+        session=None,
+    ) -> ResolvedMarketSymbol:
+        instrument = self.instruments.resolve(session, query=query, exchange=exchange, token=symbol_token)
+        if instrument is not None:
+            return ResolvedMarketSymbol(
+                symbol=instrument.symbol,
+                stock_name=instrument.name,
+                exchange=instrument.exchange,
+                symbol_token=instrument.token,
+            )
+
         normalized_query = self._normalize_query(query)
         if normalized_query:
             for symbol, details in ANGEL_SYMBOL_DETAILS.items():
@@ -65,8 +86,8 @@ class MarketWatchService:
 
         raise InvalidRequestError("Symbol is not in the local map. Enter a manual Angel token to continue.")
 
-    def quote(self, query: str | None, exchange: str = "NSE", symbol_token: str | None = None) -> dict[str, Any]:
-        resolved = self.resolve_symbol(query, exchange, symbol_token)
+    def quote(self, query: str | None, exchange: str = "NSE", symbol_token: str | None = None, session=None) -> dict[str, Any]:
+        resolved = self.resolve_symbol(query, exchange, symbol_token, session=session)
         base = self._empty_quote(resolved)
         if not self.angel.has_credentials():
             base["message"] = "Angel One credentials are not configured. Showing mapped symbol only."
@@ -93,8 +114,9 @@ class MarketWatchService:
         interval: str,
         fromdate: datetime | None,
         todate: datetime | None,
+        session=None,
     ) -> dict[str, Any]:
-        resolved = self.resolve_symbol(query, exchange, symbol_token)
+        resolved = self.resolve_symbol(query, exchange, symbol_token, session=session)
         request = self._candle_request(resolved, interval, fromdate, todate)
         frame = self.angel.fetch_frame(request)
         return {

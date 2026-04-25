@@ -19,20 +19,36 @@ router = APIRouter(prefix="/market-watch", tags=["market-watch"])
 
 
 @router.post("/quote", response_model=MarketWatchQuoteResponse)
-def quote(payload: MarketWatchSymbolRequest):
-    return MarketWatchService().quote(payload.query, payload.exchange, payload.symbol_token)
+def quote(payload: MarketWatchSymbolRequest, session: Session = Depends(get_session)):
+    service = MarketWatchService()
+    try:
+        return service.quote(payload.query, payload.exchange, payload.symbol_token, session=session)
+    except TypeError:
+        return service.quote(payload.query, payload.exchange, payload.symbol_token)
 
 
 @router.post("/candles", response_model=MarketWatchCandleResponse)
-def candles(payload: MarketWatchCandleRequest):
-    return MarketWatchService().candles(
-        payload.query,
-        payload.exchange,
-        payload.symbol_token,
-        payload.interval,
-        payload.fromdate,
-        payload.todate,
-    )
+def candles(payload: MarketWatchCandleRequest, session: Session = Depends(get_session)):
+    service = MarketWatchService()
+    try:
+        return service.candles(
+            payload.query,
+            payload.exchange,
+            payload.symbol_token,
+            payload.interval,
+            payload.fromdate,
+            payload.todate,
+            session=session,
+        )
+    except TypeError:
+        return service.candles(
+            payload.query,
+            payload.exchange,
+            payload.symbol_token,
+            payload.interval,
+            payload.fromdate,
+            payload.todate,
+        )
 
 
 @router.get("/indices", response_model=list[MarketWatchIndexResponse])
@@ -43,7 +59,7 @@ def indices():
 @router.post("/use-for-backtest", response_model=MarketWatchBacktestDatasetResponse)
 def use_for_backtest(payload: MarketWatchCandleRequest, session: Session = Depends(get_session)):
     service = MarketWatchService()
-    resolved = service.resolve_symbol(payload.query, payload.exchange, payload.symbol_token)
+    resolved = service.resolve_symbol(payload.query, payload.exchange, payload.symbol_token, session=session)
     candle_request = service._candle_request(resolved, payload.interval, payload.fromdate, payload.todate)
     fetched = AngelSmartApiService().fetch_dataset(
         AngelDataFetchRequest(

@@ -14,6 +14,7 @@ from app.schemas.data_schema import (
 )
 from app.services.data.angel_smartapi_service import AngelSmartApiService
 from app.services.data.data_resampler_service import DataResamplerService
+from app.services.data.instrument_master_service import InstrumentMasterService
 
 
 @dataclass(frozen=True)
@@ -37,13 +38,22 @@ class HistoricalDataService:
         self,
         angel_service: AngelSmartApiService | None = None,
         resampler: DataResamplerService | None = None,
+        instruments: InstrumentMasterService | None = None,
     ) -> None:
         self.angel_service = angel_service or AngelSmartApiService()
         self.resampler = resampler or DataResamplerService()
+        self.instruments = instruments or InstrumentMasterService()
 
-    def fetch(self, request: HistoricalDataRequest) -> HistoricalDataResponse:
+    def fetch(self, request: HistoricalDataRequest, session=None) -> HistoricalDataResponse:
         symbol = self._normalize_symbol(request.symbol)
-        symbol_token = self._resolve_symbol_token(symbol, request.symbol_token)
+        instrument = self.instruments.resolve(
+            session,
+            query=symbol,
+            exchange=request.exchange,
+            token=request.symbol_token,
+        )
+        symbol_token = instrument.token if instrument is not None else self._resolve_symbol_token(symbol, request.symbol_token)
+        response_symbol = instrument.symbol if instrument is not None else (symbol or symbol_token)
         interval_config = self.INTERVAL_CONFIG[request.interval]
 
         frame = self.angel_service.fetch_frame(
@@ -67,7 +77,7 @@ class HistoricalDataService:
         rows = self._serialize_rows(prepared_frame)
         return HistoricalDataResponse(
             exchange=request.exchange,
-            symbol=symbol or symbol_token,
+            symbol=response_symbol,
             symbol_token=symbol_token,
             interval=request.interval,
             row_count=len(rows),

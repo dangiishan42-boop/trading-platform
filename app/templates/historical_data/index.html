@@ -629,6 +629,7 @@
 
   <script>
     const ANGEL_SYMBOL_MAP = Object.freeze({{ angel_symbol_map | tojson }});
+    const instrumentState = { items: [] };
 
     function byId(id) {
       return document.getElementById(id);
@@ -654,6 +655,39 @@
 
     function getMappedToken(symbol) {
       return ANGEL_SYMBOL_MAP[normalizeSymbol(symbol)] || null;
+    }
+    function instrumentLabel(item) {
+      return `${item.symbol} | ${item.name} | ${item.exchange} | ${item.token}`;
+    }
+    async function searchInstruments() {
+      const query = byId("historical-symbol-search")?.value.trim() || "";
+      const exchange = byId("historical-exchange")?.value.trim() || "NSE";
+      if (query.length < 2) return;
+      try {
+        const response = await fetch(`/api/v1/instruments/search?q=${encodeURIComponent(query)}&exchange=${encodeURIComponent(exchange)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Instrument search failed");
+        instrumentState.items = data.items || [];
+        const dataList = byId("historical-symbol-options");
+        dataList.innerHTML = "";
+        instrumentState.items.forEach((item) => {
+          const option = document.createElement("option");
+          option.value = item.symbol;
+          option.label = instrumentLabel(item);
+          dataList.appendChild(option);
+        });
+      } catch (error) {
+        populateSymbolOptions();
+      }
+    }
+    function applySelectedInstrument() {
+      const symbol = normalizeSymbol(byId("historical-symbol-search")?.value);
+      const exchange = byId("historical-exchange")?.value.trim().toUpperCase() || "NSE";
+      const selected = instrumentState.items.find((item) => item.symbol === symbol && item.exchange === exchange);
+      if (!selected) return false;
+      byId("historical-symbol-token").value = selected.token;
+      byId("historical-symbol-selection").innerHTML = `Selected <strong>${instrumentLabel(selected)}</strong>. Candles are fetched only when you load historical data.`;
+      return true;
     }
 
     function populateSymbolOptions() {
@@ -898,8 +932,13 @@
       resetSummary();
 
       byId("historical-data-form").addEventListener("submit", fetchHistoricalData);
-      byId("historical-symbol-search").addEventListener("input", applySymbolLookup);
-      byId("historical-symbol-search").addEventListener("change", applySymbolLookup);
+      byId("historical-symbol-search").addEventListener("input", () => {
+        applySymbolLookup();
+        searchInstruments();
+      });
+      byId("historical-symbol-search").addEventListener("change", () => {
+        if (!applySelectedInstrument()) applySymbolLookup();
+      });
       byId("historical-symbol-token").addEventListener("input", refreshSymbolSelection);
       byId("historical-reset-btn").addEventListener("click", resetHistoricalForm);
     });

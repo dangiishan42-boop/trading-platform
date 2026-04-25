@@ -271,7 +271,7 @@
     ];
     const savedStrategies = new Map();
     const datasets = new Map();
-    const angelState = { dateShortcutDays: null, activeDataset: null };
+    const angelState = { dateShortcutDays: null, activeDataset: null, instruments: [] };
     let legCounter = 0;
 
     function byId(id) { return document.getElementById(id); }
@@ -286,6 +286,40 @@
     function numberOrNull(value) { return value === "" || value === null || value === undefined ? null : Number(value); }
     function normalizeSymbol(value) { return String(value || "").trim().toUpperCase().replace(/\s+/g, ""); }
     function mappedToken(symbol) { return SYMBOL_MAP[normalizeSymbol(symbol)] || null; }
+    function instrumentLabel(item) { return `${item.symbol} | ${item.name} | ${item.exchange} | ${item.token}`; }
+    async function searchInstruments(inputId, listId) {
+      const query = byId(inputId)?.value.trim() || "";
+      const exchange = byId("angel-exchange")?.value.trim() || byId("algo-exchange")?.value.trim() || "NSE";
+      if (query.length < 2) return;
+      try {
+        const res = await fetch(`/api/v1/instruments/search?q=${encodeURIComponent(query)}&exchange=${encodeURIComponent(exchange)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Instrument search failed");
+        angelState.instruments = data.items || [];
+        const list = byId(listId);
+        list.innerHTML = "";
+        angelState.instruments.forEach((item) => {
+          const option = document.createElement("option");
+          option.value = item.symbol;
+          option.label = instrumentLabel(item);
+          list.appendChild(option);
+        });
+      } catch (error) {
+        return;
+      }
+    }
+    function applySelectedInstrument(inputId) {
+      const symbol = normalizeSymbol(byId(inputId)?.value);
+      const exchange = byId("angel-exchange")?.value.trim().toUpperCase() || byId("algo-exchange")?.value.trim().toUpperCase() || "NSE";
+      const selected = angelState.instruments.find((item) => item.symbol === symbol && item.exchange === exchange);
+      if (!selected) return false;
+      byId("angel-symbol-token").value = selected.token;
+      byId("angel-exchange").value = selected.exchange;
+      byId("algo-symbol").value = selected.symbol;
+      byId("algo-exchange").value = selected.exchange;
+      byId("angel-symbol-note").textContent = `Selected ${instrumentLabel(selected)}. Candle data is fetched only when you submit.`;
+      return true;
+    }
     function intervalToTimeframe(value) { return (ANGEL_INTERVAL_PRESETS.find((item) => item.value === value) || {}).timeframe || value; }
     function formatDateValue(value) {
       if (!value) return "--";
@@ -893,8 +927,13 @@
       byId("save-algo-strategy-btn").addEventListener("click", saveAlgoStrategy);
       byId("load-algo-strategy-btn").addEventListener("click", loadSelectedStrategy);
       byId("angel-fetch-form").addEventListener("submit", fetchAngelData);
-      byId("angel-symbol-search").addEventListener("input", applyAngelSymbolLookup);
-      byId("angel-symbol-search").addEventListener("change", applyAngelSymbolLookup);
+      byId("angel-symbol-search").addEventListener("input", () => {
+        applyAngelSymbolLookup();
+        searchInstruments("angel-symbol-search", "angel-symbol-options");
+      });
+      byId("angel-symbol-search").addEventListener("change", () => {
+        if (!applySelectedInstrument("angel-symbol-search")) applyAngelSymbolLookup();
+      });
       byId("angel-symbol-token").addEventListener("input", refreshAngelSymbolSelection);
       byId("angel-interval").addEventListener("change", () => {
         byId("algo-timeframe").value = intervalToTimeframe(byId("angel-interval").value);
@@ -909,7 +948,10 @@
         angelState.activeDataset = datasets.get(byId("algo-file-name").value.trim()) || null;
         refreshDatasetSummary();
       });
-      byId("algo-symbol").addEventListener("change", syncAlgoSymbolToFetch);
+      byId("algo-symbol").addEventListener("input", () => searchInstruments("algo-symbol", "algo-symbol-options"));
+      byId("algo-symbol").addEventListener("change", () => {
+        if (!applySelectedInstrument("algo-symbol")) syncAlgoSymbolToFetch();
+      });
       loadSavedStrategies();
       loadDatasets();
       refreshDatasetSummary();

@@ -11,6 +11,7 @@ from app.models.strategy_config_model import SavedStrategyConfiguration
 from app.models.algo_strategy_model import SavedAlgoStrategy
 from app.models.backtest_model import BacktestRun
 from app.models.dataset_model import UploadedDataset
+from app.models.instrument_master_model import InstrumentMaster
 from app.models.result_model import BacktestResultRecord
 
 

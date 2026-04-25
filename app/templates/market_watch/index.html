@@ -348,7 +348,7 @@
       WIPRO: "Wipro",
     };
     const TIMEFRAMES = ["1m", "5m", "15m", "30m", "1H", "1D"];
-    const state = { quote: null, candles: [], interval: "5m" };
+    const state = { quote: null, candles: [], interval: "5m", instruments: [] };
 
     function byId(id) { return document.getElementById(id); }
     function formatNumber(value, digits = 2) {
@@ -377,6 +377,39 @@
     }
     function candlePayload() {
       return { ...requestPayload(), interval: state.interval };
+    }
+    function instrumentLabel(item) {
+      return `${item.symbol} | ${item.name} | ${item.exchange} | ${item.token}`;
+    }
+    async function searchInstruments() {
+      const query = byId("stock-search").value.trim();
+      const exchange = byId("exchange").value;
+      if (query.length < 2) return;
+      try {
+        const response = await fetch(`/api/v1/instruments/search?q=${encodeURIComponent(query)}&exchange=${encodeURIComponent(exchange)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Instrument search failed");
+        state.instruments = data.items || [];
+        const list = byId("symbol-options");
+        list.innerHTML = "";
+        state.instruments.forEach((item) => {
+          const option = document.createElement("option");
+          option.value = item.symbol;
+          option.label = instrumentLabel(item);
+          list.appendChild(option);
+        });
+      } catch (error) {
+        renderSymbolOptions();
+      }
+    }
+    function applySelectedInstrument() {
+      const symbol = byId("stock-search").value.trim().toUpperCase();
+      const exchange = byId("exchange").value;
+      const selected = state.instruments.find((item) => item.symbol === symbol && item.exchange === exchange);
+      if (!selected) return false;
+      byId("manual-token").value = selected.token;
+      setStatus("page-status", `Selected ${instrumentLabel(selected)}. Candles will be fetched on demand only.`);
+      return true;
     }
     async function postJson(url, payload) {
       const response = await fetch(url, {
@@ -572,6 +605,8 @@
       renderOverview({});
       renderPerformance([]);
       byId("search-btn").addEventListener("click", search);
+      byId("stock-search").addEventListener("input", searchInstruments);
+      byId("stock-search").addEventListener("change", applySelectedInstrument);
       byId("stock-search").addEventListener("keydown", (event) => {
         if (event.key === "Enter") search();
       });

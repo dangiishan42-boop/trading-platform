@@ -2034,6 +2034,7 @@
       selectedConfig: null,
       angelDateShortcutDays: null,
       angelDateShortcutLabel: null,
+      angelInstruments: [],
     };
 
     const ANGEL_SYMBOL_CONFIG = Object.freeze({
@@ -3427,6 +3428,40 @@
 
     function getAngelMappedToken(symbol) {
       return ANGEL_SYMBOL_CONFIG.symbolToToken[normalizeAngelSymbol(symbol)] || null;
+    }
+    function angelInstrumentLabel(item) {
+      return `${item.symbol} | ${item.name} | ${item.exchange} | ${item.token}`;
+    }
+    async function searchAngelInstruments() {
+      const query = byId("angel-symbol-search")?.value.trim() || "";
+      const exchange = byId("angel-exchange")?.value.trim() || "NSE";
+      if (query.length < 2) return;
+      try {
+        const response = await fetch(`/api/v1/instruments/search?q=${encodeURIComponent(query)}&exchange=${encodeURIComponent(exchange)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Instrument search failed");
+        state.angelInstruments = data.items || [];
+        const dataList = byId("angel-symbol-options");
+        dataList.innerHTML = "";
+        state.angelInstruments.forEach((item) => {
+          const option = document.createElement("option");
+          option.value = item.symbol;
+          option.label = angelInstrumentLabel(item);
+          dataList.appendChild(option);
+        });
+      } catch (error) {
+        populateAngelSymbolOptions();
+      }
+    }
+    function applySelectedAngelInstrument() {
+      const symbol = normalizeAngelSymbol(byId("angel-symbol-search")?.value);
+      const exchange = byId("angel-exchange")?.value.trim().toUpperCase() || "NSE";
+      const selected = state.angelInstruments.find((item) => item.symbol === symbol && item.exchange === exchange);
+      if (!selected) return false;
+      byId("angel-symbol-token").value = selected.token;
+      byId("angel-exchange").value = selected.exchange;
+      byId("angel-symbol-selection").innerHTML = `Selected <strong>${angelInstrumentLabel(selected)}</strong>. Fetching remains on demand for this symbol and range.`;
+      return true;
     }
 
     function populateAngelSymbolOptions() {
@@ -5145,8 +5180,13 @@
 
       byId("upload-form").addEventListener("submit", uploadCsv);
       byId("angel-fetch-form").addEventListener("submit", fetchAngelData);
-      byId("angel-symbol-search").addEventListener("input", applyAngelSymbolLookup);
-      byId("angel-symbol-search").addEventListener("change", applyAngelSymbolLookup);
+      byId("angel-symbol-search").addEventListener("input", () => {
+        applyAngelSymbolLookup();
+        searchAngelInstruments();
+      });
+      byId("angel-symbol-search").addEventListener("change", () => {
+        if (!applySelectedAngelInstrument()) applyAngelSymbolLookup();
+      });
       byId("angel-symbol-token").addEventListener("input", refreshAngelSymbolSelection);
       byId("angel-interval").addEventListener("change", refreshAngelIntervalPresetState);
       byId("angel-from-date").addEventListener("input", handleAngelDateManualEdit);
