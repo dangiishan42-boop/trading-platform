@@ -295,12 +295,12 @@
     .panel-link { color: #58a6ff; font-size: 11px; font-weight: 900; }
     .panel-body { padding: 9px; }
 
-    .heatmap { display: grid; gap: 8px; }
+    .heatmap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
     .sector-block { border: 1px solid rgba(31,53,82,0.72); border-radius: 7px; padding: 7px; background: rgba(5,11,20,0.46); }
     .sector-title { color: #9fb0c7; font-size: 10px; font-weight: 950; margin-bottom: 6px; }
     .tile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
     .heat-tile {
-      min-height: 44px;
+      min-height: 66px;
       border-radius: 6px;
       padding: 6px;
       color: #fff;
@@ -310,7 +310,8 @@
       overflow: hidden;
     }
     .heat-symbol { font-size: 11px; font-weight: 950; }
-    .heat-change { font-size: 13px; font-weight: 950; }
+    .heat-value { font-size: 13px; font-weight: 950; }
+    .heat-change { font-size: 11px; font-weight: 950; }
     .heat-scale {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -816,13 +817,19 @@
     const TIMEFRAMES = ["1m", "3m", "5m", "15m", "30m", "1D", "1W", "1M"];
     const GAINERS = ["ADANIENT", "TATAMOTORS", "ONGC", "IOC", "JSWSTEEL"];
     const LOSERS = ["NESTLEIND", "BAJFINANCE", "TITAN", "MARUTI", "WIPRO"];
-    const HEATMAP = [
-      ["FINANCIAL SERVICES", ["HDFCBANK", "ICICIBANK", "SBIN", "AXISBANK", "KOTAKBANK", "BAJFINANCE"]],
-      ["IT SERVICES", ["TCS", "INFY", "WIPRO", "HCLTECH", "TECHM"]],
-      ["AUTOMOBILE", ["MARUTI", "M&M", "TATAMOTORS", "BAJAJ-AUTO"]],
-      ["CONSUMER GOODS", ["HINDUNILVR", "ITC", "NESTLEIND", "BRITANNIA"]],
-      ["OIL & GAS", ["RELIANCE", "ONGC", "IOC", "BPCL"]],
-      ["METALS", ["TATASTEEL", "JSWSTEEL", "HINDALCO", "COALINDIA"]],
+    const INDEX_HEATMAP = [
+      { name: "NIFTY 50", value: 22419.40, change: 84.80, change_pct: 0.38 },
+      { name: "SENSEX", value: 73890.20, change: 162.40, change_pct: 0.22 },
+      { name: "BANK NIFTY", value: 48120.50, change: -67.45, change_pct: -0.14 },
+      { name: "FINNIFTY", value: 21440.90, change: 38.55, change_pct: 0.18 },
+      { name: "NIFTY IT", value: 34180.25, change: 382.40, change_pct: 1.12 },
+      { name: "NIFTY AUTO", value: 21890.10, change: -74.70, change_pct: -0.34 },
+      { name: "NIFTY FMCG", value: 56320.75, change: 129.55, change_pct: 0.23 },
+      { name: "NIFTY PHARMA", value: 19082.45, change: 78.10, change_pct: 0.41 },
+      { name: "NIFTY METAL", value: 8924.80, change: -46.85, change_pct: -0.52 },
+      { name: "NIFTY ENERGY", value: 39612.30, change: -71.35, change_pct: -0.18 },
+      { name: "NIFTY REALTY", value: 948.65, change: 8.54, change_pct: 0.91 },
+      { name: "NIFTY MIDCAP", value: 50284.20, change: 176.00, change_pct: 0.35 },
     ];
     const state = {
       symbol: "RELIANCE",
@@ -1112,12 +1119,19 @@
       return pts.length > 1 ? `<polyline points="${pts.join(" ")}" fill="none" stroke="${color}" stroke-width="1.8" stroke-dasharray="4 4"/>` : "";
     }
     function renderHeatmap() {
-      byId("heatmap-grid").innerHTML = HEATMAP.map(([sector, symbols]) => `<div class="sector-block"><div class="sector-title">${sector}</div><div class="tile-grid">${symbols.map((symbol) => {
-        const change = fallbackQuote(symbol).change_pct;
-        const alpha = Math.min(0.86, 0.22 + Math.abs(change) / 5.5);
-        const bg = change >= 0 ? `rgba(0,193,118,${alpha})` : `rgba(255,77,94,${alpha})`;
-        return `<div class="heat-tile" style="background:${bg}"><div class="heat-symbol">${symbol}</div><div class="heat-change">${pct(change)}</div></div>`;
-      }).join("")}</div></div>`).join("");
+      byId("heatmap-grid").innerHTML = INDEX_HEATMAP.map((index) => {
+        const changePct = Number(index.change_pct);
+        const change = Number(index.change);
+        const alpha = Math.min(0.86, 0.22 + Math.abs(changePct || 0) / 5.5);
+        const bg = changePct >= 0 ? `rgba(0,193,118,${alpha})` : `rgba(255,77,94,${alpha})`;
+        return `<div class="heat-tile" style="background:${bg}">
+          <div class="heat-symbol">${index.name}</div>
+          <div>
+            <div class="heat-value mono">${Number.isFinite(Number(index.value)) ? fmt(index.value) : "--"}</div>
+            <div class="heat-change mono">${Number.isFinite(change) ? fmt(change) : "--"} | ${Number.isFinite(changePct) ? pct(changePct) : "--"}</div>
+          </div>
+        </div>`;
+      }).join("");
     }
     function renderSectorBars(targetId = "sector-performance") {
       const sectors = [["Banking", 0.62], ["IT", 1.12], ["Auto", -0.34], ["Pharma", 0.41], ["Energy", -0.18]];
