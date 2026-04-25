@@ -328,6 +328,53 @@
     .activity-bars { height: 96px; display: grid; grid-template-columns: repeat(6, 1fr); align-items: end; gap: 7px; padding-top: 12px; }
     .activity-bar { border-radius: 5px 5px 0 0; min-height: 8px; }
     .tab-row { display: flex; gap: 5px; margin-bottom: 8px; }
+    .watchlist-tools {
+      display: grid;
+      gap: 7px;
+      padding: 9px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(5,11,20,0.35);
+    }
+    .watchlist-select-row,
+    .watchlist-action-row {
+      display: grid;
+      gap: 6px;
+    }
+    .watchlist-select-row { grid-template-columns: minmax(0, 1fr); }
+    .watchlist-action-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .watchlist-message {
+      min-height: 16px;
+      color: #9fb0c7;
+      font-size: 11px;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+    .watchlist-empty {
+      padding: 14px 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-align: center;
+    }
+    .symbol-cell-btn {
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 0;
+      text-align: left;
+      font-weight: 950;
+    }
+    .remove-btn {
+      min-height: 25px;
+      border: 1px solid rgba(255,77,94,0.48);
+      border-radius: 6px;
+      background: rgba(255,77,94,0.08);
+      color: #ffb3bb;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .remove-btn:hover { border-color: var(--red); color: #fff; background: rgba(255,77,94,0.2); }
 
     .chart-card { min-height: 660px; display: grid; grid-template-rows: auto auto minmax(430px,1fr) auto auto; }
     .chart-head {
@@ -619,6 +666,7 @@
                 <div class="chart-price mono" id="chart-price">--</div>
                 <div class="chart-change mono" id="chart-change">--</div>
                 <div class="chart-actions">
+                  <button class="tool-btn" id="add-watchlist-btn" type="button">Add to Watchlist</button>
                   <button class="tool-btn" id="fullscreen-chart-btn" type="button">Fullscreen</button>
                   <a class="tool-btn" href="/market-watch/chart">Open Large Chart</a>
                 </div>
@@ -683,8 +731,19 @@
 
         <div class="col right-col">
           <section class="panel">
-            <div class="panel-head"><div class="panel-title">My Watchlist</div><a class="panel-link" href="/portfolio">View All</a></div>
-            <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Chg</th><th>Chg %</th></tr></thead><tbody id="watchlist-body"></tbody></table></div>
+            <div class="panel-head"><div class="panel-title">My Watchlist</div><span class="panel-link" id="watchlist-count">0 items</span></div>
+            <div class="watchlist-tools">
+              <div class="watchlist-select-row">
+                <select class="terminal-select" id="watchlist-select" aria-label="Active watchlist"></select>
+              </div>
+              <div class="watchlist-action-row">
+                <button class="tool-btn" id="new-watchlist-btn" type="button">New</button>
+                <button class="tool-btn" id="rename-watchlist-btn" type="button">Rename</button>
+                <button class="tool-btn" id="delete-watchlist-btn" type="button">Delete</button>
+              </div>
+              <div class="watchlist-message" id="watchlist-message"></div>
+            </div>
+            <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Chg %</th><th>Action</th></tr></thead><tbody id="watchlist-body"></tbody></table></div>
           </section>
           <section class="panel" id="stocks">
             <div class="panel-head"><div class="panel-title">Top Gainers</div></div>
@@ -748,7 +807,6 @@
       WIPRO: "Wipro",
     };
     const TIMEFRAMES = ["1m", "3m", "5m", "15m", "30m", "1D", "1W", "1M"];
-    const WATCHLIST = ["RELIANCE", "HDFCBANK", "TCS", "INFY", "ICICIBANK"];
     const GAINERS = ["ADANIENT", "TATAMOTORS", "ONGC", "IOC", "JSWSTEEL"];
     const LOSERS = ["NESTLEIND", "BAJFINANCE", "TITAN", "MARUTI", "WIPRO"];
     const HEATMAP = [
@@ -768,12 +826,17 @@
       quote: null,
       candles: [],
       instruments: [],
+      watchlists: [],
+      activeWatchlistId: null,
       indicators: { ema20: true, ema50: true, volumeSma: false },
       footer: { percent: false, log: false, auto: true },
     };
 
     function byId(id) { return document.getElementById(id); }
     function normalize(value) { return String(value || "").trim().toUpperCase().replace(/\s+/g, ""); }
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
     function fmt(value, digits = 2) {
       const n = Number(value);
       return Number.isFinite(n) ? n.toLocaleString("en-IN", { minimumFractionDigits: digits, maximumFractionDigits: digits }) : "--";
@@ -834,6 +897,17 @@
       if (!res.ok) throw new Error(data.detail || "Request failed");
       return data;
     }
+    async function fetchJson(url, options = {}) {
+      const res = await fetch(url, options);
+      if (res.status === 204) return null;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Request failed");
+      return data;
+    }
+    function putJson(url, payload) {
+      return fetchJson(url, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    }
+    function deleteJson(url) { return fetchJson(url, { method: "DELETE" }); }
     function rangeDates() {
       const end = new Date();
       const start = new Date(end);
@@ -847,6 +921,11 @@
       const el = byId("page-status");
       el.textContent = message;
       el.className = `status-line ${isError ? "negative" : ""}`.trim();
+    }
+    function setWatchlistMessage(message, isError = false) {
+      const el = byId("watchlist-message");
+      el.textContent = message;
+      el.className = `watchlist-message ${isError ? "negative" : ""}`.trim();
     }
 
     function renderTicker() {
@@ -1045,8 +1124,143 @@
         return `<tr><td><strong>${symbol}</strong></td><td class="mono">${fmt(q.latest_price)}</td><td class="${cls(q.change)} mono">${fmt(q.change)}</td><td class="${cls(q.change_pct)} mono">${pct(q.change_pct)}</td></tr>`;
       }).join("");
     }
+    function activeWatchlist() {
+      return state.watchlists.find((watchlist) => String(watchlist.id) === String(state.activeWatchlistId)) || state.watchlists[0] || null;
+    }
+    function renderWatchlistControls() {
+      const select = byId("watchlist-select");
+      select.innerHTML = state.watchlists.map((watchlist) => `<option value="${watchlist.id}">${escapeHtml(watchlist.name)}</option>`).join("");
+      if (state.activeWatchlistId) select.value = String(state.activeWatchlistId);
+    }
+    function renderWatchlist() {
+      renderWatchlistControls();
+      const watchlist = activeWatchlist();
+      const body = byId("watchlist-body");
+      const count = watchlist ? watchlist.items.length : 0;
+      byId("watchlist-count").textContent = `${count} ${count === 1 ? "item" : "items"}`;
+      if (!watchlist) {
+        body.innerHTML = `<tr><td colspan="4"><div class="watchlist-empty">No watchlist available.</div></td></tr>`;
+        return;
+      }
+      if (!watchlist.items.length) {
+        body.innerHTML = `<tr><td colspan="4"><div class="watchlist-empty">No symbols in ${escapeHtml(watchlist.name)} yet.</div></td></tr>`;
+        return;
+      }
+      body.innerHTML = watchlist.items.map((item) => {
+        const q = fallbackQuote(item.symbol);
+        return `<tr>
+          <td><button class="symbol-cell-btn" type="button" data-watchlist-load="${item.id}">${escapeHtml(item.symbol)}</button><div class="muted">${escapeHtml(item.exchange)} ${escapeHtml(item.display_name || "")}</div></td>
+          <td class="mono">${fmt(q.latest_price)}</td>
+          <td class="${cls(q.change_pct)} mono">${pct(q.change_pct)}</td>
+          <td><button class="remove-btn" type="button" data-watchlist-remove="${item.id}">Remove</button></td>
+        </tr>`;
+      }).join("");
+    }
+    async function loadWatchlists() {
+      try {
+        const previousId = state.activeWatchlistId;
+        state.watchlists = await fetchJson("/api/v1/watchlists");
+        state.activeWatchlistId = state.watchlists.some((watchlist) => String(watchlist.id) === String(previousId))
+          ? previousId
+          : (state.watchlists[0] && state.watchlists[0].id);
+        renderWatchlist();
+        setWatchlistMessage(state.watchlists.length ? "" : "No watchlists available.", false);
+      } catch (error) {
+        setWatchlistMessage(`Could not load watchlists: ${error.message}`, true);
+      }
+    }
+    async function createWatchlist() {
+      const name = prompt("Watchlist name");
+      if (!name || !name.trim()) return;
+      try {
+        const watchlist = await postJson("/api/v1/watchlists", { name: name.trim() });
+        state.watchlists.push(watchlist);
+        state.activeWatchlistId = watchlist.id;
+        renderWatchlist();
+        setWatchlistMessage(`Created ${watchlist.name}`);
+      } catch (error) {
+        setWatchlistMessage(error.message, true);
+      }
+    }
+    async function renameWatchlist() {
+      const watchlist = activeWatchlist();
+      if (!watchlist) return;
+      const name = prompt("Rename watchlist", watchlist.name);
+      if (!name || !name.trim() || name.trim() === watchlist.name) return;
+      try {
+        const updated = await putJson(`/api/v1/watchlists/${watchlist.id}`, { name: name.trim() });
+        state.watchlists = state.watchlists.map((item) => item.id === updated.id ? updated : item);
+        renderWatchlist();
+        setWatchlistMessage(`Renamed to ${updated.name}`);
+      } catch (error) {
+        setWatchlistMessage(error.message, true);
+      }
+    }
+    async function deleteActiveWatchlist() {
+      const watchlist = activeWatchlist();
+      if (!watchlist) return;
+      if (!confirm(`Delete watchlist "${watchlist.name}"?`)) return;
+      try {
+        await deleteJson(`/api/v1/watchlists/${watchlist.id}`);
+        state.watchlists = state.watchlists.filter((item) => item.id !== watchlist.id);
+        state.activeWatchlistId = state.watchlists[0] ? state.watchlists[0].id : null;
+        renderWatchlist();
+        setWatchlistMessage(`Deleted ${watchlist.name}`);
+        if (!state.watchlists.length) await loadWatchlists();
+      } catch (error) {
+        setWatchlistMessage(error.message, true);
+      }
+    }
+    async function addSelectedToWatchlist() {
+      const watchlist = activeWatchlist();
+      if (!watchlist) {
+        setWatchlistMessage("Create a watchlist before adding symbols.", true);
+        return;
+      }
+      const symbol = normalize(state.symbol || byId("stock-search").value);
+      if (!symbol) {
+        setWatchlistMessage("Select a symbol before adding it.", true);
+        return;
+      }
+      if (watchlist.items.some((item) => normalize(item.symbol) === symbol && item.exchange === state.exchange)) {
+        setWatchlistMessage(`${symbol} already exists in ${watchlist.name}.`, true);
+        return;
+      }
+      try {
+        const item = await postJson(`/api/v1/watchlists/${watchlist.id}/items`, {
+          symbol,
+          exchange: state.exchange,
+          token: state.token || mappedToken(symbol) || null,
+          display_name: (state.quote && state.quote.stock_name) || SYMBOL_NAMES[symbol] || symbol,
+        });
+        watchlist.items.push(item);
+        renderWatchlist();
+        setWatchlistMessage(`Added ${symbol} to ${watchlist.name}`);
+      } catch (error) {
+        setWatchlistMessage(error.message, true);
+      }
+    }
+    async function removeWatchlistItem(itemId) {
+      const watchlist = activeWatchlist();
+      if (!watchlist) return;
+      const item = watchlist.items.find((candidate) => String(candidate.id) === String(itemId));
+      try {
+        await deleteJson(`/api/v1/watchlists/${watchlist.id}/items/${itemId}`);
+        watchlist.items = watchlist.items.filter((candidate) => String(candidate.id) !== String(itemId));
+        renderWatchlist();
+        setWatchlistMessage(item ? `Removed ${item.symbol}` : "Removed symbol");
+      } catch (error) {
+        setWatchlistMessage(error.message, true);
+      }
+    }
+    function loadWatchlistItem(itemId) {
+      const watchlist = activeWatchlist();
+      const item = watchlist && watchlist.items.find((candidate) => String(candidate.id) === String(itemId));
+      if (!item) return;
+      selectSymbol({ symbol: item.symbol, exchange: item.exchange, token: item.token, name: item.display_name });
+    }
     function renderRightTables() {
-      byId("watchlist-body").innerHTML = tableRows(WATCHLIST);
+      renderWatchlist();
       byId("gainers-body").innerHTML = tableRows(GAINERS);
       byId("losers-body").innerHTML = tableRows(LOSERS);
       byId("alerts-list").innerHTML = [
@@ -1079,6 +1293,22 @@
       byId("manual-token").addEventListener("input", () => { state.token = byId("manual-token").value.trim(); });
       byId("fullscreen-chart-btn").addEventListener("click", () => byId("technical").classList.toggle("fullscreen-chart"));
       byId("fullscreen-chart-icon").addEventListener("click", () => byId("technical").classList.toggle("fullscreen-chart"));
+      byId("add-watchlist-btn").addEventListener("click", addSelectedToWatchlist);
+      byId("watchlist-select").addEventListener("change", () => {
+        state.activeWatchlistId = byId("watchlist-select").value;
+        renderWatchlist();
+        const watchlist = activeWatchlist();
+        setWatchlistMessage(watchlist ? `Using ${watchlist.name}` : "");
+      });
+      byId("new-watchlist-btn").addEventListener("click", createWatchlist);
+      byId("rename-watchlist-btn").addEventListener("click", renameWatchlist);
+      byId("delete-watchlist-btn").addEventListener("click", deleteActiveWatchlist);
+      byId("watchlist-body").addEventListener("click", (event) => {
+        const loadButton = event.target.closest("[data-watchlist-load]");
+        const removeButton = event.target.closest("[data-watchlist-remove]");
+        if (loadButton) loadWatchlistItem(loadButton.dataset.watchlistLoad);
+        if (removeButton) removeWatchlistItem(removeButton.dataset.watchlistRemove);
+      });
       byId("snapshot-btn").addEventListener("click", () => setStatus("Snapshot captured for current chart view"));
       byId("indicator-btn").addEventListener("click", () => setStatus("EMA 20 and EMA 50 overlays are available"));
       document.querySelectorAll("[data-indicator]").forEach((button) => button.addEventListener("click", () => {
@@ -1132,6 +1362,7 @@
       renderHeatmap();
       renderSectorBars();
       renderActivityBars();
+      await loadWatchlists();
       renderRightTables();
       renderBottomWidgets();
       setupInteractions();

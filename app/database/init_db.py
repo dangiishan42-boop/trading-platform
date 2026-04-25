@@ -13,6 +13,7 @@ from app.models.backtest_model import BacktestRun
 from app.models.dataset_model import UploadedDataset
 from app.models.instrument_master_model import InstrumentMaster
 from app.models.result_model import BacktestResultRecord
+from app.models.watchlist_model import Watchlist, WatchlistItem
 
 
 def _sqlite_database_path() -> Path | None:
