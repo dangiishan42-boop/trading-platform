@@ -184,14 +184,15 @@
       </section>
 
       <nav class="tab-row">
-        <a class="tool-btn active" href="#overview">Overview</a>
-        <a class="tool-btn" href="#fundamentals">Fundamentals</a>
-        <a class="tool-btn" href="#option-chain">Option Chain</a>
-        <a class="tool-btn" href="#technical-signals">Technical Signals</a>
-        <a class="tool-btn" href="#peers">Peers</a>
-        <a class="tool-btn" href="#action-hub">Action Hub</a>
+        <a class="tool-btn {% if active_section == 'overview' %}active{% endif %}" href="/market-watch/{{ asset_type }}/{{ symbol }}/overview">Overview</a>
+        <a class="tool-btn {% if active_section == 'fundamentals' %}active{% endif %}" href="/market-watch/{{ asset_type }}/{{ symbol }}/fundamentals">Fundamentals</a>
+        <a class="tool-btn {% if active_section == 'option-chain' %}active{% endif %}" href="/market-watch/{{ asset_type }}/{{ symbol }}/option-chain">Option Chain</a>
+        <a class="tool-btn {% if active_section == 'technical' %}active{% endif %}" href="/market-watch/{{ asset_type }}/{{ symbol }}/technical">Technical Signals</a>
+        <a class="tool-btn {% if active_section == 'peers' %}active{% endif %}" href="/market-watch/{{ asset_type }}/{{ symbol }}/peers">Peers</a>
+        <a class="tool-btn {% if active_section == 'actions' %}active{% endif %}" href="/market-watch/{{ asset_type }}/{{ symbol }}/actions">Action Hub</a>
       </nav>
 
+      {% if active_section == 'overview' %}
       <section class="content-grid">
         <div class="left-stack">
           <section class="panel" id="chart">
@@ -231,36 +232,46 @@
             <div class="panel-body"><div class="performance-grid" id="performance-grid"></div></div>
           </section>
 
-          <section class="panel" id="fundamentals" style="margin-top:10px;">
-            <div class="panel-head"><div class="panel-title">Company Snapshot / Fundamentals</div></div>
-            <div class="panel-body">
-              <div class="placeholder" id="fundamentals-message">Fundamental data source not connected yet</div>
-              <div class="stat-grid" id="fundamentals-grid" style="margin-top:10px;"></div>
-            </div>
-          </section>
-
-          <section class="panel" id="option-chain" style="margin-top:10px;">
-            <div class="panel-head"><div class="panel-title">Option Chain</div></div>
-            <div class="panel-body">
-              <div class="option-controls">
-                <select class="terminal-select" id="expiry-select"><option>Expiry unavailable</option></select>
-                <select class="terminal-select" id="strike-range-select"><option>ATM +/- 5 strikes</option><option>ATM +/- 10 strikes</option></select>
-                <div class="placeholder" id="option-chain-message">Option chain data source not connected yet</div>
-              </div>
-              <div class="performance-grid" id="option-summary"></div>
-              <div class="option-table-wrap" style="margin-top:10px;">
-                <table class="option-table">
-                  <thead>
-                    <tr><th>CE LTP</th><th>CE Chg</th><th>CE OI</th><th>CE OI Chg</th><th>CE Vol</th><th>CE IV</th><th>Strike</th><th>PE LTP</th><th>PE Chg</th><th>PE OI</th><th>PE OI Chg</th><th>PE Vol</th><th>PE IV</th></tr>
-                  </thead>
-                  <tbody id="option-chain-body"><tr><td colspan="13" class="muted">Option chain data source not connected yet</td></tr></tbody>
-                </table>
-              </div>
-            </div>
-          </section>
         </div>
 
         <div class="right-stack">
+          <section class="panel" id="price-volume">
+            <div class="panel-head"><div class="panel-title">Price & Volume</div></div>
+            <div class="panel-body"><div class="metric-list" id="price-volume-list"></div></div>
+          </section>
+        </div>
+      </section>
+      {% elif active_section == 'fundamentals' %}
+      <section class="panel" id="fundamentals">
+        <div class="panel-head"><div class="panel-title">Company Snapshot / Fundamentals</div></div>
+        <div class="panel-body">
+          <div class="placeholder" id="fundamentals-message">Fundamental data source not connected yet</div>
+          <div class="stat-grid" id="fundamentals-grid" style="margin-top:10px;"></div>
+        </div>
+      </section>
+      {% elif active_section == 'option-chain' %}
+      <section class="panel" id="option-chain">
+        <div class="panel-head"><div class="panel-title">Option Chain</div></div>
+        <div class="panel-body">
+          <div class="option-controls">
+            <select class="terminal-select" id="expiry-select"><option>Expiry unavailable</option></select>
+            <select class="terminal-select" id="strike-range-select"><option>ATM +/- 5 strikes</option><option>ATM +/- 10 strikes</option></select>
+            <div class="placeholder" id="option-chain-message">Option chain data source not connected yet</div>
+          </div>
+          <div class="performance-grid" id="option-summary"></div>
+          <div class="option-table-wrap" style="margin-top:10px;">
+            <table class="option-table">
+              <thead>
+                <tr><th>CE LTP</th><th>CE Chg</th><th>CE OI</th><th>CE OI Chg</th><th>CE Vol</th><th>CE IV</th><th>Strike</th><th>PE LTP</th><th>PE Chg</th><th>PE OI</th><th>PE OI Chg</th><th>PE Vol</th><th>PE IV</th></tr>
+              </thead>
+              <tbody id="option-chain-body"><tr><td colspan="13" class="muted">Option chain data source not connected yet</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      {% elif active_section == 'technical' %}
+      <section class="content-grid">
+        <div class="left-stack">
           <section class="panel" id="technical-signals">
             <div class="panel-head"><div class="panel-title">Technical Signals</div></div>
             <div class="panel-body">
@@ -272,39 +283,38 @@
             <div class="panel-head"><div class="panel-title">Derived Metrics</div></div>
             <div class="panel-body"><div class="metric-list" id="technical-list"></div></div>
           </section>
-          <section class="panel" id="price-volume" style="margin-top:10px;">
-            <div class="panel-head"><div class="panel-title">Price & Volume</div></div>
-            <div class="panel-body"><div class="metric-list" id="price-volume-list"></div></div>
-          </section>
-          <section class="panel" id="peers" style="margin-top:10px;">
-            <div class="panel-head"><div class="panel-title">Related Stocks / Peers</div></div>
-            <div class="panel-body">
-              <div class="placeholder" id="peers-message">Loading peers...</div>
-              <div class="option-table-wrap" style="margin-top:10px;">
-                <table class="peer-table">
-                  <thead><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Chg %</th><th>Sector</th><th></th></tr></thead>
-                  <tbody id="peers-body"></tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-          <section class="panel" id="action-hub" style="margin-top:10px;">
-            <div class="panel-head"><div class="panel-title">Action Hub</div></div>
-            <div class="panel-body">
-              <div class="action-grid">
-                <button class="tool-btn" id="hub-watchlist-btn" type="button">Add to Watchlist</button>
-                <a class="tool-btn" id="hub-backtest-link" href="/dashboard">Use for Backtest</a>
-                <a class="tool-btn" id="hub-history-link" href="/historical-data">Open Historical Data</a>
-                <a class="tool-btn" id="hub-algo-link" href="/algo-trading">Open Algo Trading</a>
-                <a class="tool-btn" id="hub-optimizer-link" href="/research">Run Optimizer</a>
-                <a class="tool-btn" id="hub-portfolio-link" href="/portfolio">Open Portfolio</a>
-                <button class="tool-btn" id="create-alert-btn" type="button">Create Alert</button>
-              </div>
-              <div class="placeholder" id="action-hub-message" style="margin-top:10px;">Alerts engine not connected yet</div>
-            </div>
-          </section>
         </div>
       </section>
+      {% elif active_section == 'peers' %}
+      <section class="panel" id="peers">
+        <div class="panel-head"><div class="panel-title">Related Stocks / Peers</div></div>
+        <div class="panel-body">
+          <div class="placeholder" id="peers-message">Loading peers...</div>
+          <div class="option-table-wrap" style="margin-top:10px;">
+            <table class="peer-table">
+              <thead><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Chg %</th><th>Sector</th><th></th></tr></thead>
+              <tbody id="peers-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      {% elif active_section == 'actions' %}
+      <section class="panel" id="action-hub">
+        <div class="panel-head"><div class="panel-title">Action Hub</div></div>
+        <div class="panel-body">
+          <div class="action-grid">
+            <button class="tool-btn" id="hub-watchlist-btn" type="button">Add to Watchlist</button>
+            <a class="tool-btn" id="hub-backtest-link" href="/dashboard">Use for Backtest</a>
+            <a class="tool-btn" id="hub-history-link" href="/historical-data">Open Historical Data</a>
+            <a class="tool-btn" id="hub-algo-link" href="/algo-trading">Open Algo Trading</a>
+            <a class="tool-btn" id="hub-optimizer-link" href="/research">Run Optimizer</a>
+            <a class="tool-btn" id="hub-portfolio-link" href="/portfolio">Open Portfolio</a>
+            <button class="tool-btn" id="create-alert-btn" type="button">Create Alert</button>
+          </div>
+          <div class="placeholder" id="action-hub-message" style="margin-top:10px;">Alerts engine not connected yet</div>
+        </div>
+      </section>
+      {% endif %}
     </main>
   </div>
 
@@ -314,6 +324,7 @@
       symbol: "{{ symbol }}",
       assetType: "{{ asset_type }}",
       exchange: "{{ exchange }}",
+      activeSection: "{{ active_section }}",
     };
     const INDEX_VALUES = {
       NIFTY50: { name: "NIFTY 50", exchange: "NSE", latest_price: 22419.40, change: 84.80, change_pct: 0.38 },
@@ -434,6 +445,7 @@
     }
     function setStatus(message, isError = false) {
       const el = byId("page-status");
+      if (!el) return;
       el.textContent = message;
       el.className = `status-line ${isError ? "negative" : ""}`.trim();
     }
@@ -450,7 +462,7 @@
       byId("asset-type").textContent = `${DETAIL.assetType} detail`;
       const dayRange = q.day_range || (Number.isFinite(Number(q.low)) && Number.isFinite(Number(q.high)) ? `${fmt(q.low)} - ${fmt(q.high)}` : "--");
       const stats = [["Open", fmt(q.open)], ["High", fmt(q.high)], ["Low", fmt(q.low)], ["Previous Close", fmt(q.previous_close)], ["Volume", compact(q.volume)], ["Value Traded", Number.isFinite(Number(q.value_traded)) ? compact(q.value_traded) : "--"], ["Day Range", dayRange], ["52 Week High", fmt(q.week_52_high)], ["52 Week Low", fmt(q.week_52_low)], ["VWAP", fmt(q.vwap)]];
-      byId("overview-stats").innerHTML = stats.map(([label, value]) => `<div class="stat-card"><div class="stat-label">${label}</div><div class="stat-value mono">${value}</div></div>`).join("");
+      if (byId("overview-stats")) byId("overview-stats").innerHTML = stats.map(([label, value]) => `<div class="stat-card"><div class="stat-label">${label}</div><div class="stat-value mono">${value}</div></div>`).join("");
     }
     function linePath(values, x, y, color) {
       const pts = values.map((v, i) => v === null ? null : `${x(i).toFixed(2)},${y(v).toFixed(2)}`).filter(Boolean);
@@ -458,6 +470,7 @@
     }
     function renderChart() {
       const svg = byId("candle-svg");
+      if (!svg) return;
       const rows = state.candles.slice(-160);
       if (!rows.length) {
         svg.innerHTML = "";
@@ -488,6 +501,7 @@
       svg.innerHTML = `<g opacity="0.7">${[0,1,2,3,4,5].map((i) => `<line x1="0" x2="${w}" y1="${top + i * priceH / 5}" y2="${top + i * priceH / 5}" stroke="#1f3552" stroke-width="1"/>`).join("")}</g>${candles}${state.indicators.ema20 ? linePath(sma(closes, 20), x, y, "var(--amber)") : ""}${state.indicators.ema50 ? linePath(sma(closes, 50), x, y, "#58a6ff") : ""}<text x="12" y="22" fill="#7f90a7" font-size="12" font-weight="900">${fmt(minP)} - ${fmt(maxP)}</text>`;
     }
     function renderTechnical() {
+      if (!byId("technical-list")) return;
       const closes = state.candles.map((r) => Number(r.close));
       const volumes = state.candles.map((r) => Number(r.volume) || 0);
       const ema20 = sma(closes, 20).filter((v) => v !== null).at(-1);
@@ -502,6 +516,7 @@
       byId("technical-list").innerHTML = metrics.map(([label, value]) => `<div class="metric-row"><span>${label}</span><strong class="mono">${value}</strong></div>`).join("");
     }
     function renderPerformance() {
+      if (!byId("performance-grid")) return;
       const closes = state.candles.map((r) => Number(r.close));
       const periods = [["1 day", 1], ["1 week", 5], ["1 month", 22], ["3 month", 66], ["6 month", 132], ["1 year", 252]];
       byId("performance-grid").innerHTML = periods.map(([label, count]) => {
@@ -510,6 +525,7 @@
       }).join("");
     }
     function renderPriceVolume() {
+      if (!byId("price-volume-list")) return;
       const q = state.quote || fallbackQuote();
       const volumes = state.candles.map((r) => Number(r.volume) || 0);
       const today = Number(q.volume) || volumes.at(-1);
@@ -520,13 +536,14 @@
     }
     function renderActionLinks() {
       const query = `?symbol=${encodeURIComponent(DETAIL.symbol)}&exchange=${encodeURIComponent(state.quote?.exchange || DETAIL.exchange)}`;
-      ["backtest-link", "hub-backtest-link"].forEach((id) => byId(id).href = `/dashboard${query}`);
-      ["historical-link", "hub-history-link"].forEach((id) => byId(id).href = `/historical-data${query}`);
-      ["algo-link", "hub-algo-link"].forEach((id) => byId(id).href = `/algo-trading${query}`);
-      byId("hub-optimizer-link").href = `/research${query}`;
-      byId("hub-portfolio-link").href = `/portfolio${query}`;
+      ["backtest-link", "hub-backtest-link"].forEach((id) => { if (byId(id)) byId(id).href = `/dashboard${query}`; });
+      ["historical-link", "hub-history-link"].forEach((id) => { if (byId(id)) byId(id).href = `/historical-data${query}`; });
+      ["algo-link", "hub-algo-link"].forEach((id) => { if (byId(id)) byId(id).href = `/algo-trading${query}`; });
+      if (byId("hub-optimizer-link")) byId("hub-optimizer-link").href = `/research${query}`;
+      if (byId("hub-portfolio-link")) byId("hub-portfolio-link").href = `/portfolio${query}`;
     }
     async function renderFundamentalsSection() {
+      if (!byId("fundamentals-message")) return;
       try {
         const data = await fetchJson(`/api/v1/market-watch/detail/${encodeURIComponent(DETAIL.symbol)}/fundamentals`);
         byId("fundamentals-message").textContent = data.message || "Fundamental data source not connected yet";
@@ -543,6 +560,7 @@
       }
     }
     async function renderOptionChainSection() {
+      if (!byId("option-chain-message")) return;
       try {
         const data = await fetchJson(`/api/v1/market-watch/detail/${encodeURIComponent(DETAIL.symbol)}/option-chain`);
         byId("option-chain-message").textContent = data.message || "Option chain data source not connected yet";
@@ -574,6 +592,7 @@
       return { available: true, message: null, support, resistance, overall_rating: score >= 3 ? "Strong Buy" : score >= 1 ? "Buy" : score <= -3 ? "Strong Sell" : score <= -1 ? "Sell" : "Neutral", signals: { trend, rsi: rsiValue, rsi_status: rsiValue >= 70 ? "Overbought" : rsiValue <= 30 ? "Oversold" : "Neutral", ema20, ema50, ema20_vs_ema50: ema50 ? (ema20 > ema50 ? "Above" : "Below") : "Insufficient data", ema200, price_vs_ema200: ema200 ? (latest > ema200 ? "Above" : "Below") : "Insufficient data", volume_spike: avgVol ? volumes.at(-1) > avgVol * 1.5 : false, breakout: latest >= resistance * 0.995, average_volume: avgVol } };
     }
     async function renderTechnicalSignalsSection() {
+      if (!byId("technical-rating")) return;
       let data = null;
       try {
         data = await fetchJson(`/api/v1/market-watch/detail/${encodeURIComponent(DETAIL.symbol)}/technical?exchange=${encodeURIComponent(state.quote?.exchange || DETAIL.exchange)}&symbol_token=${encodeURIComponent(token(DETAIL.symbol) || "")}`);
@@ -587,6 +606,7 @@
       byId("technical-signals-grid").innerHTML = rows.map(([label, value]) => `<div class="stat-card"><div class="stat-label">${label}</div><div class="stat-value mono">${value || "--"}</div></div>`).join("");
     }
     async function renderPeersSection() {
+      if (!byId("peers-message")) return;
       try {
         const data = await fetchJson(`/api/v1/market-watch/detail/${encodeURIComponent(DETAIL.symbol)}/peers`);
         const peers = data.peers || [];
@@ -607,8 +627,8 @@
       await Promise.all([renderFundamentalsSection(), renderOptionChainSection(), renderTechnicalSignalsSection(), renderPeersSection()]);
     }
     function renderControls() {
-      byId("timeframes").innerHTML = TIMEFRAMES.map((tf) => `<button class="tool-btn ${tf === state.interval ? "active" : ""}" type="button" data-timeframe="${tf}">${tf}</button>`).join("");
-      byId("range-bar").innerHTML = `<span class="muted" style="font-size:11px;font-weight:950;text-transform:uppercase;">Range</span>${RANGES.map((range) => `<button class="tool-btn ${range === state.range ? "active" : ""}" type="button" data-range="${range}">${range === "MAX" ? "Max" : range}</button>`).join("")}`;
+      if (byId("timeframes")) byId("timeframes").innerHTML = TIMEFRAMES.map((tf) => `<button class="tool-btn ${tf === state.interval ? "active" : ""}" type="button" data-timeframe="${tf}">${tf}</button>`).join("");
+      if (byId("range-bar")) byId("range-bar").innerHTML = `<span class="muted" style="font-size:11px;font-weight:950;text-transform:uppercase;">Range</span>${RANGES.map((range) => `<button class="tool-btn ${range === state.range ? "active" : ""}" type="button" data-range="${range}">${range === "MAX" ? "Max" : range}</button>`).join("")}`;
     }
     async function loadQuote() {
       try {
@@ -627,8 +647,10 @@
       renderQuote();
     }
     async function loadCandles() {
-      byId("chart-message").classList.add("show");
-      byId("chart-message").textContent = "Loading chart...";
+      if (byId("chart-message")) {
+        byId("chart-message").classList.add("show");
+        byId("chart-message").textContent = "Loading chart...";
+      }
       try {
         const data = DETAIL.assetType === "index" ? null : await postJson("/api/v1/market-watch/candles", candlesPayload());
         state.candles = data?.rows?.length ? data.rows : previewCandles();
@@ -664,9 +686,9 @@
           renderChart();
         }
       });
-      byId("add-watchlist-btn").addEventListener("click", () => setStatus("Open Market Watch to add this instrument to a watchlist."));
-      byId("hub-watchlist-btn").addEventListener("click", () => setStatus("Open Market Watch to add this instrument to a watchlist."));
-      byId("create-alert-btn").addEventListener("click", () => {
+      if (byId("add-watchlist-btn")) byId("add-watchlist-btn").addEventListener("click", () => setStatus("Open Market Watch to add this instrument to a watchlist."));
+      if (byId("hub-watchlist-btn")) byId("hub-watchlist-btn").addEventListener("click", () => setStatus("Open Market Watch to add this instrument to a watchlist."));
+      if (byId("create-alert-btn")) byId("create-alert-btn").addEventListener("click", () => {
         byId("action-hub-message").textContent = "Alerts engine not connected yet";
         setStatus("Alerts engine not connected yet");
       });
@@ -678,7 +700,7 @@
       setInterval(renderClock, 1000);
       setupInteractions();
       await loadQuote();
-      await loadCandles();
+      if (["overview", "technical"].includes(DETAIL.activeSection)) await loadCandles();
       await loadProfessionalSections();
     });
   </script>

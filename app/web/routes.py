@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.templating import Jinja2Templates
 from app.config.constants import ANGEL_SYMBOL_TO_TOKEN
 from app.config.settings import get_settings
@@ -7,6 +7,40 @@ from app.services.strategies.strategy_registry import StrategyRegistry
 settings = get_settings()
 templates = Jinja2Templates(directory=str(settings.templates_dir))
 router = APIRouter()
+
+DETAIL_SECTIONS = {
+    "overview",
+    "fundamentals",
+    "option-chain",
+    "technical",
+    "peers",
+    "actions",
+}
+
+
+def render_market_watch_detail(request: Request, symbol: str, asset_type: str, section: str = "overview"):
+    active_section = section.strip().lower()
+    if active_section not in DETAIL_SECTIONS:
+        raise HTTPException(status_code=404, detail="Detail section not found")
+
+    normalized_symbol = symbol.strip().upper()
+    exchange = "NSE"
+    if asset_type == "index":
+        exchange = "BSE" if normalized_symbol == "SENSEX" else "NSE"
+
+    return templates.TemplateResponse(
+        request=request,
+        name="market_watch/detail.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - {normalized_symbol} Detail",
+            "angel_symbol_map": ANGEL_SYMBOL_TO_TOKEN,
+            "symbol": normalized_symbol,
+            "asset_type": asset_type,
+            "exchange": exchange,
+            "active_section": active_section,
+        },
+    )
 
 @router.get("/")
 def home(request: Request):
@@ -50,36 +84,22 @@ def market_watch_large_chart_page(request: Request):
 
 @router.get("/market-watch/stock/{symbol}")
 def market_watch_stock_detail_page(request: Request, symbol: str):
-    normalized_symbol = symbol.strip().upper()
-    return templates.TemplateResponse(
-        request=request,
-        name="market_watch/detail.html",
-        context={
-            "request": request,
-            "title": f"{settings.app_name} - {normalized_symbol} Detail",
-            "angel_symbol_map": ANGEL_SYMBOL_TO_TOKEN,
-            "symbol": normalized_symbol,
-            "asset_type": "stock",
-            "exchange": "NSE",
-        },
-    )
+    return render_market_watch_detail(request, symbol, "stock")
+
+
+@router.get("/market-watch/stock/{symbol}/{section}")
+def market_watch_stock_detail_section_page(request: Request, symbol: str, section: str):
+    return render_market_watch_detail(request, symbol, "stock", section)
 
 
 @router.get("/market-watch/index/{symbol}")
 def market_watch_index_detail_page(request: Request, symbol: str):
-    normalized_symbol = symbol.strip().upper()
-    return templates.TemplateResponse(
-        request=request,
-        name="market_watch/detail.html",
-        context={
-            "request": request,
-            "title": f"{settings.app_name} - {normalized_symbol} Detail",
-            "angel_symbol_map": ANGEL_SYMBOL_TO_TOKEN,
-            "symbol": normalized_symbol,
-            "asset_type": "index",
-            "exchange": "BSE" if normalized_symbol == "SENSEX" else "NSE",
-        },
-    )
+    return render_market_watch_detail(request, symbol, "index")
+
+
+@router.get("/market-watch/index/{symbol}/{section}")
+def market_watch_index_detail_section_page(request: Request, symbol: str, section: str):
+    return render_market_watch_detail(request, symbol, "index", section)
 
 
 @router.get("/dashboard")
