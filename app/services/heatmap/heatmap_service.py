@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from app.schemas.heatmap_schema import HeatmapRunRequest
+from app.schemas.heatmap_schema import HeatmapRunRequest, HeatmapSectorRequest
 
 
 class HeatmapService:
@@ -15,6 +15,25 @@ class HeatmapService:
     SIZE_BY = ["Market Cap", "Volume", "Turnover", "Equal Weight"]
     COLOR_BY = ["% Change", "Volume Change", "Relative Volume", "RSI", "Sector Strength"]
     TIMEFRAMES = ["1D", "1W", "1M", "3M", "6M", "1Y"]
+    SECTOR_SLUGS = {
+        "FINANCIAL SERVICES": "financial-services",
+        "INFORMATION TECHNOLOGY": "information-technology",
+        "ENERGY": "energy",
+        "AUTOMOBILE": "automobile",
+        "CONSUMER GOODS": "consumer-goods",
+        "PHARMA & HEALTHCARE": "pharma-healthcare",
+        "METALS & MINING": "metals-mining",
+        "CONSTRUCTION": "construction",
+        "TELECOM": "telecom",
+        "CHEMICALS": "chemicals",
+        "RETAIL": "retail",
+        "MEDIA": "media",
+        "REALTY": "realty",
+        "INDUSTRIALS": "industrials",
+        "TEXTILES": "textiles",
+        "AGRI": "agri",
+        "CONSUMER DURABLES": "consumer-durables",
+    }
 
     SAMPLE_STOCKS: list[dict[str, Any]] = [
         {"symbol": "HDFCBANK", "name": "HDFC Bank", "sector": "FINANCIAL SERVICES", "price": 1548.2, "change_pct": -0.42, "market_cap_cr": 1175000, "volume": 11400000, "rsi": 48.6},
@@ -122,6 +141,64 @@ class HeatmapService:
             "data_source_note": self.DATA_SOURCE_NOTE,
         }
 
+    def sectors(self) -> list[dict[str, Any]]:
+        stocks = [self._decorate_stock(row, HeatmapRunRequest()) for row in self.SAMPLE_STOCKS]
+        return [
+            {
+                "name": sector["name"],
+                "slug": sector["slug"],
+                "stock_count": len(sector["stocks"]),
+                "change_pct": sector["change_pct"],
+                "market_cap_cr": sector["market_cap_cr"],
+                "volume": sector["volume"],
+            }
+            for sector in self._sectors(stocks)
+        ]
+
+    def sector_detail(self, sector_slug: str, request: HeatmapSectorRequest) -> dict[str, Any] | None:
+        sector_name = self._sector_name_for_slug(sector_slug)
+        if not sector_name:
+            return None
+        synthetic_request = HeatmapRunRequest(
+            universe=request.universe,
+            size_by=request.size_by,
+            color_by=request.color_by,
+            timeframe=request.timeframe,
+        )
+        stocks = [
+            self._decorate_stock(row, synthetic_request)
+            for row in self.SAMPLE_STOCKS
+            if row["sector"] == sector_name
+        ]
+        if not stocks:
+            return None
+        sector = self._sectors(stocks)[0]
+        breadth = self._breadth(stocks)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S IST")
+        return {
+            "sector": {
+                "name": sector["name"],
+                "slug": sector["slug"],
+                "universe": request.universe,
+                "stock_count": len(stocks),
+                "average_change_pct": sector["change_pct"],
+                "market_cap_cr": sector["market_cap_cr"],
+                "volume": sector["volume"],
+            },
+            "summary": self._summary(stocks, breadth, synthetic_request, timestamp),
+            "stocks": sorted(stocks, key=lambda row: row["size_value"], reverse=True),
+            "gainers": sorted(stocks, key=lambda row: row["change_pct"], reverse=True)[:5],
+            "losers": sorted(stocks, key=lambda row: row["change_pct"])[:5],
+            "largest": sorted(stocks, key=lambda row: row["market_cap_cr"], reverse=True)[:10],
+            "most_active": sorted(stocks, key=lambda row: row["volume"], reverse=True)[:10],
+            "breadth": breadth,
+            "sector_performance": [{"label": row["symbol"], "value": row["change_pct"], "market_cap_cr": row["market_cap_cr"]} for row in sorted(stocks, key=lambda item: item["change_pct"], reverse=True)],
+            "distributions": self._sector_distributions(stocks),
+            "indices": self._indices(),
+            "timestamp": timestamp,
+            "data_source_note": self.DATA_SOURCE_NOTE,
+        }
+
     def _decorate_stock(self, row: dict[str, Any], request: HeatmapRunRequest) -> dict[str, Any]:
         item = row.copy()
         item["turnover_cr"] = round(item["price"] * item["volume"] / 10000000, 2)
@@ -161,6 +238,7 @@ class HeatmapService:
             sectors.append(
                 {
                     "name": name,
+                    "slug": self.SECTOR_SLUGS.get(name, self._slugify(name)),
                     "change_pct": round(weighted_change, 2),
                     "market_cap_cr": round(market_cap, 2),
                     "volume": volume,
@@ -168,6 +246,41 @@ class HeatmapService:
                 }
             )
         return sorted(sectors, key=lambda sector: sector["market_cap_cr"], reverse=True)
+
+    def _sector_distributions(self, stocks: list[dict[str, Any]]) -> dict[str, Any]:
+        total_cap = max(sum(float(row["market_cap_cr"]) for row in stocks), 1)
+        total_volume = max(sum(int(row["volume"]) for row in stocks), 1)
+        return {
+            "market_cap": [
+                {"label": "> Rs 500,000 Cr", "value": sum(1 for row in stocks if row["market_cap_cr"] > 500000)},
+                {"label": "Rs 100,000 - Rs 500,000 Cr", "value": sum(1 for row in stocks if 100000 <= row["market_cap_cr"] <= 500000)},
+                {"label": "Rs 50,000 - Rs 100,000 Cr", "value": sum(1 for row in stocks if 50000 <= row["market_cap_cr"] < 100000)},
+                {"label": "< Rs 50,000 Cr", "value": sum(1 for row in stocks if row["market_cap_cr"] < 50000)},
+            ],
+            "volume": [
+                {"label": "High Activity", "value": sum(1 for row in stocks if row["volume"] > 5000000)},
+                {"label": "Medium Activity", "value": sum(1 for row in stocks if 1000000 <= row["volume"] <= 5000000)},
+                {"label": "Low Activity", "value": sum(1 for row in stocks if row["volume"] < 1000000)},
+            ],
+            "constituent_weights": [
+                {"label": row["symbol"], "value": round((float(row["market_cap_cr"]) / total_cap) * 100, 2)}
+                for row in sorted(stocks, key=lambda item: item["market_cap_cr"], reverse=True)[:10]
+            ],
+            "volume_share": [
+                {"label": row["symbol"], "value": round((int(row["volume"]) / total_volume) * 100, 2)}
+                for row in sorted(stocks, key=lambda item: item["volume"], reverse=True)[:10]
+            ],
+        }
+
+    def _sector_name_for_slug(self, sector_slug: str) -> str | None:
+        normalized = str(sector_slug or "").strip().lower()
+        for name, slug in self.SECTOR_SLUGS.items():
+            if slug == normalized:
+                return name
+        return None
+
+    def _slugify(self, value: str) -> str:
+        return value.lower().replace("&", "").replace("/", " ").replace("  ", " ").strip().replace(" ", "-")
 
     def _breadth(self, stocks: list[dict[str, Any]]) -> dict[str, Any]:
         advancing = sum(1 for row in stocks if row["change_pct"] > 0.05)

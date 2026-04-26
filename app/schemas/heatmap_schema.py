@@ -49,6 +49,7 @@ class HeatmapStock(BaseModel):
 
 class HeatmapSector(BaseModel):
     name: str
+    slug: str
     change_pct: float
     market_cap_cr: float
     volume: int
@@ -70,3 +71,40 @@ class HeatmapRunResponse(BaseModel):
     data_source_note: str = Field(
         default="Heatmap data is based on local sample data for UI demonstration. Real-time exchange integration coming soon."
     )
+
+
+class HeatmapSectorRequest(BaseModel):
+    size_by: Literal["Market Cap", "Volume", "Equal Weight"] = "Market Cap"
+    color_by: Literal["% Change", "Volume Change", "Relative Volume"] = "% Change"
+    timeframe: HeatmapTimeframe = "1D"
+    universe: HeatmapUniverse = "Nifty 500"
+
+    @field_validator("size_by", "color_by", "timeframe", "universe", mode="before")
+    @classmethod
+    def normalize_sector_request_text(cls, value):
+        return str(value or "").strip()
+
+
+class HeatmapSectorListItem(BaseModel):
+    name: str
+    slug: str
+    stock_count: int
+    change_pct: float
+    market_cap_cr: float
+    volume: int
+
+
+class HeatmapSectorDetailResponse(BaseModel):
+    sector: dict[str, Any]
+    summary: dict[str, Any]
+    stocks: list[HeatmapStock]
+    gainers: list[HeatmapStock]
+    losers: list[HeatmapStock]
+    largest: list[HeatmapStock]
+    most_active: list[HeatmapStock]
+    breadth: dict[str, Any]
+    sector_performance: list[dict[str, Any]]
+    distributions: dict[str, Any]
+    indices: list[dict[str, Any]]
+    timestamp: str
+    data_source_note: str

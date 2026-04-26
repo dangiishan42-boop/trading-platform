@@ -42,6 +42,29 @@ def test_heatmap_page_loads():
     assert "Heatmap data is based on local sample data for UI demonstration" in response.text
 
 
+def test_heatmap_financial_services_sector_page_loads():
+    response = client.get("/heatmap/sector/financial-services")
+
+    assert response.status_code == 200
+    assert "Sector Heatmap" in response.text
+    assert "Top Gainers in Sector" in response.text
+    assert "Back to Full Heatmap" in response.text
+
+
+def test_heatmap_information_technology_sector_page_loads():
+    response = client.get("/heatmap/sector/information-technology")
+
+    assert response.status_code == 200
+    assert "Sector Heatmap" in response.text
+    assert "Largest by Market Cap" in response.text
+
+
+def test_heatmap_invalid_sector_page_returns_404():
+    response = client.get("/heatmap/sector/not-a-sector")
+
+    assert response.status_code == 404
+
+
 def test_market_watch_stock_detail_page_loads():
     response = client.get("/market-watch/stock/RELIANCE")
 

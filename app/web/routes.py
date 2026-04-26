@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.templating import Jinja2Templates
 from app.config.constants import ANGEL_SYMBOL_TO_TOKEN
 from app.config.settings import get_settings
+from app.schemas.heatmap_schema import HeatmapSectorRequest
+from app.services.heatmap.heatmap_service import HeatmapService
 from app.services.strategies.strategy_registry import StrategyRegistry
 
 settings = get_settings()
@@ -88,6 +90,22 @@ def heatmap_page(request: Request):
         context={
             "request": request,
             "title": f"{settings.app_name} - Market Heatmap",
+        },
+    )
+
+
+@router.get("/heatmap/sector/{sector_slug}")
+def heatmap_sector_page(request: Request, sector_slug: str):
+    preview = HeatmapService().sector_detail(sector_slug, HeatmapSectorRequest())
+    if preview is None:
+        raise HTTPException(status_code=404, detail="Sector not found")
+    return templates.TemplateResponse(
+        request=request,
+        name="heatmap/sector_detail.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - Sector Heatmap",
+            "sector_slug": sector_slug,
         },
     )
 

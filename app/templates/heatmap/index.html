@@ -100,12 +100,19 @@
     .panel-body { padding: 10px; }
     .heatmap-panel { min-height: 660px; }
     .heatmap-grid { display: grid; grid-template-columns: repeat(6, minmax(120px, 1fr)); grid-auto-rows: 128px; gap: 6px; min-height: 590px; }
-    .sector-box { min-width: 0; min-height: 0; border: 1px solid rgba(44,82,125,.62); border-radius: 7px; background: rgba(5,11,20,.55); padding: 6px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 5px; overflow: hidden; }
+    .sector-box { min-width: 0; min-height: 0; border: 1px solid rgba(44,82,125,.62); border-radius: 7px; background: rgba(5,11,20,.55); display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; }
     .sector-large { grid-column: span 2; grid-row: span 2; }
     .sector-wide { grid-column: span 2; }
-    .sector-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; color: #aebbd0; font-size: 10px; font-weight: 950; text-transform: uppercase; min-width: 0; }
+    .sector-head { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 6px; color: #aebbd0; font-size: 10px; font-weight: 950; text-transform: uppercase; min-width: 0; padding: 6px; background: linear-gradient(180deg, rgba(11,21,36,.98), rgba(7,17,31,.94)); border-bottom: 1px solid rgba(44,82,125,.42); }
+    .sector-link { display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: #d8e5f5; }
+    .sector-link:hover { color: #fff; }
+    .sector-arrow { color: var(--purple); font-size: 12px; font-weight: 950; }
     .sector-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tiles { min-height: 0; display: flex; flex-wrap: wrap; gap: 4px; align-content: stretch; }
+    .tiles { min-height: 0; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; overflow: auto; padding: 6px; scrollbar-width: thin; scrollbar-color: rgba(139,92,246,.45) rgba(5,11,20,.45); }
+    .tiles::-webkit-scrollbar { width: 7px; height: 7px; }
+    .tiles::-webkit-scrollbar-track { background: rgba(5,11,20,.45); border-radius: 999px; }
+    .tiles::-webkit-scrollbar-thumb { background: rgba(139,92,246,.45); border-radius: 999px; border: 1px solid rgba(47,129,247,.28); }
+    .tiles::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,.72); }
     .stock-tile { position: relative; min-width: 64px; min-height: 48px; flex: 1 1 var(--basis, 80px); border: 1px solid rgba(255,255,255,.08); border-radius: 5px; padding: 5px; display: grid; align-content: space-between; color: #fff; overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
     .stock-tile:hover { outline: 2px solid rgba(139,92,246,.78); z-index: 2; }
     .tile-symbol { font-size: 11px; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -371,7 +378,7 @@
       $("heatmap-grid").innerHTML = state.data.sectors.map((sector, index) => {
         const boxClass = index < 4 ? "sector-large" : index < 8 ? "sector-wide" : "";
         return `<div class="sector-box ${boxClass}">
-          <div class="sector-head"><span class="sector-name">${esc(sector.name)}</span><span class="${cls(sector.change_pct)} mono">${pct(sector.change_pct)}</span></div>
+          <div class="sector-head"><a class="sector-link" href="/heatmap/sector/${encodeURIComponent(sector.slug)}"><span class="sector-name">${esc(sector.name)}</span><span class="sector-arrow">-></span><span class="muted">View Sector</span></a><span class="${cls(sector.change_pct)} mono">${pct(sector.change_pct)}</span></div>
           <div class="tiles">${sector.stocks.map((stock) => `<a class="stock-tile" href="/market-watch/stock/${encodeURIComponent(stock.symbol)}" style="--basis:${basis(stock, sector)}px;background:${heatColor(stock.color_value)}" data-stock="${esc(stock.symbol)}">
             <div><div class="tile-symbol">${esc(stock.symbol)}</div><div class="tile-meta">${esc(stock.sector)}</div></div>
             <div><div class="tile-change mono">${pct(stock.change_pct)}</div><div class="tile-meta mono">Rs ${fmt(stock.price)} | ${$("size-by").value === "Volume" ? compact(stock.volume) : `${fmt(stock.market_cap_cr, 0)} Cr`}</div></div>
