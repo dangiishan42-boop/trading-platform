@@ -4,6 +4,7 @@ from app.config.constants import ANGEL_SYMBOL_TO_TOKEN
 from app.config.settings import get_settings
 from app.schemas.heatmap_schema import HeatmapSectorRequest
 from app.services.heatmap.heatmap_service import HeatmapService
+from app.services.news.news_service import NewsService
 from app.services.strategies.strategy_registry import StrategyRegistry
 
 settings = get_settings()
@@ -92,6 +93,24 @@ def heatmap_page(request: Request):
             "title": f"{settings.app_name} - Market Heatmap",
         },
     )
+
+
+@router.get("/news")
+def news_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="news/index.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - News & Insights Terminal",
+            "news_data": NewsService().page_data(),
+        },
+    )
+
+
+@router.get("/news-insights")
+def news_insights_page(request: Request):
+    return news_page(request)
 
 
 @router.get("/heatmap/sector/{sector_slug}")

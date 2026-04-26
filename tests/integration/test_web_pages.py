@@ -42,6 +42,24 @@ def test_heatmap_page_loads():
     assert "Heatmap data is based on local sample data for UI demonstration" in response.text
 
 
+def test_news_page_loads():
+    response = client.get("/news")
+
+    assert response.status_code == 200
+    assert "NEWS & INSIGHTS TERMINAL" in response.text
+    assert "Top News" in response.text
+    assert "FII / DII Flows" in response.text
+    assert "LIVE NEWS TICKER" in response.text
+    assert "News data is local/sample for UI demonstration" in response.text
+
+
+def test_news_insights_alias_loads():
+    response = client.get("/news-insights")
+
+    assert response.status_code == 200
+    assert "NEWS & INSIGHTS TERMINAL" in response.text
+
+
 def test_heatmap_financial_services_sector_page_loads():
     response = client.get("/heatmap/sector/financial-services")
 
@@ -80,7 +98,12 @@ def test_core_pages_still_load_after_heatmap_upgrade():
     for path, expected in [
         ("/market-watch", "Live Market Watch"),
         ("/screener", "Enterprise grade stock screener"),
+        ("/heatmap", "Market Heatmap"),
         ("/dashboard", "Backtest Dashboard"),
+        ("/research", "Research"),
+        ("/portfolio", "Portfolio Dashboard"),
+        ("/historical-data", "Historical Data"),
+        ("/algo-trading", "Algo Trading"),
     ]:
         response = client.get(path)
 
