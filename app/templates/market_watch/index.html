@@ -297,6 +297,10 @@
     .panel-body { padding: 9px; }
 
     .heatmap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    #heatmap-grid { max-height: 360px; overflow-y: auto; padding-right: 3px; }
+    #heatmap-grid::-webkit-scrollbar { width: 8px; }
+    #heatmap-grid::-webkit-scrollbar-track { background: #050b14; border-radius: 999px; }
+    #heatmap-grid::-webkit-scrollbar-thumb { background: #2c527d; border-radius: 999px; }
     .sector-block { border: 1px solid rgba(31,53,82,0.72); border-radius: 7px; padding: 7px; background: rgba(5,11,20,0.46); }
     .sector-title { color: #9fb0c7; font-size: 10px; font-weight: 950; margin-bottom: 6px; }
     .tile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
@@ -409,6 +413,11 @@
     .chart-symbol-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
     .chart-symbol { font-size: 23px; font-weight: 950; color: #eef6ff; }
     .badge { border: 1px solid var(--line-2); border-radius: 6px; background: rgba(47,129,247,0.12); color: #bfd0e6; padding: 3px 7px; font-size: 11px; font-weight: 900; }
+    .source-badge { display:inline-flex;align-items:center;min-height:18px;border:1px solid var(--line-2);border-radius:5px;background:#07111f;color:#bfd0e6;padding:1px 5px;font-size:9px;font-weight:950;text-transform:uppercase;white-space:nowrap; }
+    .source-badge.live { border-color:rgba(0,193,118,.52);color:#9ff3ca; }
+    .source-badge.cached { border-color:rgba(245,184,75,.52);color:#ffd98a; }
+    .source-badge.sample { border-color:rgba(47,129,247,.6);color:#a9ccff; }
+    .source-badge.unavailable, .source-badge.error { border-color:rgba(255,77,94,.45);color:#ffb3bb; }
     .chart-stat-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
     .chart-stat { border: 1px solid rgba(44,82,125,0.65); border-radius: 6px; background: rgba(5,11,20,0.54); padding: 6px 7px; min-width: 0; }
     .chart-stat-label { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 950; }
@@ -679,6 +688,7 @@
                   <span class="chart-symbol" id="chart-symbol">RELIANCE</span>
                   <span class="badge" id="chart-exchange">NSE</span>
                   <span class="badge" id="chart-timeframe">5m</span>
+                  <span class="source-badge unavailable" id="chart-source">Unavailable</span>
                   <span class="muted" id="chart-company">Reliance Industries</span>
                 </div>
               </div>
@@ -740,7 +750,7 @@
             </div>
             <div class="chart-footer">
               <div id="chart-clock">IST --:--:--</div>
-              <div class="muted">Volume SMA 9 | EMA 20 close | EMA 50 close</div>
+              <div class="muted" id="chart-candle-source">Candles: Unavailable</div>
               <div class="footer-controls">
                 <button class="tool-btn" type="button" data-footer-toggle="percent">%</button>
                 <button class="tool-btn" type="button" data-footer-toggle="log">Log</button>
@@ -800,11 +810,11 @@
           </section>
           <section class="panel" id="stocks">
             <div class="panel-head"><div class="panel-title">Top Gainers</div></div>
-            <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Chg</th><th>Chg %</th></tr></thead><tbody id="gainers-body"></tbody></table></div>
+            <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Chg</th><th>Chg %</th><th>Vol</th></tr></thead><tbody id="gainers-body"></tbody></table></div>
           </section>
           <section class="panel">
             <div class="panel-head"><div class="panel-title">Top Losers</div></div>
-            <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Chg</th><th>Chg %</th></tr></thead><tbody id="losers-body"></tbody></table></div>
+            <div class="panel-body"><table class="table"><thead><tr><th>Symbol</th><th>LTP</th><th>Chg</th><th>Chg %</th><th>Vol</th></tr></thead><tbody id="losers-body"></tbody></table></div>
           </section>
           <section class="panel" id="alerts">
             <div class="panel-head"><div class="panel-title">Alerts & Signals</div></div>
@@ -829,23 +839,7 @@
       BAJFINANCE: "Bajaj Finance",
       WIPRO: "Wipro",
     };
-    const TIMEFRAMES = ["1m", "3m", "5m", "15m", "30m", "1D", "1W", "1M"];
-    const GAINERS = ["ADANIENT", "TATAMOTORS", "ONGC", "IOC", "JSWSTEEL"];
-    const LOSERS = ["NESTLEIND", "BAJFINANCE", "TITAN", "MARUTI", "WIPRO"];
-    const INDEX_HEATMAP = [
-      { name: "NIFTY 50", value: 22419.40, change: 84.80, change_pct: 0.38 },
-      { name: "SENSEX", value: 73890.20, change: 162.40, change_pct: 0.22 },
-      { name: "BANK NIFTY", value: 48120.50, change: -67.45, change_pct: -0.14 },
-      { name: "FINNIFTY", value: 21440.90, change: 38.55, change_pct: 0.18 },
-      { name: "NIFTY IT", value: 34180.25, change: 382.40, change_pct: 1.12 },
-      { name: "NIFTY AUTO", value: 21890.10, change: -74.70, change_pct: -0.34 },
-      { name: "NIFTY FMCG", value: 56320.75, change: 129.55, change_pct: 0.23 },
-      { name: "NIFTY PHARMA", value: 19082.45, change: 78.10, change_pct: 0.41 },
-      { name: "NIFTY METAL", value: 8924.80, change: -46.85, change_pct: -0.52 },
-      { name: "NIFTY ENERGY", value: 39612.30, change: -71.35, change_pct: -0.18 },
-      { name: "NIFTY REALTY", value: 948.65, change: 8.54, change_pct: 0.91 },
-      { name: "NIFTY MIDCAP", value: 50284.20, change: 176.00, change_pct: 0.35 },
-    ];
+    const TIMEFRAMES = ["1m", "3m", "5m", "15m", "30m", "1H", "1D", "1W", "1M"];
     const state = {
       symbol: "RELIANCE",
       exchange: "NSE",
@@ -859,6 +853,7 @@
       activeWatchlistId: null,
       watchlistQuotes: {},
       watchlistLoading: false,
+      summary: null,
       indicators: { ema20: true, ema50: true, volumeSma: false },
       footer: { percent: false, log: false, auto: true },
     };
@@ -866,7 +861,8 @@
     function byId(id) { return document.getElementById(id); }
     function normalize(value) { return String(value || "").trim().toUpperCase().replace(/\s+/g, ""); }
     function routeSymbol(value) { return String(value || "").trim().toUpperCase().replace(/[\s_-]+/g, ""); }
-    function isIndexSymbol(value) { return INDEX_HEATMAP.some((item) => routeSymbol(item.name) === routeSymbol(value)) || ["NIFTY50", "SENSEX", "BANKNIFTY", "FINNIFTY"].includes(routeSymbol(value)); }
+    function indexRows() { return (state.summary && state.summary.indices) || []; }
+    function isIndexSymbol(value) { return indexRows().some((item) => routeSymbol(item.name) === routeSymbol(value) || routeSymbol(item.symbol) === routeSymbol(value)) || ["NIFTY50", "SENSEX", "BANKNIFTY", "FINNIFTY"].includes(routeSymbol(value)); }
     function detailPath(symbol, type = null) {
       const route = routeSymbol(symbol);
       return `/market-watch/${type || (isIndexSymbol(route) ? "index" : "stock")}/${route}`;
@@ -887,48 +883,20 @@
       return Number.isFinite(n) ? `${n >= 0 ? "+" : ""}${n.toFixed(2)}%` : "--";
     }
     function cls(value) { return Number(value) >= 0 ? "positive" : "negative"; }
-    function seed(symbol) { return [...String(symbol)].reduce((sum, ch) => sum + ch.charCodeAt(0), 0); }
+    function sourceClass(value) {
+      const text = String(value || "Unavailable").toLowerCase();
+      if (text.includes("live")) return "live";
+      if (text.includes("cached")) return "cached";
+      if (text.includes("sample")) return "sample";
+      if (text.includes("error")) return "error";
+      return "unavailable";
+    }
+    function badge(value) {
+      const text = escapeHtml(value || "Unavailable");
+      return `<span class="source-badge ${sourceClass(value)}">${text}</span>`;
+    }
     function mappedToken(symbol) { return STATIC_SYMBOL_MAP[normalize(symbol)] || ""; }
     function watchlistQuoteKey(item) { return `${item.exchange || "NSE"}:${normalize(item.symbol)}`; }
-    function fallbackQuote(symbol = state.symbol) {
-      const s = seed(symbol);
-      const prev = 400 + (s % 4200);
-      const chgPct = ((s % 58) - 25) / 10;
-      const latest = prev * (1 + chgPct / 100);
-      const volume = 200000 + s * 245;
-      return {
-        symbol,
-        stock_name: SYMBOL_NAMES[symbol] || `${symbol} Equity`,
-        exchange: state.exchange,
-        symbol_token: mappedToken(symbol),
-        latest_price: latest,
-        change: latest - prev,
-        change_pct: chgPct,
-        open: prev * 0.997,
-        high: latest * 1.012,
-        low: latest * 0.984,
-        previous_close: prev,
-        volume,
-        value_traded: latest * volume,
-      };
-    }
-    function previewCandles(symbol = state.symbol, count = 140) {
-      const s = seed(symbol);
-      let price = 400 + (s % 4200);
-      const rows = [];
-      const now = Date.now();
-      for (let i = count - 1; i >= 0; i -= 1) {
-        const open = price;
-        const move = Math.sin((count - i + s) / 8) * 0.7 + Math.cos((count - i) / 14) * 0.38;
-        const close = Math.max(10, open * (1 + move / 185));
-        const high = Math.max(open, close) * (1 + (0.25 + ((i + s) % 7) / 24) / 100);
-        const low = Math.min(open, close) * (1 - (0.22 + ((i + s) % 6) / 25) / 100);
-        const volume = 90000 + ((i + 1) * (s % 97)) + Math.abs(close - open) * 12000;
-        rows.push({ datetime: new Date(now - i * 300000).toISOString(), open, high, low, close, volume });
-        price = close;
-      }
-      return rows;
-    }
     async function postJson(url, payload) {
       const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const data = await res.json();
@@ -966,15 +934,51 @@
       el.className = `watchlist-message ${isError ? "negative" : ""}`.trim();
     }
 
+    async function loadSummary() {
+      setSummaryLoading();
+      try {
+        state.summary = await fetchJson("/api/v1/market-watch/summary");
+        renderSummary();
+        setStatus(`Market summary loaded - ${state.summary.data_source_summary?.primary_badge || "Unavailable"}`);
+      } catch (error) {
+        state.summary = null;
+        setStatus(`Market summary unavailable: ${error.message}`, true);
+        renderSummaryError(error.message);
+      }
+    }
+    function setSummaryLoading() {
+      byId("ticker-strip").innerHTML = `<div class="ticker-card"><div class="ticker-name">Indices</div><div class="ticker-value">Loading...</div></div>`;
+      byId("heatmap-grid").innerHTML = `<div class="muted">Loading indices...</div>`;
+      byId("gainers-body").innerHTML = `<tr><td colspan="5" class="muted">Loading...</td></tr>`;
+      byId("losers-body").innerHTML = `<tr><td colspan="5" class="muted">Loading...</td></tr>`;
+      byId("breadth-text").innerHTML = `<div class="muted">Loading market breadth...</div>`;
+    }
+    function renderSummary() {
+      renderTicker();
+      renderHeatmap();
+      renderSectorBars("sector-performance");
+      renderSectorBars("sector-performance-bottom");
+      renderFiiDii("activity-bars");
+      renderFiiDii("activity-bars-bottom");
+      renderRightTables();
+      renderBottomWidgets();
+    }
+    function renderSummaryError(message) {
+      byId("heatmap-grid").innerHTML = `<div class="muted">Indices unavailable. ${escapeHtml(message)}</div>`;
+      byId("gainers-body").innerHTML = `<tr><td colspan="5" class="muted">Gainers unavailable.</td></tr>`;
+      byId("losers-body").innerHTML = `<tr><td colspan="5" class="muted">Losers unavailable.</td></tr>`;
+      byId("activity-bars").innerHTML = `<div class="muted">FII/DII live data source not connected yet</div>`;
+      byId("activity-bars-bottom").innerHTML = `<div class="muted">FII/DII live data source not connected yet</div>`;
+    }
     function renderTicker() {
-      const items = [
-        ["NIFTY 50", 22419.4, 0.38], ["SENSEX", 73890.2, 0.22], ["BANK NIFTY", 48120.5, -0.14], ["FINNIFTY", 21440.9, 0.18],
-        ["INDIA VIX", 13.42, -1.78], ["USD/INR", 83.31, 0.04], ["GOLD", 71920, 0.41], ["CRUDE OIL", 6985, -0.32],
-      ];
-      byId("ticker-strip").innerHTML = items.map(([name, value, change], index) => {
+      const items = indexRows();
+      byId("ticker-strip").innerHTML = items.map((item, index) => {
+        const name = item.name || item.symbol;
+        const value = item.latest_price;
+        const change = item.change_pct;
         const points = Array.from({ length: 18 }, (_, i) => `${(i / 17) * 42},${22 - (Math.sin((i + index) / 3) * 7 + 11)}`).join(" ");
-        return `<a class="ticker-card" href="${detailPath(name, "index")}"><div><div class="ticker-name">${name}</div><div class="ticker-value mono">${fmt(value)}</div><div class="ticker-chg ${cls(change)}">${change >= 0 ? "UP" : "DN"} ${pct(change)}</div></div><svg class="spark" viewBox="0 0 42 25"><polyline points="${points}" fill="none" stroke="${change >= 0 ? "var(--green)" : "var(--red)"}" stroke-width="2"/></svg></a>`;
-      }).join("");
+        return `<a class="ticker-card" href="${detailPath(item.symbol || name, "index")}"><div><div class="ticker-name">${escapeHtml(name)}</div><div class="ticker-value mono">${fmt(value)}</div><div class="ticker-chg ${cls(change)}">${Number(change) >= 0 ? "UP" : "DN"} ${pct(change)} ${badge(item.data_source_badge)}</div></div><svg class="spark" viewBox="0 0 42 25"><polyline points="${points}" fill="none" stroke="${Number(change) >= 0 ? "var(--green)" : "var(--red)"}" stroke-width="2"/></svg></a>`;
+      }).join("") || `<div class="ticker-card"><div class="ticker-name">Indices</div><div class="ticker-value mono">--</div><div class="ticker-chg">${badge("Unavailable")}</div></div>`;
     }
     function renderClock() {
       const time = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date());
@@ -999,11 +1003,10 @@
       box.innerHTML = "";
       if (!state.instruments.length) { box.classList.remove("open"); return; }
       state.instruments.forEach((item) => {
-        const quote = fallbackQuote(item.symbol);
         const row = document.createElement("button");
         row.type = "button";
         row.className = "result-row";
-        row.innerHTML = `<strong>${item.symbol}</strong><span>${item.exchange}</span><span class="muted">${item.name || item.symbol}<br>Token ${item.token}</span><span class="${cls(quote.change_pct)}">${pct(quote.change_pct)}</span>`;
+        row.innerHTML = `<strong>${item.symbol}</strong><span>${item.exchange}</span><span class="muted">${item.name || item.symbol}<br>Token ${item.token}</span><span class="muted">--</span>`;
         row.addEventListener("click", () => selectSymbol(item));
         box.appendChild(row);
       });
@@ -1022,13 +1025,21 @@
     async function loadQuote() {
       try {
         const quote = await postJson("/api/v1/market-watch/quote", requestPayload());
-        state.quote = { ...fallbackQuote(state.symbol), ...quote };
+        state.quote = quote;
       } catch (error) {
-        state.quote = { ...fallbackQuote(state.symbol), data_source_badge: "Sample", data_source_note: `Quote API unavailable: ${error.message}. Showing safe preview data.` };
+        state.quote = {
+          symbol: state.symbol,
+          stock_name: SYMBOL_NAMES[state.symbol] || state.symbol,
+          exchange: state.exchange,
+          symbol_token: state.token,
+          available: false,
+          data_source_badge: "Error",
+          data_source_note: `Quote API unavailable: ${error.message}`,
+        };
       }
       renderChartHeader();
       renderRightTables();
-      setStatus(`${state.quote.data_source_badge || "Sample"} - ${state.quote.data_source_note || `Loaded ${state.symbol} quote`}`);
+      setStatus(`${state.quote.data_source_badge || "Unavailable"} - ${state.quote.data_source_note || `Loaded ${state.symbol} quote`}`, state.quote.data_source_badge === "Error");
     }
     async function loadCandles() {
       const message = byId("chart-message");
@@ -1036,11 +1047,15 @@
       message.classList.add("show");
       try {
         const data = await postJson("/api/v1/market-watch/candles", candlePayload());
-        state.candles = data.rows && data.rows.length ? data.rows : previewCandles(state.symbol);
-        setStatus(data.rows && data.rows.length ? `${data.data_source_badge || "Sample"} - ${data.data_source_note || `Loaded ${state.candles.length} candles`}` : "No API candles returned. Showing safe preview candles.");
+        state.candles = data.rows && data.rows.length ? data.rows : [];
+        state.candleSource = data;
+        byId("chart-candle-source").innerHTML = `Candles: ${badge(data.data_source_badge || "Unavailable")} ${escapeHtml(data.data_source_note || "")}`;
+        setStatus(data.rows && data.rows.length ? `${data.data_source_badge || "Unavailable"} - ${data.data_source_note || `Loaded ${state.candles.length} candles`}` : "No candle data returned for this request.");
       } catch (error) {
-        state.candles = previewCandles(state.symbol);
-        setStatus(`Candle API unavailable: ${error.message}. Showing safe preview candles.`, true);
+        state.candles = [];
+        state.candleSource = { data_source_badge: "Error", data_source_note: error.message };
+        byId("chart-candle-source").innerHTML = `Candles: ${badge("Error")} ${escapeHtml(error.message)}`;
+        setStatus(`Candle API unavailable: ${error.message}.`, true);
       }
       renderChart();
     }
@@ -1052,12 +1067,14 @@
       await Promise.all([loadQuote(), loadCandles()]);
     }
     function renderChartHeader() {
-      const q = state.quote || fallbackQuote(state.symbol);
+      const q = state.quote || { symbol: state.symbol, stock_name: SYMBOL_NAMES[state.symbol] || state.symbol, exchange: state.exchange, data_source_badge: "Unavailable" };
       const change = Number(q.change_pct);
       byId("chart-symbol").textContent = q.symbol || state.symbol;
       byId("chart-company").textContent = q.stock_name || SYMBOL_NAMES[state.symbol] || "Selected instrument";
       byId("chart-exchange").textContent = q.exchange || state.exchange;
       byId("chart-timeframe").textContent = state.interval;
+      byId("chart-source").textContent = q.data_source_badge || "Unavailable";
+      byId("chart-source").className = `source-badge ${sourceClass(q.data_source_badge)}`;
       byId("chart-price").textContent = fmt(q.latest_price);
       byId("chart-change").className = `chart-change mono ${cls(change)}`;
       byId("chart-change").textContent = `${fmt(q.change)} (${pct(q.change_pct)})`;
@@ -1080,7 +1097,7 @@
       const message = byId("chart-message");
       if (rows.length < 2) {
         svg.innerHTML = "";
-        message.textContent = "No candle data available.";
+        message.textContent = `${state.candleSource?.data_source_badge || "Unavailable"} - ${state.candleSource?.data_source_note || "No candle data available."}`;
         message.classList.add("show");
         return;
       }
@@ -1140,34 +1157,47 @@
       return pts.length > 1 ? `<polyline points="${pts.join(" ")}" fill="none" stroke="${color}" stroke-width="1.8" stroke-dasharray="4 4"/>` : "";
     }
     function renderHeatmap() {
-      byId("heatmap-grid").innerHTML = INDEX_HEATMAP.map((index) => {
+      byId("heatmap-grid").innerHTML = indexRows().map((index) => {
         const changePct = Number(index.change_pct);
         const change = Number(index.change);
-        const alpha = Math.min(0.86, 0.22 + Math.abs(changePct || 0) / 5.5);
+        const alpha = Number.isFinite(changePct) ? Math.min(0.86, 0.22 + Math.abs(changePct || 0) / 5.5) : 0.16;
         const bg = changePct >= 0 ? `rgba(0,193,118,${alpha})` : `rgba(255,77,94,${alpha})`;
-        return `<a class="heat-tile" href="${detailPath(index.name, "index")}" style="background:${bg}">
-          <div class="heat-symbol">${index.name}</div>
+        return `<a class="heat-tile" href="${detailPath(index.symbol || index.name, "index")}" style="background:${bg}">
+          <div class="heat-symbol">${escapeHtml(index.name)} ${badge(index.data_source_badge)}</div>
           <div>
-            <div class="heat-value mono">${Number.isFinite(Number(index.value)) ? fmt(index.value) : "--"}</div>
+            <div class="heat-value mono">${Number.isFinite(Number(index.latest_price)) ? fmt(index.latest_price) : "--"}</div>
             <div class="heat-change mono">${Number.isFinite(change) ? fmt(change) : "--"} | ${Number.isFinite(changePct) ? pct(changePct) : "--"}</div>
           </div>
         </a>`;
-      }).join("");
+      }).join("") || `<div class="muted">No index data available. ${badge("Unavailable")}</div>`;
     }
     function renderSectorBars(targetId = "sector-performance") {
-      const sectors = [["Banking", 0.62], ["IT", 1.12], ["Auto", -0.34], ["Pharma", 0.41], ["Energy", -0.18]];
-      const html = sectors.map(([name, value]) => `<div class="bar-row"><span>${name}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, Math.abs(value) * 34 + 12)}%;background:${value >= 0 ? "var(--green)" : "var(--red)"}"></div></div><span class="${cls(value)} mono">${pct(value)}</span></div>`).join("");
+      const sectors = (state.summary && state.summary.sector_performance) || [];
+      const html = sectors.map((row) => {
+        const value = Number(row.average_change_pct);
+        const breadth = Number.isFinite(Number(row.breadth_pct)) ? `${fmt(row.breadth_pct, 0)}% breadth` : "-- breadth";
+        return `<div class="bar-row"><span>${escapeHtml(row.sector)}<br><span class="muted">${breadth}</span></span><div class="bar-track"><div class="bar-fill" style="width:${Number.isFinite(value) ? Math.min(100, Math.abs(value) * 34 + 12) : 0}%;background:${value >= 0 ? "var(--green)" : "var(--red)"}"></div></div><span class="${Number.isFinite(value) ? cls(value) : "muted"} mono">${Number.isFinite(value) ? pct(value) : "--"}</span></div>`;
+      }).join("");
       byId(targetId).innerHTML = html;
     }
-    function renderActivityBars(targetId = "activity-bars") {
-      const values = [820, -420, 1140, -260, 760, 1320];
-      byId(targetId).innerHTML = values.map((value) => `<div title="${value} Cr" class="activity-bar" style="height:${Math.abs(value) / 15}px;background:${value >= 0 ? "var(--green)" : "var(--red)"}"></div>`).join("");
+    function renderFiiDii(targetId = "activity-bars") {
+      const data = state.summary && state.summary.fii_dii_status;
+      const daily = data && data.tabs && data.tabs.Daily ? data.tabs.Daily : {};
+      byId(targetId).innerHTML = `<div style="display:grid;gap:7px;width:100%;font-size:12px;font-weight:850">
+        <div>${badge(data?.data_source_badge || "Unavailable")} <span class="muted">${escapeHtml(data?.message || "FII/DII live data source not connected yet")}</span></div>
+        <div class="bar-row"><span>FII Cash</span><div class="bar-track"><div class="bar-fill" style="width:0;background:var(--green)"></div></div><span class="mono">--</span></div>
+        <div class="bar-row"><span>DII Cash</span><div class="bar-track"><div class="bar-fill" style="width:0;background:var(--green)"></div></div><span class="mono">--</span></div>
+        <div class="bar-row"><span>Net Flow</span><div class="bar-track"><div class="bar-fill" style="width:0;background:var(--green)"></div></div><span class="mono">${Number.isFinite(Number(daily.net_flow)) ? fmt(daily.net_flow) : "--"}</span></div>
+      </div>`;
     }
-    function tableRows(symbols) {
-      return symbols.map((symbol) => {
-        const q = fallbackQuote(symbol);
-        return `<tr><td><a class="symbol-cell-btn" href="${detailPath(symbol)}">${symbol}</a></td><td class="mono">${fmt(q.latest_price)}</td><td class="${cls(q.change)} mono">${fmt(q.change)}</td><td class="${cls(q.change_pct)} mono">${pct(q.change_pct)}</td></tr>`;
-      }).join("");
+    function marketRows(rows) {
+      return (rows || []).map((q) => `<tr>
+        <td><a class="symbol-cell-btn" href="${detailPath(q.symbol)}">${escapeHtml(q.symbol)}</a><div>${badge(q.data_source_badge)}</div></td>
+        <td class="mono">${Number.isFinite(Number(q.latest_price)) ? fmt(q.latest_price) : "--"}</td>
+        <td class="${Number.isFinite(Number(q.change)) ? cls(q.change) : "muted"} mono">${Number.isFinite(Number(q.change)) ? fmt(q.change) : "--"}</td>
+        <td class="${Number.isFinite(Number(q.change_pct)) ? cls(q.change_pct) : "muted"} mono">${Number.isFinite(Number(q.change_pct)) ? pct(q.change_pct) : "--"}</td>
+        <td class="mono">${Number.isFinite(Number(q.volume)) ? compact(q.volume) : "--"}</td>
+      </tr>`).join("");
     }
     function activeWatchlist() {
       return state.watchlists.find((watchlist) => String(watchlist.id) === String(state.activeWatchlistId)) || state.watchlists[0] || null;
@@ -1198,7 +1228,7 @@
         const hasChange = Number.isFinite(Number(q.change));
         const hasChangePct = Number.isFinite(Number(q.change_pct));
         return `<tr class="watchlist-row">
-          <td><a class="symbol-cell-btn" href="${detailPath(item.symbol)}">${escapeHtml(item.symbol)}</a><div class="muted">${escapeHtml(item.exchange)} ${escapeHtml(item.display_name || "")}</div></td>
+          <td><a class="symbol-cell-btn" href="${detailPath(item.symbol)}">${escapeHtml(item.symbol)}</a><div class="muted">${escapeHtml(item.exchange)} ${escapeHtml(item.display_name || "")}</div><div>${badge(q.data_source_badge || "Unavailable")}</div></td>
           <td class="mono">${hasPrice ? fmt(q.latest_price) : "--"}</td>
           <td class="${hasChange ? cls(q.change) : "muted"} mono">${hasChange ? fmt(q.change) : "--"}</td>
           <td class="${hasChangePct ? cls(q.change_pct) : "muted"} mono">${hasChangePct ? pct(q.change_pct) : "--"}</td>
@@ -1340,8 +1370,8 @@
     }
     function renderRightTables() {
       renderWatchlist();
-      byId("gainers-body").innerHTML = tableRows(GAINERS);
-      byId("losers-body").innerHTML = tableRows(LOSERS);
+      byId("gainers-body").innerHTML = marketRows(state.summary?.top_gainers) || `<tr><td colspan="5" class="muted">No gainers available.</td></tr>`;
+      byId("losers-body").innerHTML = marketRows(state.summary?.top_losers) || `<tr><td colspan="5" class="muted">No losers available.</td></tr>`;
       byId("alerts-list").innerHTML = [
         ["RELIANCE", "Bullish breakout above 3000", "2m ago"],
         ["HDFCBANK", "RSI oversold on daily chart", "8m ago"],
@@ -1350,19 +1380,18 @@
       ].map(([symbol, text, time]) => `<div class="alert-item"><a class="symbol-cell-btn" href="${detailPath(symbol)}">${symbol}</a> - ${text}<div class="muted mono">${time}</div></div>`).join("");
     }
     function renderBottomWidgets() {
-      const adv = 1238, dec = 846, flat = 102, total = adv + dec + flat;
+      const breadth = state.summary?.market_breadth || {};
+      const adv = Number(breadth.advancers || 0), dec = Number(breadth.decliners || 0), flat = Number(breadth.unchanged || 0), unavailable = Number(breadth.unavailable || 0), total = Number(breadth.total_symbols || adv + dec + flat + unavailable || 1);
+      const scanned = Math.max(adv + dec + flat, 1);
       const c = 2 * Math.PI * 45;
-      byId("breadth-donut").innerHTML = `<circle cx="60" cy="60" r="45" fill="none" stroke="#17263a" stroke-width="15"/><circle cx="60" cy="60" r="45" fill="none" stroke="var(--green)" stroke-width="15" stroke-dasharray="${c * adv / total} ${c}" transform="rotate(-90 60 60)"/><circle cx="60" cy="60" r="45" fill="none" stroke="var(--red)" stroke-width="15" stroke-dasharray="${c * dec / total} ${c}" stroke-dashoffset="${-c * adv / total}" transform="rotate(-90 60 60)"/><text x="60" y="61" text-anchor="middle" fill="#d8e5f5" font-size="18" font-weight="900">${Math.round(adv / total * 100)}%</text>`;
-      byId("breadth-text").innerHTML = `<div class="positive">Advances ${adv}</div><div class="negative">Declines ${dec}</div><div class="muted">Unchanged ${flat}</div>`;
+      byId("breadth-donut").innerHTML = `<circle cx="60" cy="60" r="45" fill="none" stroke="#17263a" stroke-width="15"/><circle cx="60" cy="60" r="45" fill="none" stroke="var(--green)" stroke-width="15" stroke-dasharray="${c * adv / scanned} ${c}" transform="rotate(-90 60 60)"/><circle cx="60" cy="60" r="45" fill="none" stroke="var(--red)" stroke-width="15" stroke-dasharray="${c * dec / scanned} ${c}" stroke-dashoffset="${-c * adv / scanned}" transform="rotate(-90 60 60)"/><text x="60" y="61" text-anchor="middle" fill="#d8e5f5" font-size="18" font-weight="900">${Math.round((adv / scanned) * 100)}%</text>`;
+      byId("breadth-text").innerHTML = `<div>${badge(breadth.data_source_badge)}</div><div class="positive">Advances ${adv} (${pct(breadth.advancers_pct)})</div><div class="negative">Declines ${dec} (${pct(breadth.decliners_pct)})</div><div class="muted">Unchanged ${flat}</div><div class="muted">Unavailable ${unavailable}</div><div class="muted">A/D ${fmt(breadth.advance_decline_ratio)}</div><div class="muted">Scanned ${scanned}/${total}</div>`;
       renderSectorBars("sector-performance-bottom");
-      renderActivityBars("activity-bars-bottom");
-      byId("futures-body").innerHTML = [["NIFTY", "APR", 22480, 42, 18], ["BANKNIFTY", "APR", 48220, -64, -22], ["FINNIFTY", "APR", 21480, 21, 9], ["SENSEX", "APR", 74120, 88, 31]].map(([s,e,l,c,b]) => `<tr><td>${s}</td><td>${e}</td><td class="mono">${fmt(l)}</td><td class="${cls(c)}">${fmt(c)}</td><td class="${cls(b)}">${fmt(b)}</td></tr>`).join("");
+      renderFiiDii("activity-bars-bottom");
+      byId("futures-body").innerHTML = [["NIFTY"], ["BANKNIFTY"], ["FINNIFTY"], ["SENSEX"]].map(([s]) => `<tr><td>${s}</td><td>--</td><td class="mono">--</td><td class="muted">--</td><td class="muted">--</td></tr>`).join("");
       byId("news-list").innerHTML = [["09:42", "Banks mixed ahead of weekly derivatives expiry", "Desk"], ["09:36", "IT basket gains on renewed institutional buying", "Research"], ["09:28", "Rupee opens flat against US dollar", "FX"], ["09:20", "Oil and gas counters see selective demand", "Desk"]].map(([t,h,s]) => `<div class="news-item"><span class="mono muted">${t}</span> ${h}<div class="muted">${s}</div></div>`).join("");
-      byId("active-volume-body").innerHTML = ["SBIN", "RELIANCE", "TATASTEEL", "ONGC", "INFY"].map((symbol) => {
-        const q = fallbackQuote(symbol);
-        return `<tr><td><a class="symbol-cell-btn" href="${detailPath(symbol)}">${symbol}</a></td><td class="mono">${fmt(q.latest_price)}</td><td class="mono">${compact(q.volume)}</td><td class="${cls(q.change_pct)}">${pct(q.change_pct)}</td></tr>`;
-      }).join("");
-      byId("currency-body").innerHTML = [["USD/INR", 83.31, 0.04], ["EUR/INR", 89.42, -0.12], ["GBP/INR", 103.9, 0.18], ["JPY/INR", 0.54, -0.06]].map(([s,p,c]) => `<tr><td>${s}</td><td class="mono">${fmt(p)}</td><td class="${cls(c)}">${pct(c)}</td></tr>`).join("");
+      byId("active-volume-body").innerHTML = ((state.summary?.universe_quotes || []).filter((q) => Number.isFinite(Number(q.volume))).sort((a,b) => Number(b.volume) - Number(a.volume)).slice(0,5).map((q) => `<tr><td><a class="symbol-cell-btn" href="${detailPath(q.symbol)}">${escapeHtml(q.symbol)}</a></td><td class="mono">${fmt(q.latest_price)}</td><td class="mono">${compact(q.volume)}</td><td class="${cls(q.change_pct)}">${pct(q.change_pct)}</td></tr>`).join("")) || `<tr><td colspan="4" class="muted">Volume data unavailable.</td></tr>`;
+      byId("currency-body").innerHTML = [["USD/INR"], ["EUR/INR"], ["GBP/INR"], ["JPY/INR"]].map(([s]) => `<tr><td>${s}</td><td class="mono">--</td><td class="muted">${badge("Unavailable")}</td></tr>`).join("");
     }
     function setupInteractions() {
       byId("load-symbol").addEventListener("click", loadSymbol);
@@ -1442,14 +1471,9 @@
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
-      renderTicker();
       renderTimeframes();
-      renderHeatmap();
-      renderSectorBars();
-      renderActivityBars();
+      await loadSummary();
       await loadWatchlists();
-      renderRightTables();
-      renderBottomWidgets();
       setupInteractions();
       renderClock();
       setInterval(renderClock, 1000);

@@ -55,6 +55,11 @@ def indices():
     return MarketWatchService().indices()
 
 
+@router.get("/summary")
+def summary(session: Session = Depends(get_session), universe: str = "NIFTY 50"):
+    return MarketWatchService().summary(session=session, universe=universe)
+
+
 @router.get("/detail/{symbol}/fundamentals")
 def detail_fundamentals(symbol: str):
     return MarketWatchService().fundamentals_placeholder(symbol)

@@ -132,6 +132,7 @@ class AngelMarketDataProvider(MarketDataProvider):
         )
 
     def get_indices(self) -> list[dict[str, Any]]:
+        self.angel.settings = get_settings()
         rows = []
         for name, details in ANGEL_INDEX_DETAILS.items():
             token = details.get("token")

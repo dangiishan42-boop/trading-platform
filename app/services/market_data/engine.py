@@ -105,7 +105,17 @@ class MarketDataEngine:
 
     def get_indices(self) -> list[dict[str, Any]]:
         try:
-            return [{**row, **self._source_meta(self.primary)} for row in self.primary.get_indices()]
+            return [
+                {
+                    **row,
+                    **self._source_meta(
+                        self.primary,
+                        status=None if row.get("available") else "Unavailable",
+                        message=row.get("message") if not row.get("available") else None,
+                    ),
+                }
+                for row in self.primary.get_indices()
+            ]
         except Exception as exc:
             return [{**row, **self._source_meta(self.fallback, message=f"Live fetch failed: {exc}")} for row in self.fallback.get_indices()]
 
@@ -133,6 +143,8 @@ class MarketDataEngine:
             return "Showing cached market data because a fresh value was unavailable or recently fetched."
         if label == "Sample":
             return "Showing sample/local market data. Configure Angel One credentials for live data."
+        if label == "Unavailable":
+            return message or "Live market data is unavailable for this instrument."
         return message or "Market data provider returned an error."
 
     def _primary_has_credentials(self) -> bool:

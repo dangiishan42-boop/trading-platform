@@ -29,6 +29,20 @@ def test_market_watch_large_chart_page_loads():
     assert "Open Large Chart" in response.text
 
 
+def test_market_watch_summary_endpoint_returns_structured_payload():
+    response = client.get("/api/v1/market-watch/summary")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "indices" in payload
+    assert "top_gainers" in payload
+    assert "top_losers" in payload
+    assert "market_breadth" in payload
+    assert "sector_performance" in payload
+    assert "data_source_summary" in payload
+    assert payload["fii_dii_status"]["status"] == "source_not_connected"
+
+
 def test_market_watch_quote_uses_service(monkeypatch):
     class FakeMarketWatchService:
         def quote(self, query, exchange, symbol_token):

@@ -6,7 +6,7 @@ from typing import Any
 
 import pandas as pd
 
-from app.config.constants import ANGEL_INDEX_DETAILS, ANGEL_SYMBOL_DETAILS, MARKET_WATCH_PEERS
+from app.config.constants import ANGEL_INDEX_DETAILS, ANGEL_SYMBOL_DETAILS, MARKET_WATCH_PEERS, MARKET_WATCH_SECTOR_MAP
 from app.core.exceptions import InvalidRequestError
 from app.schemas.data_schema import AngelDataFetchRequest
 from app.services.data.angel_smartapi_service import AngelSmartApiService
@@ -43,6 +43,7 @@ class MarketWatchService:
         "1W": MarketWatchIntervalConfig("ONE_DAY", timedelta(days=365 * 3), "W"),
         "1M": MarketWatchIntervalConfig("ONE_DAY", timedelta(days=365 * 5), "ME"),
     }
+    SUMMARY_UNIVERSE = list(ANGEL_SYMBOL_DETAILS.keys())
 
     def __init__(
         self,
@@ -144,6 +145,27 @@ class MarketWatchService:
 
     def indices(self) -> list[dict[str, Any]]:
         return self.market_data.get_indices()
+
+    def summary(self, session=None, universe: str = "NIFTY 50") -> dict[str, Any]:
+        indices = [self._normalize_index_row(row) for row in self.indices()]
+        universe_quotes = self._universe_quotes(session=session)
+        rankable = [row for row in universe_quotes if self._is_rankable(row)]
+        top_gainers = sorted([row for row in rankable if row["change_pct"] > 0], key=lambda row: row["change_pct"], reverse=True)[:10]
+        top_losers = sorted([row for row in rankable if row["change_pct"] < 0], key=lambda row: row["change_pct"])[:10]
+        breadth = self._market_breadth(universe_quotes)
+        sectors = self._sector_performance(universe_quotes)
+        return {
+            "indices": indices,
+            "universe": universe,
+            "universe_quotes": universe_quotes,
+            "top_gainers": top_gainers,
+            "top_losers": top_losers,
+            "market_breadth": breadth,
+            "sector_performance": sectors,
+            "fii_dii_status": self._fii_dii_status(),
+            "data_source_summary": self._data_source_summary(indices, universe_quotes),
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+        }
 
     def fundamentals_placeholder(self, symbol: str) -> dict[str, Any]:
         normalized = self._normalize_query(symbol)
@@ -328,6 +350,172 @@ class MarketWatchService:
 
     def _normalize_query(self, query: str | None) -> str:
         return str(query or "").strip().upper().replace(" ", "")
+
+    def _universe_quotes(self, session=None) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for symbol in self.SUMMARY_UNIVERSE:
+            details = ANGEL_SYMBOL_DETAILS[symbol]
+            try:
+                quote = self.market_data.get_quote(
+                    symbol=symbol,
+                    token=details["token"],
+                    exchange=details["exchange"],
+                    session=session,
+                )
+            except Exception as exc:
+                quote = {
+                    "symbol": symbol,
+                    "stock_name": details["name"],
+                    "exchange": details["exchange"],
+                    "symbol_token": details["token"],
+                    "available": False,
+                    "message": str(exc),
+                    "data_source_badge": "Error",
+                    "data_source_note": str(exc),
+                }
+            rows.append(self._normalize_quote_row(quote))
+        return rows
+
+    def _normalize_quote_row(self, quote: dict[str, Any]) -> dict[str, Any]:
+        symbol = self._normalize_query(quote.get("symbol"))
+        latest = self._number_or_none(quote.get("latest_price"))
+        change = self._number_or_none(quote.get("change"))
+        change_pct = self._number_or_none(quote.get("change_pct"))
+        available = bool(quote.get("available")) and latest is not None and change_pct is not None
+        badge = self._badge_for(quote, available)
+        return {
+            "symbol": symbol,
+            "name": quote.get("stock_name") or ANGEL_SYMBOL_DETAILS.get(symbol, {}).get("name") or symbol,
+            "exchange": quote.get("exchange") or ANGEL_SYMBOL_DETAILS.get(symbol, {}).get("exchange") or "NSE",
+            "symbol_token": quote.get("symbol_token"),
+            "latest_price": latest if available else None,
+            "change": change if available else None,
+            "change_pct": change_pct if available else None,
+            "volume": self._number_or_none(quote.get("volume")) if available else None,
+            "available": available,
+            "sector": MARKET_WATCH_SECTOR_MAP.get(symbol, "Unknown"),
+            "source": quote.get("source"),
+            "data_source_badge": badge,
+            "data_source_note": quote.get("data_source_note") or quote.get("message"),
+            "message": quote.get("message"),
+        }
+
+    def _normalize_index_row(self, row: dict[str, Any]) -> dict[str, Any]:
+        available = bool(row.get("available")) and row.get("latest_price") is not None and row.get("change_pct") is not None
+        badge = self._badge_for(row, available)
+        return {
+            "name": row.get("name"),
+            "symbol": self._route_symbol(row.get("name")),
+            "exchange": row.get("exchange"),
+            "latest_price": self._number_or_none(row.get("latest_price")) if available else None,
+            "change": self._number_or_none(row.get("change")) if available else None,
+            "change_pct": self._number_or_none(row.get("change_pct")) if available else None,
+            "available": available,
+            "source": row.get("source"),
+            "data_source_badge": badge,
+            "data_source_note": row.get("data_source_note") if available else row.get("message") or "Index token or live provider data is unavailable.",
+            "message": row.get("message"),
+        }
+
+    def _badge_for(self, row: dict[str, Any], available: bool) -> str:
+        if not available:
+            if row.get("data_source_badge") == "Sample":
+                return "Sample"
+            if row.get("data_source_badge") == "Cached":
+                return "Cached"
+            if row.get("data_source_badge") == "Error":
+                return "Error"
+            return "Unavailable"
+        return row.get("data_source_badge") or row.get("data_source") or "Unavailable"
+
+    def _is_rankable(self, row: dict[str, Any]) -> bool:
+        return bool(row.get("available")) and row.get("change_pct") is not None
+
+    def _market_breadth(self, rows: list[dict[str, Any]]) -> dict[str, Any]:
+        available = [row for row in rows if row.get("available") and row.get("change_pct") is not None]
+        unavailable = len(rows) - len(available)
+        epsilon = 0.0001
+        advancers = sum(1 for row in available if float(row["change_pct"]) > epsilon)
+        decliners = sum(1 for row in available if float(row["change_pct"]) < -epsilon)
+        unchanged = len(available) - advancers - decliners
+        total = len(rows)
+        scanned = len(available)
+        return {
+            "advancers": advancers,
+            "decliners": decliners,
+            "unchanged": unchanged,
+            "unavailable": unavailable,
+            "total_symbols": total,
+            "symbols_scanned": scanned,
+            "advance_decline_ratio": round(advancers / decliners, 2) if decliners else float(advancers) if advancers else 0,
+            "advancers_pct": round((advancers / scanned) * 100, 2) if scanned else 0,
+            "decliners_pct": round((decliners / scanned) * 100, 2) if scanned else 0,
+            "data_source_badge": self._dominant_badge(rows),
+        }
+
+    def _sector_performance(self, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            grouped.setdefault(row.get("sector") or "Unknown", []).append(row)
+        sectors = []
+        for sector, items in grouped.items():
+            available = [item for item in items if item.get("available") and item.get("change_pct") is not None]
+            advancers = sum(1 for item in available if float(item["change_pct"]) > 0)
+            decliners = sum(1 for item in available if float(item["change_pct"]) < 0)
+            avg_change = sum(float(item["change_pct"]) for item in available) / len(available) if available else None
+            sectors.append(
+                {
+                    "sector": sector,
+                    "average_change_pct": round(avg_change, 2) if avg_change is not None else None,
+                    "advancers": advancers,
+                    "decliners": decliners,
+                    "total": len(items),
+                    "available": len(available),
+                    "breadth_pct": round((advancers / len(available)) * 100, 2) if available else None,
+                    "data_source_badge": self._dominant_badge(items),
+                }
+            )
+        return sorted(sectors, key=lambda row: row["average_change_pct"] if row["average_change_pct"] is not None else -999, reverse=True)
+
+    def _fii_dii_status(self) -> dict[str, Any]:
+        return {
+            "status": "source_not_connected",
+            "data_source_badge": "Unavailable",
+            "message": "FII/DII live data source not connected yet",
+            "tabs": {
+                "Daily": {"fii_cash": None, "dii_cash": None, "net_flow": None},
+                "Weekly": {"fii_cash": None, "dii_cash": None, "net_flow": None},
+                "Monthly": {"fii_cash": None, "dii_cash": None, "net_flow": None},
+            },
+        }
+
+    def _data_source_summary(self, indices: list[dict[str, Any]], quotes: list[dict[str, Any]]) -> dict[str, Any]:
+        rows = [*indices, *quotes]
+        counts: dict[str, int] = {}
+        for row in rows:
+            badge = row.get("data_source_badge") or "Unavailable"
+            counts[badge] = counts.get(badge, 0) + 1
+        return {
+            "counts": counts,
+            "primary_badge": self._dominant_badge(rows),
+            "unavailable_count": counts.get("Unavailable", 0) + counts.get("Error", 0),
+        }
+
+    def _dominant_badge(self, rows: list[dict[str, Any]]) -> str:
+        for badge in ("Live: Angel One", "Cached", "Sample", "Error", "Unavailable"):
+            if any(row.get("data_source_badge") == badge for row in rows):
+                return badge
+        return "Unavailable"
+
+    def _number_or_none(self, value: Any) -> float | None:
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return None
+        return round(number, 2)
+
+    def _route_symbol(self, value: Any) -> str:
+        return str(value or "").strip().upper().replace(" ", "").replace("-", "").replace("_", "")
 
     def _empty_quote(self, resolved: ResolvedMarketSymbol) -> dict[str, Any]:
         return {

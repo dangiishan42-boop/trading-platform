@@ -33,9 +33,33 @@ ANGEL_SYMBOL_DETAILS = {
 }
 ANGEL_INDEX_DETAILS = {
     "NIFTY 50": {"name": "NIFTY 50", "exchange": "NSE", "token": None},
-    "BANK NIFTY": {"name": "BANK NIFTY", "exchange": "NSE", "token": None},
     "SENSEX": {"name": "SENSEX", "exchange": "BSE", "token": None},
+    "BANK NIFTY": {"name": "BANK NIFTY", "exchange": "NSE", "token": None},
+    "FINNIFTY": {"name": "FINNIFTY", "exchange": "NSE", "token": None},
     "NIFTY IT": {"name": "NIFTY IT", "exchange": "NSE", "token": None},
+    "NIFTY AUTO": {"name": "NIFTY AUTO", "exchange": "NSE", "token": None},
+    "NIFTY FMCG": {"name": "NIFTY FMCG", "exchange": "NSE", "token": None},
+    "NIFTY PHARMA": {"name": "NIFTY PHARMA", "exchange": "NSE", "token": None},
+    "NIFTY METAL": {"name": "NIFTY METAL", "exchange": "NSE", "token": None},
+    "NIFTY ENERGY": {"name": "NIFTY ENERGY", "exchange": "NSE", "token": None},
+    "NIFTY REALTY": {"name": "NIFTY REALTY", "exchange": "NSE", "token": None},
+    "NIFTY MIDCAP": {"name": "NIFTY MIDCAP", "exchange": "NSE", "token": None},
+    "NIFTY SMALLCAP": {"name": "NIFTY SMALLCAP", "exchange": "NSE", "token": None},
+    "INDIA VIX": {"name": "INDIA VIX", "exchange": "NSE", "token": None},
+}
+MARKET_WATCH_SECTOR_MAP = {
+    "RELIANCE": "Energy",
+    "TCS": "Information Technology",
+    "INFY": "Information Technology",
+    "WIPRO": "Information Technology",
+    "HDFCBANK": "Banking",
+    "ICICIBANK": "Banking",
+    "SBIN": "Banking",
+    "AXISBANK": "Banking",
+    "LT": "Industrials",
+    "ITC": "FMCG",
+    "HINDUNILVR": "FMCG",
+    "BAJFINANCE": "Financial Services",
 }
 MARKET_WATCH_PEERS = {
     "HDFCBANK": {
