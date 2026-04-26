@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from app.schemas.heatmap_schema import HeatmapRunRequest, HeatmapSectorRequest
+from app.services.data.instrument_master_service import InstrumentMasterService
 from app.services.market_data.engine import MarketDataEngine, get_market_data_engine
 
 
@@ -167,10 +168,11 @@ class HeatmapService:
             "data_source_note": self.DATA_SOURCE_NOTE,
         }
 
-    def run(self, request: HeatmapRunRequest) -> dict[str, Any]:
+    def run(self, request: HeatmapRunRequest, session=None) -> dict[str, Any]:
+        source_note = self.DATA_SOURCE_NOTE
         stocks = [self._decorate_stock(row, request) for row in self.SAMPLE_STOCKS]
         if request.universe == "F&O Stocks":
-            stocks = [row for row in stocks if row.get("is_fno")]
+            stocks, source_note = self._fno_stocks(request, session)
         sectors = self._sectors(stocks)
         gainers = sorted(stocks, key=lambda row: row["change_pct"], reverse=True)[:5]
         losers = sorted(stocks, key=lambda row: row["change_pct"])[:5]
@@ -191,11 +193,7 @@ class HeatmapService:
             "rotation": self.rotation({}),
             "insights": self.insights({})["insights"],
             "timestamp": timestamp,
-            "data_source_note": (
-                "F&O universe is synced from Angel instrument master. Historical availability may be limited to active/live contracts depending on provider."
-                if request.universe == "F&O Stocks"
-                else self.DATA_SOURCE_NOTE
-            ),
+            "data_source_note": source_note,
         }
 
     def sectors(self) -> list[dict[str, Any]]:
@@ -407,6 +405,34 @@ class HeatmapService:
         item["color_value"] = self._color_value(item, request.color_by)
         return item
 
+    def _fno_stocks(self, request: HeatmapRunRequest, session=None) -> tuple[list[dict[str, Any]], str]:
+        note = "F&O universe is synced from Angel instrument master. Historical availability may be limited to active/live contracts depending on provider."
+        if session is None:
+            return [row for row in [self._decorate_stock(item, request) for item in self.SAMPLE_STOCKS] if row.get("is_fno")], f"{note} Sample fallback is active."
+        payload = InstrumentMasterService().fno_underlyings(session, limit=1000)
+        if payload["source"] != "Angel Instrument Master":
+            fallback = [row for row in [self._decorate_stock(item, request) for item in self.SAMPLE_STOCKS] if row.get("is_fno")]
+            return fallback, f"{payload.get('message') or note} Source: {payload['source']}."
+
+        sample_by_symbol = {row["symbol"]: row for row in self.SAMPLE_STOCKS}
+        stocks = []
+        for item in payload["items"]:
+            sample = sample_by_symbol.get(item.symbol, {})
+            row = {
+                "symbol": item.symbol,
+                "name": item.name,
+                "sector": sample.get("sector", "UNKNOWN"),
+                "price": float(sample.get("price", 0)),
+                "change_pct": float(sample.get("change_pct", 0)),
+                "market_cap_cr": float(sample.get("market_cap_cr", 1)),
+                "volume": int(sample.get("volume", 0)),
+                "rsi": float(sample.get("rsi", 50)),
+            }
+            decorated = self._decorate_stock(row, request)
+            decorated["is_fno"] = True
+            stocks.append(decorated)
+        return stocks, note
+
     def _size_value(self, item: dict[str, Any], size_by: str) -> float:
         if size_by == "Volume":
             return float(item["volume"])
@@ -478,7 +504,7 @@ class HeatmapService:
         for name, rows in grouped.items():
             market_cap = sum(float(row["market_cap_cr"]) for row in rows)
             volume = sum(int(row["volume"]) for row in rows)
-            weighted_change = sum(float(row["change_pct"]) * float(row["market_cap_cr"]) for row in rows) / market_cap
+            weighted_change = sum(float(row["change_pct"]) * float(row["market_cap_cr"]) for row in rows) / max(market_cap, 1)
             sectors.append(
                 {
                     "name": name,

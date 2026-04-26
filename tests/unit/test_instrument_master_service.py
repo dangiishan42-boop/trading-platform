@@ -78,6 +78,25 @@ def test_derive_fno_underlyings_returns_unique_symbols():
     assert underlyings[0].has_options is True
 
 
+def test_parser_extracts_many_fno_underlyings_from_nfo_fixture():
+    payload = []
+    for index, symbol in enumerate(["RELIANCE", "HDFCBANK", "ICICIBANK", "TCS", "INFY", "SBIN"], start=1):
+        payload.extend(
+            [
+                {"exch_seg": "NSE", "symbol": f"{symbol}-EQ", "name": symbol, "token": str(2000 + index), "instrumenttype": ""},
+                {"exch_seg": "NFO", "symbol": f"{symbol}25APRFUT", "name": symbol, "token": str(3000 + index), "instrumenttype": "FUTSTK", "expiry": "2025-04-24", "lotsize": "100"},
+                {"exch_seg": "NFO", "symbol": f"{symbol}25APR1000CE", "name": symbol, "token": str(4000 + index), "instrumenttype": "OPTSTK", "expiry": "2025-04-24", "strike": "100000", "lotsize": "100"},
+            ]
+        )
+
+    service = InstrumentMasterService()
+    records = service.parse_records(payload)
+    underlyings = service.derive_fno_underlyings(records)
+
+    assert len(underlyings) == 6
+    assert {row.symbol for row in underlyings} == {"RELIANCE", "HDFCBANK", "ICICIBANK", "TCS", "INFY", "SBIN"}
+
+
 def test_fallback_mapping_resolves_without_synced_master():
     instrument = InstrumentMasterService().resolve(
         None,

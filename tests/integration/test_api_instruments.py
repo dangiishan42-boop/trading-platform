@@ -90,18 +90,31 @@ def test_fno_underlyings_and_contract_endpoints_return_unique_contracts():
     with Session(engine) as session:
         session.exec(delete(FnoUnderlying))
         session.exec(delete(InstrumentMaster))
-        session.add(
-            FnoUnderlying(
-                symbol="RELIANCE",
-                name="Reliance Industries",
-                exchange="NSE",
-                equity_token="2885",
-                nearest_future_token="111",
-                active_expiries="2025-04-24",
-                has_futures=True,
-                has_options=True,
-                lot_size=250,
-            )
+        session.add_all(
+            [
+                FnoUnderlying(
+                    symbol="HDFCBANK",
+                    name="HDFC Bank",
+                    exchange="NSE",
+                    equity_token="1333",
+                    nearest_future_token="211",
+                    active_expiries="2025-04-24",
+                    has_futures=True,
+                    has_options=True,
+                    lot_size=550,
+                ),
+                FnoUnderlying(
+                    symbol="RELIANCE",
+                    name="Reliance Industries",
+                    exchange="NSE",
+                    equity_token="2885",
+                    nearest_future_token="111",
+                    active_expiries="2025-04-24",
+                    has_futures=True,
+                    has_options=True,
+                    lot_size=250,
+                ),
+            ]
         )
         session.add_all(
             [
@@ -139,8 +152,17 @@ def test_fno_underlyings_and_contract_endpoints_return_unique_contracts():
 
     underlyings_response = client.get("/api/v1/instruments/fno-underlyings?q=rel")
     assert underlyings_response.status_code == 200
-    underlyings = underlyings_response.json()
+    underlyings = underlyings_response.json()["items"]
     assert [row["symbol"] for row in underlyings] == ["RELIANCE"]
+
+    paged_response = client.get("/api/v1/instruments/fno-underlyings?limit=1&offset=1")
+    assert paged_response.status_code == 200
+    paged = paged_response.json()
+    assert paged["total"] == 2
+    assert paged["limit"] == 1
+    assert paged["offset"] == 1
+    assert paged["source"] == "Angel Instrument Master"
+    assert paged["items"][0]["symbol"] == "RELIANCE"
 
     contracts_response = client.get("/api/v1/instruments/fno-contracts?symbol=RELIANCE")
     assert contracts_response.status_code == 200
@@ -151,3 +173,58 @@ def test_fno_underlyings_and_contract_endpoints_return_unique_contracts():
     expiries_response = client.get("/api/v1/instruments/fno-expiries?symbol=RELIANCE")
     assert expiries_response.status_code == 200
     assert expiries_response.json()["expiries"] == ["2025-04-24"]
+
+
+def test_fno_underlyings_does_not_return_sample_when_real_nfo_exists_without_underlyings():
+    with Session(engine) as session:
+        session.exec(delete(FnoUnderlying))
+        session.exec(delete(InstrumentMaster))
+        session.add(
+            InstrumentMaster(
+                exchange="NFO",
+                symbol="RELIANCE",
+                name="RELIANCE",
+                trading_symbol="RELIANCE25APRFUT",
+                token="111",
+                instrument_type="FUTSTK",
+                expiry="2025-04-24",
+                lot_size=250,
+                underlying="RELIANCE",
+                is_fno=True,
+                is_future=True,
+            )
+        )
+        session.commit()
+
+    response = client.get("/api/v1/instruments/fno-underlyings?limit=500")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["items"] == []
+    assert payload["source"] == "Unavailable"
+    assert "No F&O underlyings" in payload["message"]
+
+
+def test_instrument_sync_response_includes_fno_summary(monkeypatch):
+    fixture = [
+        {"exch_seg": "NSE", "symbol": "RELIANCE-EQ", "name": "Reliance Industries", "token": "2885", "instrumenttype": ""},
+        {"exch_seg": "BSE", "symbol": "RELIANCE", "name": "Reliance Industries", "token": "500325", "instrumenttype": "EQ"},
+        {"exch_seg": "NFO", "symbol": "RELIANCE25APRFUT", "name": "RELIANCE", "token": "111", "instrumenttype": "FUTSTK", "expiry": "2025-04-24"},
+        {"exch_seg": "NFO", "symbol": "RELIANCE25APR2500CE", "name": "RELIANCE", "token": "112", "instrumenttype": "OPTSTK", "expiry": "2025-04-24", "strike": "250000"},
+        {"exch_seg": "NSE", "symbol": "NIFTY", "name": "NIFTY", "token": "999", "instrumenttype": "AMXIDX"},
+    ]
+
+    monkeypatch.setattr("app.services.data.instrument_master_service.InstrumentMasterService.fetch_master_payload", lambda self, source_url: fixture)
+
+    response = client.post("/api/v1/instruments/sync", json={"source_url": "https://example.test/master.json"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_rows"] == 5
+    assert payload["total_instruments_parsed"] == 4
+    assert payload["nse_equities_stored"] == 1
+    assert payload["bse_equities_stored"] == 1
+    assert payload["nfo_futures_stored"] == 1
+    assert payload["nfo_options_stored"] == 1
+    assert payload["unique_fno_underlyings_stored"] == 1
+    assert payload["skipped_invalid_rows_count"] == 1

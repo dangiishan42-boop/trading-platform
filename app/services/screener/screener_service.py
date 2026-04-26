@@ -5,6 +5,7 @@ from typing import Any
 from uuid import uuid4
 
 from app.schemas.screener_schema import ScreenerRunRequest, ScreenerSavedScreenCreate
+from app.services.data.instrument_master_service import InstrumentMasterService
 from app.services.market_data.engine import MarketDataEngine, get_market_data_engine
 
 
@@ -102,20 +103,16 @@ class ScreenerService:
             "data_source_note": self.DATA_SOURCE_NOTE,
         }
 
-    def run(self, request: ScreenerRunRequest) -> dict[str, Any]:
+    def run(self, request: ScreenerRunRequest, session=None) -> dict[str, Any]:
         rows, source_note = self._market_rows()
         if request.universe == "F&O Stocks":
-            rows = [row for row in rows if row.get("is_fno", True)]
-            source_note = (
-                "F&O universe is synced from Angel instrument master. Historical availability may be limited "
-                "to active/live contracts depending on provider."
-            )
+            rows, source_note = self._fno_market_rows(session)
         filtered = [row for row in rows if self._matches_filters(row, request.filters)]
         sort_field = self.SORT_FIELDS.get(request.sort_by, "market_cap_cr")
         filtered.sort(key=lambda item: item.get(sort_field) or 0, reverse=request.sort_direction == "desc")
         return {
             "results": filtered,
-            "summary": self._summary(filtered, request),
+            "summary": self._summary(filtered, request, universe_total=len(rows)),
             "distributions": self._distributions(filtered),
             "sector_breakdown": self._sector_breakdown(filtered),
             "saved_screens": self.list_saved_screens(),
@@ -168,13 +165,13 @@ class ScreenerService:
             return str(actual).lower() == str(expected).lower()
         return True
 
-    def _summary(self, rows: list[dict[str, Any]], request: ScreenerRunRequest) -> dict[str, Any]:
+    def _summary(self, rows: list[dict[str, Any]], request: ScreenerRunRequest, universe_total: int | None = None) -> dict[str, Any]:
         total_volume = sum(int(row["volume"]) for row in rows)
         avg_market_cap = self._avg(rows, "market_cap_cr")
         avg_change = self._avg(rows, "change_pct")
         return {
             "matches": len(rows),
-            "total_stocks": len(self.SAMPLE_UNIVERSE),
+            "total_stocks": universe_total if universe_total is not None else len(self.SAMPLE_UNIVERSE),
             "avg_market_cap_cr": round(avg_market_cap, 2),
             "avg_change_pct": round(avg_change, 2),
             "total_volume": total_volume,
@@ -259,3 +256,40 @@ class ScreenerService:
             if quote.get("data_source_note"):
                 source_note = quote["data_source_note"]
         return rows, source_note
+
+    def _fno_market_rows(self, session=None) -> tuple[list[dict[str, Any]], str]:
+        note = (
+            "F&O universe is synced from Angel instrument master. Historical availability may be limited "
+            "to active/live contracts depending on provider."
+        )
+        if session is None:
+            return [row.copy() for row in self.SAMPLE_UNIVERSE if row.get("is_fno", True)], f"{note} Sample fallback is active."
+        payload = InstrumentMasterService().fno_underlyings(session, limit=1000)
+        underlyings = payload["items"]
+        if payload["source"] != "Angel Instrument Master":
+            return [row.copy() for row in self.SAMPLE_UNIVERSE if row.get("is_fno", True)], f"{payload.get('message') or note} Source: {payload['source']}."
+
+        sample_by_symbol = {row["symbol"]: row for row in self.SAMPLE_UNIVERSE}
+        rows: list[dict[str, Any]] = []
+        for item in underlyings:
+            sample = sample_by_symbol.get(item.symbol, {})
+            rows.append(
+                {
+                    "symbol": item.symbol,
+                    "name": item.name,
+                    "sector": sample.get("sector", "Unknown"),
+                    "ltp": float(sample.get("ltp", 0)),
+                    "change_pct": float(sample.get("change_pct", 0)),
+                    "volume": int(sample.get("volume", 0)),
+                    "market_cap_cr": float(sample.get("market_cap_cr", 0)),
+                    "pe_ttm": float(sample.get("pe_ttm", 0)),
+                    "roe_pct": float(sample.get("roe_pct", 0)),
+                    "eps_growth_yoy_pct": float(sample.get("eps_growth_yoy_pct", 0)),
+                    "rsi_14": float(sample.get("rsi_14", 50)),
+                    "debt_equity": float(sample.get("debt_equity", 0)),
+                    "exchange": item.exchange,
+                    "price_above_ema200": bool(sample.get("price_above_ema200", False)),
+                    "is_fno": True,
+                }
+            )
+        return rows, note

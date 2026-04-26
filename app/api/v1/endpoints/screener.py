@@ -1,5 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlmodel import Session
 
+from app.api.dependencies import get_session
 from app.schemas.screener_schema import (
     ScreenerCapabilitiesResponse,
     ScreenerRunRequest,
@@ -17,8 +19,8 @@ def capabilities():
 
 
 @router.post("/run", response_model=ScreenerRunResponse)
-def run_screener(payload: ScreenerRunRequest):
-    return ScreenerService().run(payload)
+def run_screener(payload: ScreenerRunRequest, session: Session = Depends(get_session)):
+    return ScreenerService().run(payload, session=session)
 
 
 @router.get("/saved")

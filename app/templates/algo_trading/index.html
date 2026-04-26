@@ -324,6 +324,25 @@
       byId("angel-symbol-note").textContent = `Selected ${instrumentLabel(selected)}. Candle data is fetched only when you submit.`;
       return true;
     }
+    async function loadFnoUniverseOptions() {
+      const targets = [byId("algo-symbol-options"), byId("angel-symbol-options")].filter(Boolean);
+      try {
+        const res = await fetch("/api/v1/instruments/fno-underlyings?limit=1000&offset=0");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Unable to load F&O universe");
+        targets.forEach((list) => {
+          (data.items || []).forEach((item) => {
+            const option = document.createElement("option");
+            option.value = item.symbol;
+            option.label = `${item.symbol} | ${item.name} | ${item.exchange} | F&O`;
+            list.appendChild(option);
+          });
+        });
+        if (data.message) setSaveStatus(data.message, data.source === "Sample" ? "warning" : "danger");
+      } catch (error) {
+        return;
+      }
+    }
     function intervalToTimeframe(value) { return (ANGEL_INTERVAL_PRESETS.find((item) => item.value === value) || {}).timeframe || value; }
     function formatDateValue(value) {
       if (!value) return "--";
@@ -924,6 +943,7 @@
       renderAngelControls();
       applyAngelDateShortcut(1);
       applyAngelSymbolLookup();
+      loadFnoUniverseOptions();
       addDefaultBuilder();
       byId("add-leg-btn").addEventListener("click", () => addLeg({ name: `Leg ${legCounter + 1}` }));
       byId("add-target-btn").addEventListener("click", () => addTarget());

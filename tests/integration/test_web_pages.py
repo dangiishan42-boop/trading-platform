@@ -366,6 +366,16 @@ def test_backtest_dashboard_page_loads_focused_layout():
     assert "Recent Backtest History" in response.text
 
 
+def test_fno_universe_selectors_load_full_list_client_side():
+    dashboard = client.get("/dashboard")
+    algo = client.get("/algo-trading")
+
+    assert dashboard.status_code == 200
+    assert algo.status_code == 200
+    assert "/api/v1/instruments/fno-underlyings?limit=1000&offset=0" in dashboard.text
+    assert "/api/v1/instruments/fno-underlyings?limit=1000&offset=0" in algo.text
+
+
 def test_research_page_loads_focused_layout():
     response = client.get("/research")
 

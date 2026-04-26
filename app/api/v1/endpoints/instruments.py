@@ -6,6 +6,7 @@ from app.schemas.instrument_schema import (
     FnoContractsResponse,
     FnoExpiriesResponse,
     FnoUnderlyingEntry,
+    FnoUnderlyingSearchResponse,
     InstrumentEntry,
     InstrumentSearchResponse,
     InstrumentSyncRequest,
@@ -20,11 +21,12 @@ router = APIRouter(prefix="/instruments", tags=["instruments"])
 @router.post("/sync", response_model=InstrumentSyncResponse)
 def sync_instruments(payload: InstrumentSyncRequest | None = None, session: Session = Depends(get_session)):
     source_url = payload.source_url if payload and payload.source_url else DEFAULT_ANGEL_SCRIP_MASTER_URL
-    imported_count = InstrumentMasterService().sync(session, source_url)
+    summary = InstrumentMasterService().sync(session, source_url)
     return InstrumentSyncResponse(
         message="Instrument master synced successfully",
-        imported_count=imported_count,
+        imported_count=summary["total_instruments_parsed"],
         source_url=source_url,
+        **summary,
     )
 
 
@@ -41,13 +43,22 @@ def search_instruments(
     return InstrumentSearchResponse(items=[InstrumentEntry.model_validate(item) for item in items])
 
 
-@router.get("/fno-underlyings", response_model=list[FnoUnderlyingEntry])
+@router.get("/fno-underlyings", response_model=FnoUnderlyingSearchResponse)
 def fno_underlyings(
     q: str | None = Query(default=None, max_length=80),
     limit: int = Query(default=500, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
     session: Session = Depends(get_session),
 ):
-    return InstrumentMasterService().fno_underlyings(session, q=q, limit=limit)
+    payload = InstrumentMasterService().fno_underlyings(session, q=q, limit=limit, offset=offset)
+    return FnoUnderlyingSearchResponse(
+        items=[FnoUnderlyingEntry.model_validate(row) for row in payload["items"]],
+        total=payload["total"],
+        limit=limit,
+        offset=offset,
+        source=payload["source"],
+        message=payload.get("message"),
+    )
 
 
 @router.get("/fno-contracts", response_model=FnoContractsResponse)

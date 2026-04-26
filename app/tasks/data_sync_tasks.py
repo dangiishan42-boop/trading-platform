@@ -8,7 +8,7 @@ class DataSyncTasks:
         from app.services.data.instrument_master_service import InstrumentMasterService
         from app.services.market_data.engine import get_market_data_engine
 
-        underlyings = InstrumentMasterService().fno_underlyings(session, limit=limit)
+        underlyings = InstrumentMasterService().fno_underlyings(session, limit=limit)["items"]
         instruments = [
             {"symbol": row.symbol, "token": row.equity_token, "exchange": row.exchange}
             for row in underlyings

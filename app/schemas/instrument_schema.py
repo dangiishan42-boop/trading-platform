@@ -26,6 +26,14 @@ class InstrumentSyncResponse(BaseModel):
     message: str
     imported_count: int = Field(ge=0)
     source_url: str
+    total_rows: int = Field(default=0, ge=0)
+    total_instruments_parsed: int = Field(default=0, ge=0)
+    nse_equities_stored: int = Field(default=0, ge=0)
+    bse_equities_stored: int = Field(default=0, ge=0)
+    nfo_futures_stored: int = Field(default=0, ge=0)
+    nfo_options_stored: int = Field(default=0, ge=0)
+    unique_fno_underlyings_stored: int = Field(default=0, ge=0)
+    skipped_invalid_rows_count: int = Field(default=0, ge=0)
 
 
 class InstrumentSearchResponse(BaseModel):
@@ -44,6 +52,15 @@ class FnoUnderlyingEntry(BaseModel):
     has_futures: bool = False
     has_options: bool = False
     lot_size: int | None = None
+
+
+class FnoUnderlyingSearchResponse(BaseModel):
+    items: list[FnoUnderlyingEntry]
+    total: int = Field(ge=0)
+    limit: int = Field(ge=1)
+    offset: int = Field(ge=0)
+    source: str
+    message: str | None = None
 
 
 class FnoContractsResponse(BaseModel):

@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session
 
+from app.api.dependencies import get_session
 from app.schemas.heatmap_schema import (
     HeatmapCapabilitiesResponse,
     HeatmapRunRequest,
@@ -20,8 +22,8 @@ def capabilities():
 
 
 @router.post("/run", response_model=HeatmapRunResponse)
-def run_heatmap(payload: HeatmapRunRequest):
-    return HeatmapService().run(payload)
+def run_heatmap(payload: HeatmapRunRequest, session: Session = Depends(get_session)):
+    return HeatmapService().run(payload, session=session)
 
 
 @router.get("/sectors", response_model=list[HeatmapSectorListItem])

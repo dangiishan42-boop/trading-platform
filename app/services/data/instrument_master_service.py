@@ -7,7 +7,7 @@ from typing import Any
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from sqlalchemy import delete, or_
+from sqlalchemy import delete, func, or_
 from sqlmodel import Session, select
 
 from app.config.constants import ANGEL_SYMBOL_DETAILS
@@ -37,8 +37,9 @@ class InstrumentMasterService:
             raise DataValidationError("Instrument sync failed: master JSON must be a list")
         return payload
 
-    def sync(self, session: Session, source_url: str = DEFAULT_ANGEL_SCRIP_MASTER_URL) -> int:
-        records = self.parse_records(self.fetch_master_payload(source_url))
+    def sync(self, session: Session, source_url: str = DEFAULT_ANGEL_SCRIP_MASTER_URL) -> dict[str, int]:
+        payload = self.fetch_master_payload(source_url)
+        records = self.parse_records(payload)
         session.exec(delete(InstrumentMaster))
         session.exec(delete(FnoUnderlying))
         if records:
@@ -48,7 +49,7 @@ class InstrumentMasterService:
         if underlyings:
             session.add_all(underlyings)
         session.commit()
-        return len(records)
+        return self._sync_summary(payload, records, underlyings)
 
     def parse_records(self, payload: list[dict[str, Any]]) -> list[InstrumentMaster]:
         records: list[InstrumentMaster] = []
@@ -102,16 +103,41 @@ class InstrumentMasterService:
         )
         return list(session.exec(statement))
 
-    def fno_underlyings(self, session: Session, q: str | None = None, limit: int = 500) -> list[FnoUnderlying]:
+    def fno_underlyings(self, session: Session, q: str | None = None, limit: int = 500, offset: int = 0) -> dict[str, Any]:
+        real_fno_instrument_count = self._real_fno_instrument_count(session)
+        real_fno_underlying_count = self._real_fno_underlying_count(session)
         statement = select(FnoUnderlying)
         if q:
             pattern = f"%{q.strip().upper()}%"
             statement = statement.where(or_(FnoUnderlying.symbol.ilike(pattern), FnoUnderlying.name.ilike(pattern)))
-        statement = statement.order_by(FnoUnderlying.symbol).limit(limit)
+        total = session.exec(select(func.count()).select_from(statement.subquery())).one()
+        statement = statement.order_by(FnoUnderlying.symbol).offset(offset).limit(limit)
         rows = list(session.exec(statement))
-        if rows:
-            return rows
-        return self._fallback_fno_underlyings()
+        if real_fno_underlying_count:
+            return {
+                "items": rows,
+                "total": total,
+                "source": "Angel Instrument Master",
+                "message": None,
+            }
+        if real_fno_instrument_count:
+            return {
+                "items": [],
+                "total": total,
+                "source": "Unavailable",
+                "message": "No F&O underlyings were derived from the synced Angel instrument master.",
+            }
+        fallback = self._fallback_fno_underlyings()
+        if q:
+            pattern = q.strip().upper()
+            fallback = [row for row in fallback if pattern in row.symbol.upper() or pattern in row.name.upper()]
+        fallback_total = len(fallback)
+        return {
+            "items": fallback[offset : offset + limit],
+            "total": fallback_total,
+            "source": "Sample",
+            "message": "F&O instrument master not synced yet. Run instrument sync.",
+        }
 
     def fno_contracts(self, session: Session, symbol: str) -> dict[str, list[InstrumentMaster]]:
         normalized = self._normalize_symbol(symbol)
@@ -162,6 +188,37 @@ class InstrumentMasterService:
                 )
             )
         return sorted(underlyings, key=lambda row: row.symbol)
+
+    def _sync_summary(
+        self,
+        payload: list[dict[str, Any]],
+        records: list[InstrumentMaster],
+        underlyings: list[FnoUnderlying],
+    ) -> dict[str, int]:
+        return {
+            "total_rows": len(payload),
+            "total_instruments_parsed": len(records),
+            "nse_equities_stored": sum(1 for row in records if row.exchange == "NSE" and row.is_equity),
+            "bse_equities_stored": sum(1 for row in records if row.exchange == "BSE" and row.is_equity),
+            "nfo_futures_stored": sum(1 for row in records if row.exchange == "NFO" and row.is_future),
+            "nfo_options_stored": sum(1 for row in records if row.exchange == "NFO" and row.is_option),
+            "unique_fno_underlyings_stored": len(underlyings),
+            "skipped_invalid_rows_count": max(0, len(payload) - len(records)),
+        }
+
+    def _real_fno_instrument_count(self, session: Session) -> int:
+        return int(
+            session.exec(
+                select(func.count())
+                .select_from(InstrumentMaster)
+                .where(InstrumentMaster.exchange == "NFO")
+                .where(InstrumentMaster.is_fno == True)  # noqa: E712
+            ).one()
+            or 0
+        )
+
+    def _real_fno_underlying_count(self, session: Session) -> int:
+        return int(session.exec(select(func.count()).select_from(FnoUnderlying)).one() or 0)
 
     def get_by_token(self, session: Session, token: str) -> InstrumentMaster | None:
         return session.exec(select(InstrumentMaster).where(InstrumentMaster.token == token).limit(1)).first()

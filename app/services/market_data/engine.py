@@ -45,7 +45,10 @@ class MarketDataEngine:
     def get_fno_underlyings(self, session=None) -> list[dict[str, Any]]:
         from app.services.data.instrument_master_service import InstrumentMasterService
 
-        return [row.model_dump() for row in InstrumentMasterService().fno_underlyings(session)] if session is not None else []
+        if session is None:
+            return []
+        payload = InstrumentMasterService().fno_underlyings(session, limit=1000)
+        return [row.model_dump() for row in payload["items"]]
 
     def get_fno_contracts(self, symbol: str, session=None) -> dict[str, list[dict[str, Any]]]:
         from app.services.data.instrument_master_service import InstrumentMasterService
