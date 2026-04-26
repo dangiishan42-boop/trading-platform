@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -44,6 +45,8 @@ class MarketWatchService:
         "1M": MarketWatchIntervalConfig("ONE_DAY", timedelta(days=365 * 5), "ME"),
     }
     SUMMARY_UNIVERSE = list(ANGEL_SYMBOL_DETAILS.keys())
+    SUMMARY_TIMEOUT_SECONDS = 3.0
+    SUMMARY_MAX_WORKERS = 6
 
     def __init__(
         self,
@@ -146,9 +149,10 @@ class MarketWatchService:
     def indices(self) -> list[dict[str, Any]]:
         return self.market_data.get_indices()
 
-    def summary(self, session=None, universe: str = "NIFTY 50") -> dict[str, Any]:
-        indices = [self._normalize_index_row(row) for row in self.indices()]
-        universe_quotes = self._universe_quotes(session=session)
+    def summary(self, session=None, universe: str = "nifty50", fast: bool = False) -> dict[str, Any]:
+        indices = self._summary_indices(fast=fast)
+        universe_symbols = self._summary_universe(universe)
+        universe_quotes = self._universe_quotes(symbols=universe_symbols, fast=fast)
         rankable = [row for row in universe_quotes if self._is_rankable(row)]
         top_gainers = sorted([row for row in rankable if row["change_pct"] > 0], key=lambda row: row["change_pct"], reverse=True)[:10]
         top_losers = sorted([row for row in rankable if row["change_pct"] < 0], key=lambda row: row["change_pct"])[:10]
@@ -165,6 +169,7 @@ class MarketWatchService:
             "fii_dii_status": self._fii_dii_status(),
             "data_source_summary": self._data_source_summary(indices, universe_quotes),
             "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "fast": fast,
         }
 
     def fundamentals_placeholder(self, symbol: str) -> dict[str, Any]:
@@ -351,7 +356,93 @@ class MarketWatchService:
     def _normalize_query(self, query: str | None) -> str:
         return str(query or "").strip().upper().replace(" ", "")
 
-    def _universe_quotes(self, session=None) -> list[dict[str, Any]]:
+    def _summary_indices(self, fast: bool = False) -> list[dict[str, Any]]:
+        if not fast:
+            return [self._normalize_index_row(row) for row in self.indices()]
+        rows = []
+        for name, details in ANGEL_INDEX_DETAILS.items():
+            rows.append(
+                self._normalize_index_row(
+                    {
+                        "name": name,
+                        "exchange": details["exchange"],
+                        "latest_price": None,
+                        "change": None,
+                        "change_pct": None,
+                        "available": False,
+                        "data_source_badge": "Unavailable",
+                        "message": "Fast summary uses cached/sample data; index live token is unavailable.",
+                    }
+                )
+            )
+        return rows
+
+    def _summary_universe(self, universe: str | None) -> list[str]:
+        if self.SUMMARY_UNIVERSE != list(ANGEL_SYMBOL_DETAILS.keys()):
+            return self.SUMMARY_UNIVERSE[:20]
+        normalized = str(universe or "nifty50").strip().lower().replace(" ", "").replace("_", "")
+        compact = list(ANGEL_SYMBOL_DETAILS.keys())
+        universes = {
+            "nifty50": compact,
+            "default": compact,
+            "compact": compact,
+            "sample": compact,
+            "fo": compact,
+        }
+        return universes.get(normalized, compact)[:20]
+
+    def _universe_quotes(self, symbols: list[str] | None = None, fast: bool = False) -> list[dict[str, Any]]:
+        symbols = symbols or self.SUMMARY_UNIVERSE
+        if fast:
+            return [self._quote_for_summary(symbol, fast=True) for symbol in symbols]
+
+        rows_by_symbol: dict[str, dict[str, Any]] = {}
+        executor = ThreadPoolExecutor(max_workers=min(self.SUMMARY_MAX_WORKERS, max(1, len(symbols))))
+        futures = {executor.submit(self._quote_for_summary, symbol, False): symbol for symbol in symbols}
+        done, not_done = wait(futures, timeout=self.SUMMARY_TIMEOUT_SECONDS)
+        for future in done:
+            symbol = futures[future]
+            try:
+                rows_by_symbol[symbol] = future.result()
+            except Exception as exc:
+                rows_by_symbol[symbol] = self._error_quote_row(symbol, exc)
+        for future in not_done:
+            symbol = futures[future]
+            future.cancel()
+            rows_by_symbol[symbol] = self._quote_for_summary(symbol, fast=True)
+        executor.shutdown(wait=False, cancel_futures=True)
+        return [rows_by_symbol[symbol] for symbol in symbols]
+
+    def _quote_for_summary(self, symbol: str, fast: bool) -> dict[str, Any]:
+        details = ANGEL_SYMBOL_DETAILS[symbol]
+        try:
+            fetcher = self.market_data.get_quote_fast if fast and hasattr(self.market_data, "get_quote_fast") else self.market_data.get_quote
+            quote = fetcher(
+                symbol=symbol,
+                token=details["token"],
+                exchange=details["exchange"],
+                session=None,
+            )
+        except Exception as exc:
+            return self._error_quote_row(symbol, exc)
+        return self._normalize_quote_row(quote)
+
+    def _error_quote_row(self, symbol: str, exc: Exception) -> dict[str, Any]:
+        details = ANGEL_SYMBOL_DETAILS[symbol]
+        return self._normalize_quote_row(
+            {
+                "symbol": symbol,
+                "stock_name": details["name"],
+                "exchange": details["exchange"],
+                "symbol_token": details["token"],
+                "available": False,
+                "message": str(exc),
+                "data_source_badge": "Error",
+                "data_source_note": str(exc),
+            }
+        )
+
+    def _universe_quotes_legacy(self, session=None) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
         for symbol in self.SUMMARY_UNIVERSE:
             details = ANGEL_SYMBOL_DETAILS[symbol]

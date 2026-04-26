@@ -126,7 +126,7 @@
 
     .ticker-bar {
       min-width: 0;
-      height: 54px;
+      min-height: 88px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       border: 1px solid var(--line);
@@ -138,23 +138,30 @@
     .ticker-strip {
       display: grid;
       grid-auto-flow: column;
-      grid-auto-columns: minmax(126px, 1fr);
+      grid-auto-columns: minmax(205px, 1fr);
       min-width: 0;
-      overflow: hidden;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-color: #2c527d #050b14;
+      scrollbar-width: thin;
     }
+    .ticker-strip::-webkit-scrollbar { height: 8px; }
+    .ticker-strip::-webkit-scrollbar-track { background: #050b14; }
+    .ticker-strip::-webkit-scrollbar-thumb { background: #2c527d; border-radius: 999px; }
     .ticker-card {
       position: relative;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 42px;
+      grid-template-columns: minmax(0, 1fr);
       gap: 6px;
       align-items: center;
-      padding: 7px 9px;
+      min-height: 80px;
+      padding: 9px 10px;
       border-right: 1px solid rgba(31,53,82,0.84);
       background: linear-gradient(180deg, rgba(17,31,51,0.76), rgba(7,17,31,0.92));
     }
     .ticker-name { color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
-    .ticker-value { margin-top: 1px; font-size: 13px; font-weight: 950; }
-    .ticker-chg { font-size: 11px; font-weight: 900; }
+    .ticker-value { margin-top: 2px; font-size: 16px; font-weight: 950; }
+    .ticker-chg { margin-top: 3px; display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:11px;font-weight:900; }
     .spark { width: 42px; height: 25px; }
     .top-actions {
       display: flex;
@@ -264,6 +271,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .refresh-note { color: var(--amber); font-size: 11px; font-weight: 900; }
 
     .work-grid {
       min-height: 0;
@@ -934,16 +942,30 @@
       el.className = `watchlist-message ${isError ? "negative" : ""}`.trim();
     }
 
-    async function loadSummary() {
-      setSummaryLoading();
+    async function fetchJsonWithTimeout(url, timeoutMs = 4500) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        state.summary = await fetchJson("/api/v1/market-watch/summary");
+        return await fetchJson(url, { signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    async function loadSummary({ fast = false, background = false } = {}) {
+      if (!background) setSummaryLoading();
+      try {
+        if (background) setStatus("Refreshing live data...");
+        state.summary = await fetchJsonWithTimeout(`/api/v1/market-watch/summary?fast=${fast ? "true" : "false"}&universe=nifty50`, fast ? 2500 : 5000);
         renderSummary();
-        setStatus(`Market summary loaded - ${state.summary.data_source_summary?.primary_badge || "Unavailable"}`);
+        setStatus(`${background ? "Live refresh complete" : "Market summary loaded"} - ${state.summary.data_source_summary?.primary_badge || "Unavailable"}`);
       } catch (error) {
-        state.summary = null;
-        setStatus(`Market summary unavailable: ${error.message}`, true);
-        renderSummaryError(error.message);
+        if (!background || !state.summary) {
+          state.summary = null;
+          setStatus(`Market summary unavailable: ${error.message}`, true);
+          renderSummaryError(error.message);
+        } else {
+          setStatus(`Live refresh unavailable: ${error.message}. Keeping current data.`, true);
+        }
       }
     }
     function setSummaryLoading() {
@@ -977,7 +999,7 @@
         const value = item.latest_price;
         const change = item.change_pct;
         const points = Array.from({ length: 18 }, (_, i) => `${(i / 17) * 42},${22 - (Math.sin((i + index) / 3) * 7 + 11)}`).join(" ");
-        return `<a class="ticker-card" href="${detailPath(item.symbol || name, "index")}"><div><div class="ticker-name">${escapeHtml(name)}</div><div class="ticker-value mono">${fmt(value)}</div><div class="ticker-chg ${cls(change)}">${Number(change) >= 0 ? "UP" : "DN"} ${pct(change)} ${badge(item.data_source_badge)}</div></div><svg class="spark" viewBox="0 0 42 25"><polyline points="${points}" fill="none" stroke="${Number(change) >= 0 ? "var(--green)" : "var(--red)"}" stroke-width="2"/></svg></a>`;
+        return `<a class="ticker-card" href="${detailPath(item.symbol || name, "index")}"><div><div class="ticker-name">${escapeHtml(name)}</div><div class="ticker-value mono">${fmt(value)}</div><div class="ticker-chg ${cls(change)}"><span>${Number(change) >= 0 ? "UP" : "DN"} ${Number.isFinite(Number(item.change)) ? fmt(item.change) : "--"}</span><span>${pct(change)}</span>${badge(item.data_source_badge)}</div></div></a>`;
       }).join("") || `<div class="ticker-card"><div class="ticker-name">Indices</div><div class="ticker-value mono">--</div><div class="ticker-chg">${badge("Unavailable")}</div></div>`;
     }
     function renderClock() {
@@ -1242,18 +1264,29 @@
       state.watchlistLoading = true;
       renderWatchlist();
       setWatchlistMessage("Refreshing watchlist prices...");
-      const quotePairs = await Promise.all(watchlist.items.map(async (item) => {
-        try {
-          const quote = await postJson("/api/v1/market-watch/quote", {
+      let quotePairs = [];
+      try {
+        const payload = watchlist.items.map((item) => ({
             query: item.symbol,
             exchange: item.exchange || "NSE",
             symbol_token: item.token || mappedToken(item.symbol) || null,
-          });
-          return [watchlistQuoteKey(item), quote];
-        } catch (error) {
-          return [watchlistQuoteKey(item), null];
-        }
-      }));
+        }));
+        const bulk = await postJson("/api/v1/market-watch/quotes", payload);
+        quotePairs = watchlist.items.map((item, index) => [watchlistQuoteKey(item), (bulk.items || [])[index] || null]);
+      } catch (error) {
+        quotePairs = await Promise.all(watchlist.items.map(async (item) => {
+          try {
+            const quote = await postJson("/api/v1/market-watch/quote", {
+              query: item.symbol,
+              exchange: item.exchange || "NSE",
+              symbol_token: item.token || mappedToken(item.symbol) || null,
+            });
+            return [watchlistQuoteKey(item), quote];
+          } catch {
+            return [watchlistQuoteKey(item), null];
+          }
+        }));
+      }
       quotePairs.forEach(([key, quote]) => {
         state.watchlistQuotes[key] = quote;
       });
@@ -1472,12 +1505,14 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       renderTimeframes();
-      await loadSummary();
-      await loadWatchlists();
       setupInteractions();
       renderClock();
       setInterval(renderClock, 1000);
-      await loadSymbol();
+      await loadSummary({ fast: true });
+      loadSummary({ fast: false, background: true });
+      await loadWatchlists({ hydrate: false });
+      loadSymbol();
+      hydrateActiveWatchlistQuotes();
     });
   </script>
 </body>

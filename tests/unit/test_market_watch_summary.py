@@ -70,3 +70,11 @@ def test_summary_fii_dii_source_not_connected():
 
     assert fii_dii["status"] == "source_not_connected"
     assert fii_dii["message"] == "FII/DII live data source not connected yet"
+
+
+def test_summary_default_universe_is_compact():
+    service = MarketWatchService(market_data=FakeMarketData())
+
+    symbols = service._summary_universe("nifty50")
+
+    assert len(symbols) <= 20

@@ -56,8 +56,19 @@ def indices():
 
 
 @router.get("/summary")
-def summary(session: Session = Depends(get_session), universe: str = "NIFTY 50"):
-    return MarketWatchService().summary(session=session, universe=universe)
+def summary(session: Session = Depends(get_session), universe: str = "nifty50", fast: bool = False):
+    return MarketWatchService().summary(session=session, universe=universe, fast=fast)
+
+
+@router.post("/quotes")
+def quotes_bulk(payload: list[MarketWatchSymbolRequest], session: Session = Depends(get_session)):
+    service = MarketWatchService()
+    return {
+        "items": [
+            service.quote(item.query, item.exchange, item.symbol_token, session=session)
+            for item in payload
+        ]
+    }
 
 
 @router.get("/detail/{symbol}/fundamentals")

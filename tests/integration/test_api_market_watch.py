@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from time import perf_counter
 
 from app.main import app
 
@@ -41,6 +42,32 @@ def test_market_watch_summary_endpoint_returns_structured_payload():
     assert "sector_performance" in payload
     assert "data_source_summary" in payload
     assert payload["fii_dii_status"]["status"] == "source_not_connected"
+
+
+def test_market_watch_fast_summary_returns_quick_compact_payload():
+    started = perf_counter()
+    response = client.get("/api/v1/market-watch/summary?fast=true&universe=nifty50")
+    elapsed = perf_counter() - started
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert elapsed < 2.5
+    assert payload["indices"]
+    assert "top_gainers" in payload
+    assert "top_losers" in payload
+    assert len(payload["universe_quotes"]) <= 20
+
+
+def test_market_watch_summary_indices_are_readable_rows():
+    response = client.get("/api/v1/market-watch/summary?fast=true")
+
+    assert response.status_code == 200
+    index = response.json()["indices"][0]
+    assert index["name"]
+    assert "latest_price" in index
+    assert "change" in index
+    assert "change_pct" in index
+    assert "data_source_badge" in index
 
 
 def test_market_watch_quote_uses_service(monkeypatch):

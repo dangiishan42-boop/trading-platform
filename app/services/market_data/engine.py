@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -59,8 +60,38 @@ class MarketDataEngine:
             fallback_quote = self.fallback.get_quote(symbol=symbol, token=token, exchange=exchange, session=session)
             return {**fallback_quote, **self._source_meta(self.fallback, message=f"Live fetch failed: {exc}")}
 
+    def get_quote_fast(self, *, symbol: str | None = None, token: str | None = None, exchange: str = "NSE", session=None) -> dict[str, Any]:
+        key = self._quote_key(symbol, token, exchange)
+        cached = self.quote_cache.get(key)
+        if cached is not None:
+            return {**cached.value, **self._source_meta(self.primary, status="Cached", cached=True)}
+        fallback_quote = self.fallback.get_quote(symbol=symbol, token=token, exchange=exchange, session=session)
+        return {**fallback_quote, **self._source_meta(self.fallback)}
+
     def get_quotes_bulk(self, instruments: list[dict[str, str]], session=None) -> dict[str, Any]:
-        return {"items": [self.get_quote(symbol=i.get("symbol"), token=i.get("token") or i.get("symbol_token"), exchange=i.get("exchange") or "NSE", session=session) for i in instruments]}
+        def fetch(item: dict[str, str]) -> dict[str, Any]:
+            return self.get_quote(
+                symbol=item.get("symbol"),
+                token=item.get("token") or item.get("symbol_token"),
+                exchange=item.get("exchange") or "NSE",
+                session=session,
+            )
+
+        with ThreadPoolExecutor(max_workers=min(8, max(1, len(instruments)))) as executor:
+            return {"items": list(executor.map(fetch, instruments))}
+
+    def get_quotes_bulk_fast(self, instruments: list[dict[str, str]], session=None) -> dict[str, Any]:
+        return {
+            "items": [
+                self.get_quote_fast(
+                    symbol=i.get("symbol"),
+                    token=i.get("token") or i.get("symbol_token"),
+                    exchange=i.get("exchange") or "NSE",
+                    session=session,
+                )
+                for i in instruments
+            ]
+        }
 
     def get_candles(
         self,
