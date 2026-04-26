@@ -6,6 +6,13 @@ from app.main import app
 client = TestClient(app)
 
 
+def test_home_page_loads():
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "Live Market Watch" in response.text
+
+
 def test_market_watch_page_loads():
     response = client.get("/market-watch")
 
@@ -22,6 +29,17 @@ def test_screener_page_loads():
     assert "Filter Builder" in response.text
     assert "Scan Summary" in response.text
     assert "Market Cap Breakdown" in response.text
+
+
+def test_heatmap_page_loads():
+    response = client.get("/heatmap")
+
+    assert response.status_code == 200
+    assert "Market Heatmap" in response.text
+    assert "NIFTY 500 HEATMAP" in response.text
+    assert "Top Gainers" in response.text
+    assert "FII / DII Flow" in response.text
+    assert "Heatmap data is based on local sample data for UI demonstration" in response.text
 
 
 def test_market_watch_stock_detail_page_loads():
@@ -312,3 +330,10 @@ def test_algo_trading_page_loads():
     assert "Algo Rule Builder" in response.text
     assert "Risk Controls" in response.text
     assert "Simulation Settings" in response.text
+
+
+def test_historical_data_page_loads():
+    response = client.get("/historical-data")
+
+    assert response.status_code == 200
+    assert "Historical Data" in response.text

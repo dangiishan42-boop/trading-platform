@@ -80,6 +80,18 @@ def screener_page(request: Request):
     )
 
 
+@router.get("/heatmap")
+def heatmap_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="heatmap/index.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - Market Heatmap",
+        },
+    )
+
+
 @router.get("/market-watch/chart")
 def market_watch_large_chart_page(request: Request):
     return templates.TemplateResponse(

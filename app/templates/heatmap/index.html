@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <style>
+    :root {
+      --bg: #030711;
+      --side: #07111f;
+      --panel: #07111f;
+      --panel-2: #0b1524;
+      --panel-3: #101c2d;
+      --line: #1d3555;
+      --line-2: #2c527d;
+      --text: #d8e5f5;
+      --muted: #7f90a7;
+      --purple: #8b5cf6;
+      --blue: #2f81f7;
+      --green: #00d084;
+      --red: #ff4d5e;
+      --amber: #f5b84b;
+      --neutral: #637083;
+      --sidebar: 220px;
+      --rightbar: 330px;
+      --shadow: 0 18px 42px rgba(0, 0, 0, .36);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    body { overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .mono { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+    .muted { color: var(--muted); }
+    .terminal {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      background: radial-gradient(circle at 42% -18%, rgba(139, 92, 246, .16), transparent 32%), linear-gradient(180deg, #06101d, #03060d 62%);
+    }
+    .sidebar { position: sticky; top: 0; height: 100vh; overflow: hidden; background: linear-gradient(180deg, #091729, #050a13); border-right: 1px solid var(--line); display: flex; flex-direction: column; z-index: 5; }
+    .side-brand { display: flex; gap: 10px; align-items: center; padding: 14px 12px; border-bottom: 1px solid var(--line); }
+    .brand-logo { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; font-weight: 950; box-shadow: 0 0 24px rgba(139,92,246,.42); }
+    .brand-title { font-size: 14px; font-weight: 900; }
+    .brand-sub { margin-top: 2px; font-size: 11px; color: var(--muted); }
+    .nav { padding: 9px; overflow: auto; display: grid; gap: 4px; }
+    .nav-item { display: grid; grid-template-columns: 27px minmax(0, 1fr); gap: 8px; align-items: center; min-height: 31px; padding: 6px 8px; border-radius: 7px; border: 1px solid transparent; color: #aebbd0; font-size: 12px; font-weight: 780; }
+    .nav-item:hover { background: #0d1c30; border-color: rgba(47,129,247,.25); color: #fff; }
+    .nav-item.active { color: #fff; background: linear-gradient(135deg, rgba(139,92,246,.72), rgba(47,129,247,.58)); border-color: rgba(139,92,246,.72); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+    .nav-icon { color: #8ebeff; font-size: 11px; font-weight: 950; }
+    .side-status { margin: auto 10px 10px; padding: 11px; border: 1px solid var(--line); border-radius: 8px; background: #081322; }
+    .side-status-title { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 900; }
+    .side-status-open { margin-top: 6px; color: var(--green); font-size: 22px; font-weight: 950; }
+    .side-clock { margin-top: 5px; color: #9fb0c7; font-size: 11px; line-height: 1.45; }
+    .main { min-width: 0; padding: 10px; display: grid; gap: 10px; }
+    .ticker-bar { min-width: 0; min-height: 54px; display: grid; grid-template-columns: minmax(0, 1fr) auto; border: 1px solid var(--line); border-radius: 8px; background: rgba(8,17,29,.96); box-shadow: var(--shadow); overflow: hidden; }
+    .ticker-strip { display: grid; grid-template-columns: repeat(4, minmax(126px, 1fr)); min-width: 0; overflow: hidden; }
+    .ticker-card { display: grid; grid-template-columns: minmax(0,1fr) 48px; gap: 6px; align-items: center; padding: 7px 9px; border-right: 1px solid rgba(31,53,82,.84); background: linear-gradient(180deg, rgba(17,31,51,.76), rgba(7,17,31,.92)); }
+    .ticker-name { color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .ticker-value { margin-top: 1px; font-size: 13px; font-weight: 950; }
+    .ticker-chg { font-size: 11px; font-weight: 900; }
+    .spark { width: 48px; height: 26px; }
+    .top-actions { display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-left: 1px solid var(--line); background: #081322; white-space: nowrap; }
+    .top-search { width: 230px; height: 32px; border: 1px solid var(--line-2); border-radius: 7px; background: #050b14; color: var(--text); outline: none; padding: 0 10px; font-size: 12px; font-weight: 800; }
+    .icon-btn { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 7px; background: #0b1828; color: #d8e5f5; display: grid; place-items: center; font-weight: 900; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--purple), var(--blue)); font-size: 12px; font-weight: 950; }
+    .page-head { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(180deg, #0b1524, #07111f); box-shadow: var(--shadow); }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 24px; line-height: 1.1; font-weight: 950; }
+    h2 { font-size: 13px; font-weight: 950; text-transform: uppercase; color: #edf5ff; }
+    .subtitle { margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+    .status-pill, .note { min-height: 30px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(44,82,125,.62); border-radius: 7px; background: #081322; color: #bcd0e8; padding: 0 9px; font-size: 11px; font-weight: 850; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 12px rgba(245,184,75,.62); }
+    .btn { min-height: 32px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: 7px; background: #0b1828; color: var(--text); font-size: 12px; font-weight: 900; }
+    .btn:hover { border-color: var(--blue); }
+    .btn-primary { border-color: rgba(139,92,246,.75); background: linear-gradient(135deg, var(--purple), var(--blue)); color: #fff; box-shadow: 0 0 20px rgba(139,92,246,.2); }
+    .tabs { display: flex; gap: 6px; overflow: auto; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #07111f; box-shadow: var(--shadow); }
+    .tab { min-height: 32px; border: 1px solid transparent; border-radius: 7px; padding: 0 10px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 950; white-space: nowrap; }
+    .tab.active { color: #fff; border-color: rgba(139,92,246,.68); background: linear-gradient(135deg, rgba(139,92,246,.38), rgba(47,129,247,.24)); }
+    .control-bar { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)) auto auto; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(180deg, #0b1524, #07111f); box-shadow: var(--shadow); align-items: end; }
+    .field { display: grid; gap: 5px; }
+    label { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 950; }
+    select, input { width: 100%; min-height: 32px; border: 1px solid var(--line-2); border-radius: 6px; background: #050b14; color: var(--text); outline: none; padding: 0 8px; font-size: 12px; font-weight: 800; }
+    select:focus, input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
+    .summary-strip { display: grid; grid-template-columns: repeat(8, minmax(110px, 1fr)); gap: 8px; }
+    .summary-card { min-width: 0; border: 1px solid rgba(44,82,125,.58); border-radius: 8px; background: linear-gradient(180deg, #0b1524, #07111f); padding: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,.035); }
+    .summary-label { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .summary-value { margin-top: 4px; font-size: 16px; font-weight: 950; }
+    .summary-sub { margin-top: 2px; font-size: 11px; font-weight: 850; }
+    .mini-spark { margin-top: 5px; width: 100%; height: 16px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) var(--rightbar); gap: 10px; align-items: start; }
+    .content, .rightbar { min-width: 0; display: grid; gap: 10px; }
+    .rightbar { position: sticky; top: 10px; }
+    .panel { min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(180deg, var(--panel-2), var(--panel)); box-shadow: var(--shadow); overflow: hidden; }
+    .panel-head { min-height: 38px; padding: 9px 10px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(10,20,34,.72); }
+    .panel-body { padding: 10px; }
+    .heatmap-panel { min-height: 660px; }
+    .heatmap-grid { display: grid; grid-template-columns: repeat(6, minmax(120px, 1fr)); grid-auto-rows: 128px; gap: 6px; min-height: 590px; }
+    .sector-box { min-width: 0; min-height: 0; border: 1px solid rgba(44,82,125,.62); border-radius: 7px; background: rgba(5,11,20,.55); padding: 6px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 5px; overflow: hidden; }
+    .sector-large { grid-column: span 2; grid-row: span 2; }
+    .sector-wide { grid-column: span 2; }
+    .sector-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; color: #aebbd0; font-size: 10px; font-weight: 950; text-transform: uppercase; min-width: 0; }
+    .sector-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tiles { min-height: 0; display: flex; flex-wrap: wrap; gap: 4px; align-content: stretch; }
+    .stock-tile { position: relative; min-width: 64px; min-height: 48px; flex: 1 1 var(--basis, 80px); border: 1px solid rgba(255,255,255,.08); border-radius: 5px; padding: 5px; display: grid; align-content: space-between; color: #fff; overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
+    .stock-tile:hover { outline: 2px solid rgba(139,92,246,.78); z-index: 2; }
+    .tile-symbol { font-size: 11px; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tile-change { font-size: 13px; font-weight: 950; }
+    .tile-meta { color: rgba(255,255,255,.78); font-size: 10px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .scale { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin-top: 10px; color: #d6e5f7; font-size: 10px; font-weight: 900; text-align: center; }
+    .scale-cell { min-height: 22px; display: grid; place-items: center; border-radius: 5px; border: 1px solid rgba(255,255,255,.08); }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 7px 8px; border-bottom: 1px solid rgba(31,53,82,.72); font-size: 12px; text-align: left; white-space: nowrap; }
+    .table th { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 950; }
+    .table tr:hover td { background: rgba(139,92,246,.08); }
+    .rank { color: var(--muted); width: 26px; }
+    .bar-list { display: grid; gap: 8px; }
+    .bar-row { display: grid; grid-template-columns: 112px minmax(0,1fr) 44px; gap: 8px; align-items: center; font-size: 11px; color: #b8c6d8; }
+    .bar-track { height: 8px; border-radius: 99px; background: #050b14; border: 1px solid rgba(44,82,125,.42); overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 99px; }
+    .donut-wrap { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 10px; align-items: center; }
+    .donut { width: 112px; height: 112px; }
+    .legend { display: grid; gap: 6px; font-size: 12px; font-weight: 850; }
+    .legend-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid rgba(31,53,82,.5); padding-bottom: 5px; }
+    .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 7px; }
+    .bottom-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .mini-index { min-height: 118px; display: grid; grid-template-rows: auto minmax(0,1fr) auto; gap: 6px; }
+    .line-chart { width: 100%; height: 64px; }
+    .donut-css { width: 110px; height: 110px; border-radius: 50%; background: conic-gradient(var(--purple) 0 48%, var(--blue) 48% 73%, var(--green) 73% 87%, var(--amber) 87% 96%, var(--red) 96% 100%); position: relative; }
+    .donut-css::after { content: ""; position: absolute; inset: 23px; border-radius: 50%; background: #07111f; border: 1px solid var(--line); }
+    .flow-bars { height: 130px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; align-items: end; }
+    .flow-day { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) 16px; gap: 5px; }
+    .flow-stack { display: flex; align-items: flex-end; justify-content: center; gap: 4px; border-bottom: 1px solid var(--line); }
+    .flow-bar { width: 14px; min-height: 5px; border-radius: 4px 4px 0 0; }
+    .flow-label { color: var(--muted); font-size: 10px; text-align: center; }
+    .stacked { height: 28px; display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #050b14; }
+    .stack-seg { height: 100%; display: grid; place-items: center; min-width: 24px; color: #fff; font-size: 10px; font-weight: 950; overflow: hidden; }
+    .placeholder { min-height: 170px; display: grid; place-items: center; color: var(--muted); font-size: 13px; font-weight: 850; text-align: center; border: 1px dashed rgba(44,82,125,.55); border-radius: 8px; background: rgba(5,11,20,.38); }
+    .tooltip { position: fixed; display: none; z-index: 40; min-width: 230px; border: 1px solid var(--line-2); border-radius: 8px; background: rgba(5, 11, 20, .97); box-shadow: 0 18px 42px rgba(0,0,0,.5); padding: 9px; pointer-events: none; font-size: 12px; }
+    .tooltip-title { font-weight: 950; color: #fff; margin-bottom: 6px; }
+    .tip-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; color: #b8c6d8; border-bottom: 1px solid rgba(31,53,82,.45); }
+    .loading .heatmap-grid, .loading .summary-strip, .loading .rightbar, .loading .bottom-grid { opacity: .55; }
+    @media (max-width: 1480px) { .bottom-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .heatmap-grid { grid-template-columns: repeat(4, minmax(120px, 1fr)); } .summary-strip { grid-template-columns: repeat(4, minmax(110px, 1fr)); } }
+    @media (max-width: 1180px) { .workspace { grid-template-columns: 1fr; } .rightbar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 920px) { .terminal { grid-template-columns: 1fr; } .sidebar { position: static; height: auto; } .nav { grid-template-columns: repeat(2, minmax(0,1fr)); } .ticker-bar, .page-head, .control-bar { grid-template-columns: 1fr; } .ticker-strip { grid-template-columns: repeat(2, minmax(0,1fr)); } .top-actions { border-left: 0; border-top: 1px solid var(--line); justify-content: space-between; } .top-search { width: min(100%, 240px); } .heatmap-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); } .sector-large, .sector-wide { grid-column: span 1; grid-row: span 1; } .summary-strip, .rightbar, .bottom-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="terminal" id="page">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="brand-logo">TP</div>
+        <div><div class="brand-title">Trading Platform</div><div class="brand-sub">Professional Trading Platform</div></div>
+      </div>
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="nav-item" href="/dashboard"><span class="nav-icon">DB</span><span>Dashboard</span></a>
+        <a class="nav-item" href="/market-watch"><span class="nav-icon">MW</span><span>Market Watch</span></a>
+        <a class="nav-item" href="/screener"><span class="nav-icon">SC</span><span>Screener</span></a>
+        <a class="nav-item active" href="/heatmap"><span class="nav-icon">HM</span><span>Heatmap</span></a>
+        <a class="nav-item" href="/market-watch/chart"><span class="nav-icon">CH</span><span>Charts</span></a>
+        <a class="nav-item" href="/dashboard"><span class="nav-icon">BT</span><span>Backtesting</span></a>
+        <a class="nav-item" href="/algo-trading"><span class="nav-icon">ST</span><span>Strategies</span></a>
+        <a class="nav-item" href="/algo-trading"><span class="nav-icon">AT</span><span>Algo Trading</span></a>
+        <a class="nav-item" href="/portfolio"><span class="nav-icon">PF</span><span>Portfolio</span></a>
+        <a class="nav-item" href="/portfolio"><span class="nav-icon">PS</span><span>Positions</span></a>
+        <a class="nav-item" href="/portfolio"><span class="nav-icon">OR</span><span>Orders</span></a>
+        <a class="nav-item" href="/portfolio"><span class="nav-icon">HO</span><span>Holdings</span></a>
+        <a class="nav-item" href="/research"><span class="nav-icon">OP</span><span>Optimizer</span></a>
+        <a class="nav-item" href="/research"><span class="nav-icon">EV</span><span>Events Calendar</span></a>
+        <a class="nav-item" href="/historical-data"><span class="nav-icon">DD</span><span>Data Downloader</span></a>
+        <a class="nav-item" href="/docs"><span class="nav-icon">PR</span><span>Profile</span></a>
+        <a class="nav-item" href="/docs"><span class="nav-icon">SE</span><span>Settings</span></a>
+        <a class="nav-item" href="/"><span class="nav-icon">LO</span><span>Logout</span></a>
+      </nav>
+      <div class="side-status">
+        <div class="side-status-title">Market Status</div>
+        <div class="side-status-open">OPEN</div>
+        <div class="side-clock mono" id="side-clock">Asia/Kolkata session<br />Sample heatmap data</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="ticker-bar" aria-label="Market ticker">
+        <div class="ticker-strip" id="ticker-strip"></div>
+        <div class="top-actions">
+          <input class="top-search" placeholder="Search stocks, indices..." />
+          <button class="icon-btn" title="Notifications">!</button>
+          <button class="icon-btn" title="Theme">M</button>
+          <div class="avatar">AK</div>
+        </div>
+      </section>
+
+      <section class="page-head">
+        <div>
+          <h1>Market Heatmap</h1>
+          <p class="subtitle">Visualize market performance across sectors and stocks</p>
+        </div>
+        <div class="actions">
+          <span class="status-pill"><span class="status-dot"></span><span id="data-status">Delayed / Sample</span></span>
+          <span class="status-pill mono" id="data-time">Data as of --</span>
+          <button class="btn btn-primary" id="customize-btn">Customize View</button>
+        </div>
+      </section>
+
+      <section class="tabs" aria-label="Heatmap views">
+        <button class="tab active" data-tab="market">Market Heatmap</button>
+        <button class="tab" data-tab="sector">Sector Heatmap</button>
+        <button class="tab" data-tab="stock">Stock Heatmap</button>
+        <button class="tab" data-tab="rotation">Sector Rotation</button>
+        <button class="tab" data-tab="flow">FII/DII Flow</button>
+      </section>
+
+      <section class="control-bar">
+        <div class="field"><label for="universe">Universe</label><select id="universe"></select></div>
+        <div class="field"><label for="size-by">Size By</label><select id="size-by"></select></div>
+        <div class="field"><label for="color-by">Color By</label><select id="color-by"></select></div>
+        <div class="field"><label for="timeframe">Timeframe</label><select id="timeframe"></select></div>
+        <button class="icon-btn" id="filter-btn" title="Filters">F</button>
+        <button class="btn btn-primary" id="refresh-btn">Refresh</button>
+      </section>
+
+      <section class="summary-strip" id="summary-strip"></section>
+      <div class="note" id="source-note">Heatmap data is based on local sample data for UI demonstration. Real-time exchange integration coming soon.</div>
+
+      <section class="workspace" id="tab-market">
+        <div class="content">
+          <section class="panel heatmap-panel">
+            <div class="panel-head">
+              <h2 id="heatmap-title">NIFTY 500 HEATMAP</h2>
+              <span class="muted mono" id="heatmap-subtitle">Market Cap / % Change</span>
+            </div>
+            <div class="panel-body">
+              <div class="heatmap-grid" id="heatmap-grid"></div>
+              <div class="scale">
+                <div class="scale-cell" style="background:#751f2a">&lt; -3%</div>
+                <div class="scale-cell" style="background:#a92b3a">-2%</div>
+                <div class="scale-cell" style="background:#c94652">-1%</div>
+                <div class="scale-cell" style="background:#5d6877">0%</div>
+                <div class="scale-cell" style="background:#168451">+1%</div>
+                <div class="scale-cell" style="background:#05a867">+2%</div>
+                <div class="scale-cell" style="background:#00d084">&gt; +3%</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="bottom-grid">
+            <section class="panel"><div class="panel-head"><h2>Market Summary</h2></div><div class="panel-body"><div class="mini-index" id="market-summary"></div></div></section>
+            <section class="panel"><div class="panel-head"><h2>Market Cap Breakdown</h2></div><div class="panel-body"><div class="donut-wrap"><div class="donut-css"></div><div class="legend" id="market-cap-breakdown"></div></div></div></section>
+            <section class="panel"><div class="panel-head"><h2>Volume Breakdown</h2></div><div class="panel-body"><div class="donut-wrap"><div class="donut-css" style="background:conic-gradient(var(--blue) 0 58%, var(--purple) 58% 89%, var(--green) 89% 96%, var(--amber) 96% 100%)"></div><div class="legend" id="volume-breakdown"></div></div></div></section>
+            <section class="panel"><div class="panel-head"><h2>FII / DII Flow</h2><button class="btn" id="flow-toggle">Daily</button></div><div class="panel-body"><div class="flow-bars" id="flow-bars"></div></div></section>
+            <section class="panel"><div class="panel-head"><h2>Sector Market Cap Share</h2></div><div class="panel-body"><div class="stacked" id="sector-share"></div><div class="legend" id="sector-share-legend" style="margin-top:8px;"></div></div></section>
+          </section>
+        </div>
+
+        <aside class="rightbar">
+          <section class="panel"><div class="panel-head"><h2>Top Gainers</h2></div><div class="panel-body"><table class="table"><thead><tr><th>#</th><th>Symbol</th><th>LTP</th><th>% Chg</th></tr></thead><tbody id="gainers-body"></tbody></table></div></section>
+          <section class="panel"><div class="panel-head"><h2>Top Losers</h2></div><div class="panel-body"><table class="table"><thead><tr><th>#</th><th>Symbol</th><th>LTP</th><th>% Chg</th></tr></thead><tbody id="losers-body"></tbody></table></div></section>
+          <section class="panel"><div class="panel-head"><h2>Market Breadth</h2></div><div class="panel-body"><div class="donut-wrap"><svg class="donut" viewBox="0 0 120 120" id="breadth-donut"></svg><div class="legend" id="breadth-legend"></div></div></div></section>
+          <section class="panel"><div class="panel-head"><h2>Sector Performance</h2></div><div class="panel-body"><div class="bar-list" id="sector-performance"></div></div></section>
+        </aside>
+      </section>
+
+      <section class="panel" id="tab-placeholder" style="display:none;">
+        <div class="panel-head"><h2 id="placeholder-title">Sector Heatmap</h2></div>
+        <div class="panel-body"><div class="placeholder" id="placeholder-body">This tab is styled for v1. Market Heatmap is fully implemented.</div></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const state = { data: null, capabilities: null, activeTab: "market", flowMode: "Daily" };
+    const colors = ["#8b5cf6", "#2f81f7", "#00d084", "#f5b84b", "#ff4d5e", "#7dd3fc"];
+    function fmt(value, digits = 2) { return Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: digits }); }
+    function compact(value) { return Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 }).format(Number(value || 0)); }
+    function pct(value) { const n = Number(value || 0); return `${n > 0 ? "+" : ""}${n.toFixed(2)}%`; }
+    function cls(value) { return Number(value) >= 0 ? "positive" : "negative"; }
+    function esc(value) { return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+    function optionHtml(items, selected) { return items.map((item) => `<option ${item === selected ? "selected" : ""}>${item}</option>`).join(""); }
+    function heatColor(value) {
+      const n = Math.max(-3.5, Math.min(3.5, Number(value) || 0));
+      if (Math.abs(n) < 0.08) return "linear-gradient(135deg, #596574, #3f4a59)";
+      const alpha = Math.min(.96, .42 + Math.abs(n) / 4);
+      return n > 0 ? `rgba(0, 208, 132, ${alpha})` : `rgba(255, 77, 94, ${alpha})`;
+    }
+    function basis(stock, sector) {
+      const max = Math.max(...sector.stocks.map((row) => Number(row.size_value) || 1), 1);
+      const size = Number(stock.size_value) || 1;
+      return Math.max(62, Math.min(220, 62 + (size / max) * 150));
+    }
+    async function postJson(url, body) {
+      const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.detail || "Heatmap request failed");
+      return payload;
+    }
+    async function loadCapabilities() {
+      const response = await fetch("/api/v1/heatmap/capabilities");
+      state.capabilities = await response.json();
+      $("universe").innerHTML = optionHtml(state.capabilities.universes, "Nifty 500");
+      $("size-by").innerHTML = optionHtml(state.capabilities.size_by, "Market Cap");
+      $("color-by").innerHTML = optionHtml(state.capabilities.color_by, "% Change");
+      $("timeframe").innerHTML = optionHtml(state.capabilities.timeframes, "1D");
+    }
+    function payload() {
+      return {
+        universe: $("universe").value,
+        size_by: $("size-by").value,
+        color_by: $("color-by").value,
+        timeframe: $("timeframe").value,
+      };
+    }
+    async function runHeatmap() {
+      $("page").classList.add("loading");
+      $("refresh-btn").textContent = "Loading";
+      try {
+        state.data = await postJson("/api/v1/heatmap/run", payload());
+        renderAll();
+      } catch (error) {
+        $("source-note").textContent = error.message || "Unable to load heatmap data.";
+      } finally {
+        $("page").classList.remove("loading");
+        $("refresh-btn").textContent = "Refresh";
+      }
+    }
+    function renderAll() {
+      renderTicker();
+      renderHeader();
+      renderSummaryStrip();
+      renderHeatmap();
+      renderTables();
+      renderBreadth();
+      renderSectorPerformance();
+      renderBottom();
+    }
+    function renderTicker() {
+      const rows = state.data?.indices || [];
+      $("ticker-strip").innerHTML = rows.map((item) => {
+        const stroke = item.change_pct >= 0 ? "var(--green)" : "var(--red)";
+        const points = item.spark.map((y, i) => `${1 + i * 9},${y}`).join(" ");
+        return `<div class="ticker-card"><div><div class="ticker-name">${esc(item.name)}</div><div class="ticker-value mono">${fmt(item.value)}</div><div class="ticker-chg ${cls(item.change_pct)}">${pct(item.change_pct)}</div></div><svg class="spark" viewBox="0 0 48 26"><polyline points="${points}" fill="none" stroke="${stroke}" stroke-width="2"/></svg></div>`;
+      }).join("");
+    }
+    function renderHeader() {
+      $("data-time").textContent = `Data as of ${state.data.timestamp}`;
+      $("source-note").textContent = state.data.data_source_note;
+      $("heatmap-title").textContent = `${$("universe").value.toUpperCase()} HEATMAP`;
+      $("heatmap-subtitle").textContent = `${$("size-by").value} / ${$("color-by").value}`;
+    }
+    function renderSummaryStrip() {
+      const s = state.data.summary;
+      const items = [
+        ["Advancing Stocks", s.advancing, `${state.data.breadth.advance_pct}%`, "positive"],
+        ["Declining Stocks", s.declining, `${state.data.breadth.decline_pct}%`, "negative"],
+        ["Unchanged Stocks", s.unchanged, "Flat", "muted"],
+        ["Total Stocks", s.total_stocks, $("universe").value, "muted"],
+        ["Total Market Cap", `Rs ${fmt(s.total_market_cap_cr / 100000, 2)} L Cr`, "Sample universe", "muted"],
+        ["Total Volume", compact(s.total_volume), $("timeframe").value, "muted"],
+        ["FII Net Flow", `Rs ${fmt(s.fii_net_flow_cr)} Cr`, "Daily", s.fii_net_flow_cr >= 0 ? "positive" : "negative"],
+        ["DII Net Flow", `Rs ${fmt(s.dii_net_flow_cr)} Cr`, "Daily", s.dii_net_flow_cr >= 0 ? "positive" : "negative"],
+      ];
+      $("summary-strip").innerHTML = items.map(([label, value, sub, klass], index) => `<div class="summary-card"><div class="summary-label">${label}</div><div class="summary-value mono ${klass}">${value}</div><div class="summary-sub ${klass}">${sub}</div><svg class="mini-spark" viewBox="0 0 90 16"><polyline points="1,12 14,9 28,11 42,5 58,7 74,3 89,6" fill="none" stroke="${klass === "negative" ? "#ff4d5e" : index % 3 === 0 ? "#00d084" : "#2f81f7"}" stroke-width="1.6"/></svg></div>`).join("");
+    }
+    function renderHeatmap() {
+      $("heatmap-grid").innerHTML = state.data.sectors.map((sector, index) => {
+        const boxClass = index < 4 ? "sector-large" : index < 8 ? "sector-wide" : "";
+        return `<div class="sector-box ${boxClass}">
+          <div class="sector-head"><span class="sector-name">${esc(sector.name)}</span><span class="${cls(sector.change_pct)} mono">${pct(sector.change_pct)}</span></div>
+          <div class="tiles">${sector.stocks.map((stock) => `<a class="stock-tile" href="/market-watch/stock/${encodeURIComponent(stock.symbol)}" style="--basis:${basis(stock, sector)}px;background:${heatColor(stock.color_value)}" data-stock="${esc(stock.symbol)}">
+            <div><div class="tile-symbol">${esc(stock.symbol)}</div><div class="tile-meta">${esc(stock.sector)}</div></div>
+            <div><div class="tile-change mono">${pct(stock.change_pct)}</div><div class="tile-meta mono">Rs ${fmt(stock.price)} | ${$("size-by").value === "Volume" ? compact(stock.volume) : `${fmt(stock.market_cap_cr, 0)} Cr`}</div></div>
+          </a>`).join("")}</div>
+        </div>`;
+      }).join("");
+      bindTooltips();
+    }
+    function rowHtml(rows) {
+      return rows.map((row, index) => `<tr><td class="rank mono">${index + 1}</td><td><a href="/market-watch/stock/${encodeURIComponent(row.symbol)}">${esc(row.symbol)}</a></td><td class="mono">${fmt(row.price)}</td><td class="mono ${cls(row.change_pct)}">${pct(row.change_pct)}</td></tr>`).join("");
+    }
+    function renderTables() {
+      $("gainers-body").innerHTML = rowHtml(state.data.gainers);
+      $("losers-body").innerHTML = rowHtml(state.data.losers);
+    }
+    function renderBreadth() {
+      const b = state.data.breadth;
+      const total = Math.max(1, b.total);
+      const c = 2 * Math.PI * 45;
+      $("breadth-donut").innerHTML = `<circle cx="60" cy="60" r="45" fill="none" stroke="#17263a" stroke-width="15"/><circle cx="60" cy="60" r="45" fill="none" stroke="var(--green)" stroke-width="15" stroke-dasharray="${c * b.advancing / total} ${c}" transform="rotate(-90 60 60)"/><circle cx="60" cy="60" r="45" fill="none" stroke="var(--red)" stroke-width="15" stroke-dasharray="${c * b.declining / total} ${c}" stroke-dashoffset="${-c * b.advancing / total}" transform="rotate(-90 60 60)"/><text x="60" y="63" text-anchor="middle" fill="#d8e5f5" font-size="18" font-weight="900">${Math.round(b.advancing / total * 100)}%</text>`;
+      $("breadth-legend").innerHTML = `<div class="legend-row"><span><span class="swatch" style="background:var(--green)"></span>Advancing</span><strong>${b.advancing}</strong></div><div class="legend-row"><span><span class="swatch" style="background:var(--red)"></span>Declining</span><strong>${b.declining}</strong></div><div class="legend-row"><span><span class="swatch" style="background:var(--neutral)"></span>Unchanged</span><strong>${b.unchanged}</strong></div>`;
+    }
+    function renderSectorPerformance() {
+      const items = state.data.sector_performance.slice(0, 10);
+      const max = Math.max(...items.map((item) => Math.abs(Number(item.value))), 1);
+      $("sector-performance").innerHTML = items.map((item) => `<div class="bar-row"><span title="${esc(item.label)}">${esc(item.label.replace("INFORMATION TECHNOLOGY", "IT").replace("FINANCIAL SERVICES", "Financial"))}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(8, Math.abs(item.value) / max * 100)}%;background:${item.value >= 0 ? "var(--green)" : "var(--red)"}"></div></div><span class="${cls(item.value)} mono">${pct(item.value)}</span></div>`).join("");
+    }
+    function renderBottom() {
+      const s = state.data.summary;
+      $("market-summary").innerHTML = `<div><strong class="mono">NIFTY 50 ${fmt(state.data.indices[0].value)}</strong> <span class="${cls(state.data.indices[0].change_pct)}">${pct(state.data.indices[0].change_pct)}</span></div><svg class="line-chart" viewBox="0 0 240 64"><polyline points="0,48 36,42 72,46 108,26 144,33 180,18 240,24" fill="none" stroke="var(--green)" stroke-width="3"/><line x1="0" y1="52" x2="240" y2="52" stroke="#1d3555"/></svg><div class="muted mono">M.Cap Rs ${fmt(s.total_market_cap_cr / 100000, 2)} L Cr | Vol ${compact(s.total_volume)} | 52W H/L ${state.data.distributions.new_52w_highs}/${state.data.distributions.new_52w_lows}</div>`;
+      renderLegend("market-cap-breakdown", state.data.distributions.market_cap);
+      renderLegend("volume-breakdown", state.data.distributions.volume);
+      renderFlows();
+      renderSectorShare();
+    }
+    function renderLegend(id, items) {
+      $("" + id).innerHTML = items.map((item, index) => `<div class="legend-row"><span><span class="swatch" style="background:${colors[index % colors.length]}"></span>${esc(item.label)}</span><strong class="mono">${fmt(item.value, 0)}</strong></div>`).join("");
+    }
+    function renderFlows() {
+      const max = Math.max(...state.data.flows.sessions.flatMap((row) => [Math.abs(row.fii), Math.abs(row.dii)]), 1);
+      $("flow-bars").innerHTML = state.data.flows.sessions.map((row) => `<div class="flow-day"><div class="flow-stack"><div title="FII ${row.fii}" class="flow-bar" style="height:${Math.max(5, Math.abs(row.fii) / max * 100)}%;background:${row.fii >= 0 ? "var(--green)" : "var(--red)"}"></div><div title="DII ${row.dii}" class="flow-bar" style="height:${Math.max(5, Math.abs(row.dii) / max * 100)}%;background:${row.dii >= 0 ? "var(--blue)" : "var(--amber)"}"></div></div><div class="flow-label">${row.date}</div></div>`).join("");
+    }
+    function renderSectorShare() {
+      const items = state.data.distributions.sector_market_cap_share;
+      const total = Math.max(...[items.reduce((sum, item) => sum + Number(item.value || 0), 0)], 1);
+      $("sector-share").innerHTML = items.map((item, index) => `<div class="stack-seg" title="${esc(item.label)}" style="width:${Number(item.value) / total * 100}%;background:${colors[index % colors.length]}">${index < 3 ? Math.round(Number(item.value) / total * 100) + "%" : ""}</div>`).join("");
+      renderLegend("sector-share-legend", items);
+    }
+    function bindTooltips() {
+      const tip = $("tooltip");
+      document.querySelectorAll(".stock-tile").forEach((tile) => {
+        const stock = state.data.stocks.find((row) => row.symbol === tile.dataset.stock);
+        tile.addEventListener("mousemove", (event) => {
+          tip.style.display = "block";
+          tip.style.left = `${Math.min(window.innerWidth - 250, event.clientX + 14)}px`;
+          tip.style.top = `${Math.min(window.innerHeight - 220, event.clientY + 14)}px`;
+          tip.innerHTML = `<div class="tooltip-title">${esc(stock.symbol)} - ${esc(stock.name)}</div><div class="tip-row"><span>Sector</span><strong>${esc(stock.sector)}</strong></div><div class="tip-row"><span>Price</span><strong class="mono">Rs ${fmt(stock.price)}</strong></div><div class="tip-row"><span>Change</span><strong class="${cls(stock.change_pct)} mono">${pct(stock.change_pct)}</strong></div><div class="tip-row"><span>Market Cap</span><strong class="mono">Rs ${fmt(stock.market_cap_cr, 0)} Cr</strong></div><div class="tip-row"><span>Volume</span><strong class="mono">${compact(stock.volume)}</strong></div><div class="tip-row"><span>Relative Vol</span><strong class="mono">${fmt(stock.relative_volume)}x</strong></div>`;
+        });
+        tile.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+      });
+    }
+    function setupInteractions() {
+      ["universe", "size-by", "color-by", "timeframe"].forEach((id) => $(id).addEventListener("change", runHeatmap));
+      $("refresh-btn").addEventListener("click", runHeatmap);
+      $("filter-btn").addEventListener("click", () => { $("source-note").textContent = `${state.data.data_source_note} Filters will use connected exchange metadata in a later release.`; });
+      $("flow-toggle").addEventListener("click", () => { state.flowMode = state.flowMode === "Daily" ? "MTD" : "Daily"; $("flow-toggle").textContent = state.flowMode; });
+      document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => switchTab(tab.dataset.tab, tab.textContent)));
+    }
+    function switchTab(tab, label) {
+      state.activeTab = tab;
+      document.querySelectorAll(".tab").forEach((item) => item.classList.toggle("active", item.dataset.tab === tab));
+      $("tab-market").style.display = tab === "market" ? "grid" : "none";
+      $("tab-placeholder").style.display = tab === "market" ? "none" : "block";
+      $("placeholder-title").textContent = label;
+      $("placeholder-body").textContent = `${label} is prepared for v1 navigation. Market Heatmap is fully implemented with sector grouped treemap blocks and analytics.`;
+    }
+    function updateClock() {
+      $("side-clock").innerHTML = `${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: false })}<br />Sample heatmap data`;
+    }
+    document.addEventListener("DOMContentLoaded", async () => {
+      updateClock();
+      setInterval(updateClock, 30000);
+      setupInteractions();
+      await loadCapabilities();
+      await runHeatmap();
+    });
+  </script>
+</body>
+</html>
