@@ -44,3 +44,21 @@ def test_screener_run_returns_results_and_summary():
     assert "matches" in payload["summary"]
     assert "data_source_note" in payload
     assert "filters" in payload["distributions"]
+
+
+def test_screener_accepts_fno_stocks_universe():
+    response = client.post(
+        "/api/v1/screener/run",
+        json={
+            "universe": "F&O Stocks",
+            "exchange": "NSE",
+            "filters": [],
+            "sort_by": "Market Cap",
+            "sort_direction": "desc",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["summary"]["universe"] == "F&O Stocks"
+    assert "F&O universe is synced from Angel instrument master" in payload["data_source_note"]

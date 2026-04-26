@@ -12,7 +12,7 @@ class HeatmapService:
         "Heatmap data is based on local sample data for UI demonstration. "
         "Real-time exchange integration coming soon."
     )
-    UNIVERSES = ["Nifty 50", "Nifty 100", "Nifty 500", "All NSE", "All BSE"]
+    UNIVERSES = ["Nifty 50", "Nifty 100", "Nifty 500", "F&O Stocks", "All NSE", "All BSE"]
     SIZE_BY = ["Market Cap", "Volume", "Turnover", "Equal Weight"]
     COLOR_BY = ["% Change", "Volume Change", "Relative Volume", "RSI", "Sector Strength"]
     FACTOR_COLOR_BY = ["% Change", "Volume Change", "Relative Volume", "RSI", "Volatility", "Market Cap", "P/E placeholder", "ROE placeholder", "Debt/Equity placeholder"]
@@ -169,6 +169,8 @@ class HeatmapService:
 
     def run(self, request: HeatmapRunRequest) -> dict[str, Any]:
         stocks = [self._decorate_stock(row, request) for row in self.SAMPLE_STOCKS]
+        if request.universe == "F&O Stocks":
+            stocks = [row for row in stocks if row.get("is_fno")]
         sectors = self._sectors(stocks)
         gainers = sorted(stocks, key=lambda row: row["change_pct"], reverse=True)[:5]
         losers = sorted(stocks, key=lambda row: row["change_pct"])[:5]
@@ -189,7 +191,11 @@ class HeatmapService:
             "rotation": self.rotation({}),
             "insights": self.insights({})["insights"],
             "timestamp": timestamp,
-            "data_source_note": self.DATA_SOURCE_NOTE,
+            "data_source_note": (
+                "F&O universe is synced from Angel instrument master. Historical availability may be limited to active/live contracts depending on provider."
+                if request.universe == "F&O Stocks"
+                else self.DATA_SOURCE_NOTE
+            ),
         }
 
     def sectors(self) -> list[dict[str, Any]]:

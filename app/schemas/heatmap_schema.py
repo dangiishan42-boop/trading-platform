@@ -5,7 +5,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, field_validator
 
 
-HeatmapUniverse = Literal["Nifty 50", "Nifty 100", "Nifty 500", "All NSE", "All BSE"]
+HeatmapUniverse = Literal["Nifty 50", "Nifty 100", "Nifty 500", "All NSE", "All BSE", "F&O Stocks"]
 HeatmapSizeBy = Literal["Market Cap", "Volume", "Turnover", "Equal Weight"]
 HeatmapColorBy = Literal["% Change", "Volume Change", "Relative Volume", "RSI", "Sector Strength"]
 HeatmapTimeframe = Literal["1D", "1W", "1M", "3M", "6M", "1Y"]

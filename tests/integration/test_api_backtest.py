@@ -102,3 +102,28 @@ def test_backtest_run_rejects_invalid_symbol_input():
     )
 
     assert response.status_code == 422
+
+
+def test_backtest_run_accepts_fno_universe_selector():
+    response = client.post(
+        "/api/v1/backtest/run",
+        json={
+            "source": "sample",
+            "symbol": "RELIANCE",
+            "universe": "F&O Stocks",
+            "symbols": ["RELIANCE"],
+            "data_mode": "Equity underlying",
+            "timeframe": "1D",
+            "strategy_name": "ema_crossover",
+            "initial_capital": 100000,
+            "commission_pct": 0.1,
+            "slippage_pct": 0.05,
+            "parameters": {
+                "fast_period": 20,
+                "slow_period": 50,
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["symbol"] == "RELIANCE"

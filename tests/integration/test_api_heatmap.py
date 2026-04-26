@@ -39,6 +39,23 @@ def test_heatmap_run_returns_sectors_stocks_and_summary():
     assert "Heatmap data is based on local sample data" in payload["data_source_note"]
 
 
+def test_heatmap_accepts_fno_stocks_universe():
+    response = client.post(
+        "/api/v1/heatmap/run",
+        json={
+            "universe": "F&O Stocks",
+            "size_by": "Market Cap",
+            "color_by": "% Change",
+            "timeframe": "1D",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["summary"]["universe"] == "F&O Stocks"
+    assert "F&O universe is synced from Angel instrument master" in payload["data_source_note"]
+
+
 def test_heatmap_sectors_returns_stable_slugs():
     response = client.get("/api/v1/heatmap/sectors")
 

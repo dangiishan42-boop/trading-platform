@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.schemas.backtest_schema import BacktestMetrics, DataSource, EquityPoint, PositionSizingMode
 
+AlgoDataUniverse = Literal["Single Symbol", "F&O Stocks", "Watchlist"]
 AlgoConditionSource = Literal["Price", "Open", "High", "Low", "Volume", "RSI", "EMA", "SMA", "MACD", "VWAP", "ATR"]
 AlgoOperator = Literal[">", "<", ">=", "<=", "crosses above", "crosses below"]
 AlgoConnector = Literal["AND", "OR"]
@@ -68,6 +69,7 @@ class AlgoSimulationRequest(BaseModel):
     source: DataSource = "sample"
     file_name: str | None = None
     symbol: str = Field(default="DEMO", min_length=1, max_length=24)
+    data_universe: AlgoDataUniverse = "Single Symbol"
     exchange: str = Field(default="NSE", min_length=1, max_length=20)
     timeframe: str = Field(default="1D", min_length=1, max_length=20)
     from_date: str | None = None
@@ -135,6 +137,7 @@ class AlgoSimulationResponse(BaseModel):
 
 
 class AlgoCapabilitiesResponse(BaseModel):
+    data_universes: list[str] = Field(default_factory=list)
     condition_sources: list[str]
     operators: list[str]
     logical_connectors: list[str]

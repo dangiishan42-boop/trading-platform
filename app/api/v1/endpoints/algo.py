@@ -24,6 +24,7 @@ router = APIRouter(prefix="/algo", tags=["algo"])
 @router.get("/capabilities", response_model=AlgoCapabilitiesResponse)
 def capabilities():
     return {
+        "data_universes": ["Single Symbol", "F&O Stocks", "Watchlist"],
         "condition_sources": ["Price", "Open", "High", "Low", "Volume", "RSI", "EMA", "SMA", "MACD", "VWAP", "ATR"],
         "operators": [">", "<", ">=", "<=", "crosses above", "crosses below"],
         "logical_connectors": ["AND", "OR"],

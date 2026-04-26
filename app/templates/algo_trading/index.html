@@ -148,12 +148,13 @@
             <div><label for="algo-symbol">Stock Search</label><input id="algo-symbol" list="algo-symbol-options" value="RELIANCE" placeholder="HDFC Bank, RELIANCE, TCS" /><datalist id="algo-symbol-options"></datalist></div>
             <div><label for="algo-exchange">Exchange</label><input id="algo-exchange" value="NSE" /></div>
             <div><label for="algo-timeframe">Base Timeframe</label><input id="algo-timeframe" value="1D" /></div>
+            <div><label for="algo-data-universe">Data Universe</label><select id="algo-data-universe"><option>Single Symbol</option><option>F&O Stocks</option><option>Watchlist</option></select></div>
             <div><label for="algo-source">Data Source</label><select id="algo-source"><option value="sample">Sample</option><option value="upload">Uploaded CSV</option><option value="fetched">Fetched Dataset</option></select></div>
             <div><label for="algo-file-name">Uploaded File Name</label><input id="algo-file-name" placeholder="Required for uploaded CSV" /></div>
             <div><label for="algo-from-date">From Date</label><input id="algo-from-date" type="datetime-local" /></div>
             <div><label for="algo-to-date">To Date</label><input id="algo-to-date" type="datetime-local" /></div>
           </div>
-          <div id="algo-save-status" class="notice" style="margin-top:14px;">Saved algo strategies can be loaded and edited before simulation.</div>
+          <div id="algo-save-status" class="notice" style="margin-top:14px;">Saved algo strategies can be loaded and edited before simulation. F&O universe is synced from Angel instrument master; historical availability may be limited to active/live contracts depending on provider.</div>
         </section>
 
         <section class="panel">
@@ -676,6 +677,7 @@
         source: byId("algo-source").value,
         file_name: byId("algo-file-name").value.trim() || null,
         symbol: byId("algo-symbol").value.trim() || "DEMO",
+        data_universe: byId("algo-data-universe").value,
         exchange: byId("algo-exchange").value.trim() || "NSE",
         timeframe: byId("algo-timeframe").value.trim() || "1D",
         from_date: byId("algo-from-date").value || null,
@@ -730,6 +732,7 @@
       byId("algo-source").value = config.source || "sample";
       byId("algo-file-name").value = config.file_name || "";
       byId("algo-symbol").value = config.symbol || "RELIANCE";
+      byId("algo-data-universe").value = config.data_universe || "Single Symbol";
       byId("algo-exchange").value = config.exchange || "NSE";
       byId("algo-timeframe").value = config.timeframe || "1D";
       byId("algo-from-date").value = config.from_date || "";

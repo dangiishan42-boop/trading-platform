@@ -1537,6 +1537,16 @@
                       <input id="symbol" type="text" value="DEMO" placeholder="e.g. RELIANCE" />
                     </div>
                     <div class="field">
+                      <label for="backtest-universe">Universe</label>
+                      <select id="backtest-universe">
+                        <option>Single Symbol</option>
+                        <option>Watchlist</option>
+                        <option>F&O Stocks</option>
+                        <option>Nifty 50</option>
+                        <option>Custom List</option>
+                      </select>
+                    </div>
+                    <div class="field">
                       <label for="timeframe">Timeframe</label>
                       <select id="timeframe">
                         <option value="1D">1D</option>
@@ -1556,10 +1566,25 @@
                       <input id="file-name" type="text" placeholder="Auto-filled after upload" />
                     </div>
                     <div class="field">
+                      <label for="backtest-data-mode">Data Mode</label>
+                      <select id="backtest-data-mode">
+                        <option>Equity underlying</option>
+                        <option>Nearest future</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-grid-2" style="margin-top:16px;">
+                    <div class="field">
+                      <label for="backtest-symbols">Universe Symbols</label>
+                      <input id="backtest-symbols" type="text" placeholder="Optional comma-separated symbols" />
+                    </div>
+                    <div class="field">
                       <label for="initial-capital">Initial Capital</label>
                       <input id="initial-capital" type="number" min="1" step="0.01" value="100000" />
                     </div>
                   </div>
+                  <div class="muted" style="margin-top:10px;">F&O universe is synced from Angel instrument master. Historical availability may be limited to active/live contracts depending on provider.</div>
 
                   <div class="form-grid-2" style="margin-top:16px;">
                     <div class="field">
@@ -3910,6 +3935,12 @@
         source,
         file_name: source === "upload" ? byId("file-name").value.trim() : null,
         symbol: byId("symbol").value.trim() || "DEMO",
+        universe: byId("backtest-universe")?.value || "Single Symbol",
+        symbols: (byId("backtest-symbols")?.value || "")
+          .split(",")
+          .map((item) => item.trim().toUpperCase())
+          .filter(Boolean),
+        data_mode: byId("backtest-data-mode")?.value || "Equity underlying",
         timeframe: byId("timeframe").value,
         from_date: byId("from-date")?.value || null,
         to_date: byId("to-date")?.value || null,

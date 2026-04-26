@@ -6,6 +6,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 PositionSizingMode = Literal["fixed_quantity", "fixed_capital", "percent_equity"]
 TradeExitReason = Literal["signal", "stop_loss", "take_profit", "end_of_data"]
 DataSource = Literal["sample", "upload", "fetched"]
+BacktestUniverse = Literal["Single Symbol", "Watchlist", "F&O Stocks", "Nifty 50", "Custom List"]
+BacktestDataMode = Literal["Equity underlying", "Nearest future"]
 OptimizationRankingMetric = Literal[
     "net_profit",
     "total_return_pct",
@@ -17,6 +19,9 @@ class BacktestRunRequest(BaseModel):
     source: DataSource = "sample"
     file_name: str | None = None
     symbol: str = Field(default="DEMO", min_length=1, max_length=24)
+    universe: BacktestUniverse = "Single Symbol"
+    symbols: list[str] = Field(default_factory=list)
+    data_mode: BacktestDataMode = "Equity underlying"
     timeframe: str = Field(default="1D", min_length=1, max_length=20)
     from_date: str | None = None
     to_date: str | None = None

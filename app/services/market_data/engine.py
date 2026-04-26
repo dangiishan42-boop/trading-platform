@@ -34,13 +34,48 @@ class MarketDataEngine:
         self.candle_cache_dir = candle_cache_dir or DATA_DIR / "cache" / "candles"
         self.candle_cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def search_instruments(self, query: str, exchange: str | None = None, session=None) -> dict[str, Any]:
+    def search_instruments(self, query: str, exchange: str | None = None, session=None, instrument_type: str | None = None) -> dict[str, Any]:
         try:
-            rows = self.primary.search_instruments(query, exchange, session=session)
+            rows = self.primary.search_instruments(query, exchange, session=session, instrument_type=instrument_type)
             return {"items": rows, **self._source_meta(self.primary)}
         except Exception as exc:
-            rows = self.fallback.search_instruments(query, exchange, session=session)
+            rows = self.fallback.search_instruments(query, exchange, session=session, instrument_type=instrument_type)
             return {"items": rows, **self._source_meta(self.fallback, message=str(exc))}
+
+    def get_fno_underlyings(self, session=None) -> list[dict[str, Any]]:
+        from app.services.data.instrument_master_service import InstrumentMasterService
+
+        return [row.model_dump() for row in InstrumentMasterService().fno_underlyings(session)] if session is not None else []
+
+    def get_fno_contracts(self, symbol: str, session=None) -> dict[str, list[dict[str, Any]]]:
+        from app.services.data.instrument_master_service import InstrumentMasterService
+
+        if session is None:
+            return {"futures": [], "options": []}
+        contracts = InstrumentMasterService().fno_contracts(session, symbol)
+        return {key: [row.model_dump() for row in rows] for key, rows in contracts.items()}
+
+    def get_fno_quotes(self, instruments: list[dict[str, str]], session=None) -> dict[str, Any]:
+        return self.get_quotes_bulk(instruments, session=session)
+
+    def get_fno_candles(
+        self,
+        *,
+        token: str,
+        exchange: str = "NFO",
+        interval: str,
+        from_date: datetime,
+        to_date: datetime,
+        session=None,
+    ) -> dict[str, Any]:
+        return self.get_candles(
+            token=token,
+            exchange=exchange,
+            interval=interval,
+            from_date=from_date,
+            to_date=to_date,
+            session=session,
+        )
 
     def get_quote(self, *, symbol: str | None = None, token: str | None = None, exchange: str = "NSE", session=None) -> dict[str, Any]:
         key = self._quote_key(symbol, token, exchange)

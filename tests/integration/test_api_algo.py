@@ -16,6 +16,7 @@ def test_algo_capabilities_returns_rule_options():
     assert "crosses above" in payload["operators"]
     assert "Weekly" in payload["timeframes"]
     assert "Short" in payload["entry_actions"]
+    assert "F&O Stocks" in payload["data_universes"]
     assert payload["live_execution_enabled"] is False
 
 
@@ -211,3 +212,22 @@ def test_algo_strategy_save_and_list_round_trip():
     assert list_response.status_code == 200
     strategies = list_response.json()
     assert any(item["id"] == saved["id"] for item in strategies)
+
+
+def test_algo_simulate_accepts_fno_data_universe():
+    response = client.post(
+        "/api/v1/algo/simulate",
+        json={
+            "source": "sample",
+            "symbol": "RELIANCE",
+            "data_universe": "F&O Stocks",
+            "exchange": "NSE",
+            "timeframe": "1D",
+            "conditions": [
+                {"signal_type": "buy", "source": "Price", "operator": ">", "value": 100, "connector": "AND"}
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["symbol"] == "RELIANCE"

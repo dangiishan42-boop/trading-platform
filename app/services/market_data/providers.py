@@ -32,7 +32,7 @@ class MarketDataProvider(ABC):
     label: str
 
     @abstractmethod
-    def search_instruments(self, query: str, exchange: str | None = None, session=None) -> list[dict[str, Any]]:
+    def search_instruments(self, query: str, exchange: str | None = None, session=None, instrument_type: str | None = None) -> list[dict[str, Any]]:
         raise NotImplementedError
 
     @abstractmethod
@@ -78,10 +78,10 @@ class AngelMarketDataProvider(MarketDataProvider):
         self.angel = angel or AngelSmartApiService()
         self.instruments = instruments or InstrumentMasterService()
 
-    def search_instruments(self, query: str, exchange: str | None = None, session=None) -> list[dict[str, Any]]:
+    def search_instruments(self, query: str, exchange: str | None = None, session=None, instrument_type: str | None = None) -> list[dict[str, Any]]:
         if session is None:
             return SampleMarketDataProvider().search_instruments(query, exchange)
-        return [self._instrument_dict(item) for item in self.instruments.search(session, query, exchange)]
+        return [self._instrument_dict(item) for item in self.instruments.search(session, query, exchange, instrument_type=instrument_type)]
 
     def get_quote(self, *, symbol: str | None = None, token: str | None = None, exchange: str = "NSE", session=None) -> dict[str, Any]:
         self.angel.settings = get_settings()
@@ -241,9 +241,18 @@ class AngelMarketDataProvider(MarketDataProvider):
             "name": item.name,
             "exchange": item.exchange,
             "token": item.token,
+            "trading_symbol": item.trading_symbol,
             "instrument_type": item.instrument_type,
+            "expiry": item.expiry,
+            "strike": item.strike,
+            "option_type": item.option_type,
             "lot_size": item.lot_size,
             "tick_size": item.tick_size,
+            "underlying": item.underlying,
+            "is_equity": item.is_equity,
+            "is_fno": item.is_fno,
+            "is_future": item.is_future,
+            "is_option": item.is_option,
         }
 
     def _angel_trading_symbol(self, instrument: MarketInstrument) -> str:
@@ -306,7 +315,7 @@ class SampleMarketDataProvider(MarketDataProvider):
     def __init__(self, loader: DataLoaderService | None = None) -> None:
         self.loader = loader or DataLoaderService()
 
-    def search_instruments(self, query: str, exchange: str | None = None, session=None) -> list[dict[str, Any]]:
+    def search_instruments(self, query: str, exchange: str | None = None, session=None, instrument_type: str | None = None) -> list[dict[str, Any]]:
         normalized = str(query or "").strip().upper()
         rows = []
         for symbol, details in ANGEL_SYMBOL_DETAILS.items():

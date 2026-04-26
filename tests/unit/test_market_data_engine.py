@@ -10,7 +10,7 @@ class FailingProvider(MarketDataProvider):
     name = "failing"
     label = "Error"
 
-    def search_instruments(self, query, exchange=None, session=None):
+    def search_instruments(self, query, exchange=None, session=None, instrument_type=None):
         raise RuntimeError("provider down")
 
     def get_quote(self, *, symbol=None, token=None, exchange="NSE", session=None):

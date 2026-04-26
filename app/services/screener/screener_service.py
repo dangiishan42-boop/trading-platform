@@ -14,7 +14,7 @@ class ScreenerService:
         "Connect an exchange-wide instrument and fundamentals source before treating scans as full NSE/BSE coverage."
     )
 
-    UNIVERSES = ["Indian Equities", "NIFTY 50", "NIFTY 100", "NIFTY 500", "All NSE", "All BSE"]
+    UNIVERSES = ["Indian Equities", "NIFTY 50", "NIFTY 100", "NIFTY 500", "F&O Stocks", "All NSE", "All BSE"]
     EXCHANGES = ["NSE", "BSE", "NSE + BSE"]
     CATEGORIES = [
         "Overview",
@@ -104,6 +104,12 @@ class ScreenerService:
 
     def run(self, request: ScreenerRunRequest) -> dict[str, Any]:
         rows, source_note = self._market_rows()
+        if request.universe == "F&O Stocks":
+            rows = [row for row in rows if row.get("is_fno", True)]
+            source_note = (
+                "F&O universe is synced from Angel instrument master. Historical availability may be limited "
+                "to active/live contracts depending on provider."
+            )
         filtered = [row for row in rows if self._matches_filters(row, request.filters)]
         sort_field = self.SORT_FIELDS.get(request.sort_by, "market_cap_cr")
         filtered.sort(key=lambda item: item.get(sort_field) or 0, reverse=request.sort_direction == "desc")
