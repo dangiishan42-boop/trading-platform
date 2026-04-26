@@ -27,7 +27,9 @@ class HeatmapCapabilitiesResponse(BaseModel):
     universes: list[str]
     size_by: list[str]
     color_by: list[str]
+    factor_color_by: list[str] = []
     timeframes: list[str]
+    filters: dict[str, Any] = {}
     data_source_note: str
 
 
@@ -35,6 +37,8 @@ class HeatmapStock(BaseModel):
     symbol: str
     name: str
     sector: str
+    industry: str = "Other"
+    industry_slug: str = "other"
     price: float
     change_pct: float
     market_cap_cr: float
@@ -43,6 +47,15 @@ class HeatmapStock(BaseModel):
     rsi: float
     relative_volume: float
     volume_change_pct: float
+    volatility: float = 0
+    is_fno: bool = False
+    market_cap_bucket: str = "Large Cap"
+    above_ema50: bool = False
+    breakout_20d: bool = False
+    breakdown_20d: bool = False
+    pe: float | None = None
+    roe: float | None = None
+    debt_equity: float | None = None
     size_value: float
     color_value: float
 
@@ -54,6 +67,7 @@ class HeatmapSector(BaseModel):
     market_cap_cr: float
     volume: int
     stocks: list[HeatmapStock]
+    industries: list[dict[str, Any]] = []
 
 
 class HeatmapRunResponse(BaseModel):
@@ -63,10 +77,13 @@ class HeatmapRunResponse(BaseModel):
     gainers: list[HeatmapStock]
     losers: list[HeatmapStock]
     breadth: dict[str, Any]
+    breadth_dashboard: dict[str, Any] = {}
     sector_performance: list[dict[str, Any]]
     distributions: dict[str, Any]
     flows: dict[str, Any]
     indices: list[dict[str, Any]]
+    rotation: dict[str, Any] = {}
+    insights: list[dict[str, Any]] = []
     timestamp: str
     data_source_note: str = Field(
         default="Heatmap data is based on local sample data for UI demonstration. Real-time exchange integration coming soon."
@@ -96,6 +113,7 @@ class HeatmapSectorListItem(BaseModel):
 
 class HeatmapSectorDetailResponse(BaseModel):
     sector: dict[str, Any]
+    industries: list[dict[str, Any]] = []
     summary: dict[str, Any]
     stocks: list[HeatmapStock]
     gainers: list[HeatmapStock]
@@ -106,5 +124,21 @@ class HeatmapSectorDetailResponse(BaseModel):
     sector_performance: list[dict[str, Any]]
     distributions: dict[str, Any]
     indices: list[dict[str, Any]]
+    insights: list[dict[str, Any]] = []
+    timestamp: str
+    data_source_note: str
+
+
+class HeatmapIndustryDetailResponse(BaseModel):
+    sector: dict[str, Any]
+    industry: dict[str, Any]
+    summary: dict[str, Any]
+    stocks: list[HeatmapStock]
+    gainers: list[HeatmapStock]
+    losers: list[HeatmapStock]
+    breadth: dict[str, Any]
+    distributions: dict[str, Any]
+    indices: list[dict[str, Any]]
+    insights: list[dict[str, Any]]
     timestamp: str
     data_source_note: str

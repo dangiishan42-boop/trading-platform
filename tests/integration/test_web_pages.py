@@ -49,6 +49,7 @@ def test_heatmap_financial_services_sector_page_loads():
     assert "Sector Heatmap" in response.text
     assert "Top Gainers in Sector" in response.text
     assert "Back to Full Heatmap" in response.text
+    assert "Industry Groups" in response.text
 
 
 def test_heatmap_information_technology_sector_page_loads():
@@ -63,6 +64,28 @@ def test_heatmap_invalid_sector_page_returns_404():
     response = client.get("/heatmap/sector/not-a-sector")
 
     assert response.status_code == 404
+
+
+def test_heatmap_private_banks_industry_page_loads():
+    response = client.get("/heatmap/sector/financial-services/industry/private-banks")
+
+    assert response.status_code == 200
+    assert "Industry Heatmap" in response.text
+    assert "Industry-only Heatmap" in response.text
+    assert "Stocks List" in response.text
+    assert "Analytics Summary" in response.text
+
+
+def test_core_pages_still_load_after_heatmap_upgrade():
+    for path, expected in [
+        ("/market-watch", "Live Market Watch"),
+        ("/screener", "Enterprise grade stock screener"),
+        ("/dashboard", "Backtest Dashboard"),
+    ]:
+        response = client.get(path)
+
+        assert response.status_code == 200
+        assert expected in response.text
 
 
 def test_market_watch_stock_detail_page_loads():

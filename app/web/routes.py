@@ -110,6 +110,23 @@ def heatmap_sector_page(request: Request, sector_slug: str):
     )
 
 
+@router.get("/heatmap/sector/{sector_slug}/industry/{industry_slug}")
+def heatmap_industry_page(request: Request, sector_slug: str, industry_slug: str):
+    preview = HeatmapService().industry_detail(sector_slug, industry_slug, HeatmapSectorRequest())
+    if preview is None:
+        raise HTTPException(status_code=404, detail="Industry not found")
+    return templates.TemplateResponse(
+        request=request,
+        name="heatmap/industry_detail.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - Industry Heatmap",
+            "sector_slug": sector_slug,
+            "industry_slug": industry_slug,
+        },
+    )
+
+
 @router.get("/market-watch/chart")
 def market_watch_large_chart_page(request: Request):
     return templates.TemplateResponse(

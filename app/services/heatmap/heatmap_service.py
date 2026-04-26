@@ -14,6 +14,7 @@ class HeatmapService:
     UNIVERSES = ["Nifty 50", "Nifty 100", "Nifty 500", "All NSE", "All BSE"]
     SIZE_BY = ["Market Cap", "Volume", "Turnover", "Equal Weight"]
     COLOR_BY = ["% Change", "Volume Change", "Relative Volume", "RSI", "Sector Strength"]
+    FACTOR_COLOR_BY = ["% Change", "Volume Change", "Relative Volume", "RSI", "Volatility", "Market Cap", "P/E placeholder", "ROE placeholder", "Debt/Equity placeholder"]
     TIMEFRAMES = ["1D", "1W", "1M", "3M", "6M", "1Y"]
     SECTOR_SLUGS = {
         "FINANCIAL SERVICES": "financial-services",
@@ -33,6 +34,41 @@ class HeatmapService:
         "TEXTILES": "textiles",
         "AGRI": "agri",
         "CONSUMER DURABLES": "consumer-durables",
+    }
+    INDUSTRY_GROUPS = {
+        "FINANCIAL SERVICES": {
+            "Private Banks": ["HDFCBANK", "ICICIBANK", "KOTAKBANK", "AXISBANK"],
+            "PSU Banks": ["SBIN"],
+            "NBFC": ["BAJFINANCE", "BAJAJFINSV"],
+            "Insurance": ["HDFCLIFE", "SBILIFE", "LIC"],
+            "Asset Management": [],
+        },
+        "INFORMATION TECHNOLOGY": {
+            "IT Services": ["TCS", "INFY", "WIPRO", "HCLTECH", "TECHM", "LTIM"],
+            "Software Products": ["PERSISTENT"],
+            "Midcap IT": ["MPHASIS"],
+        },
+        "AUTOMOBILE": {
+            "Passenger Vehicles": ["TATAMOTORS", "MARUTI", "M&M"],
+            "Two Wheelers": ["BAJAJ-AUTO", "EICHERMOT", "TVSMOTOR"],
+            "Auto Ancillaries": [],
+        },
+        "ENERGY": {
+            "Oil & Gas": ["RELIANCE", "ONGC", "IOC", "BPCL", "GAIL", "OIL"],
+            "Utilities": ["COALINDIA"],
+            "Renewables": [],
+        },
+        "PHARMA & HEALTHCARE": {
+            "Pharma": ["SUNPHARMA", "CIPLA", "DRREDDY", "DIVISLAB", "GLENMARK", "TORNTPHARM"],
+            "Hospitals": [],
+            "Diagnostics": [],
+        },
+        "CONSUMER GOODS": {"FMCG": ["HINDUNILVR", "ITC", "DABUR", "NESTLEIND", "BRITANNIA", "GODREJCP"]},
+        "METALS & MINING": {"Metals": ["JSWSTEEL", "TATASTEEL", "HINDALCO", "VEDL", "SAIL", "NMDC"]},
+        "CONSTRUCTION": {"Capital Goods": ["LT"], "Cement": ["ULTRACEMCO", "GRASIM", "AMBUJACEM"]},
+        "TELECOM": {"Telecom Services": ["BHARTIARTL", "INDUSTOWER"]},
+        "REALTY": {"Real Estate": ["DLF", "GODREJPROP"]},
+        "INDUSTRIALS": {"Industrial Automation": ["SIEMENS", "ABB"], "Logistics": ["ADANIPORTS"]},
     }
 
     SAMPLE_STOCKS: list[dict[str, Any]] = [
@@ -115,7 +151,15 @@ class HeatmapService:
             "universes": self.UNIVERSES,
             "size_by": self.SIZE_BY,
             "color_by": self.COLOR_BY,
+            "factor_color_by": self.FACTOR_COLOR_BY,
             "timeframes": self.TIMEFRAMES,
+            "filters": {
+                "show": ["All", "Gainers only", "Losers only", "Unchanged"],
+                "market_cap": ["Large Cap", "Mid Cap", "Small Cap"],
+                "volume": ["High Volume", "Volume Spike", "Low Volume"],
+                "technical": ["RSI Oversold", "RSI Overbought", "Above EMA50", "Below EMA50", "Breakout 20D", "Breakdown 20D"],
+                "fno": ["All", "F&O only", "Non F&O"],
+            },
             "data_source_note": self.DATA_SOURCE_NOTE,
         }
 
@@ -133,10 +177,13 @@ class HeatmapService:
             "gainers": gainers,
             "losers": losers,
             "breadth": breadth,
+            "breadth_dashboard": self.breadth_dashboard({}),
             "sector_performance": self._sector_performance(sectors),
             "distributions": self._distributions(stocks, sectors),
             "flows": self._flows(),
             "indices": self._indices(),
+            "rotation": self.rotation({}),
+            "insights": self.insights({})["insights"],
             "timestamp": timestamp,
             "data_source_note": self.DATA_SOURCE_NOTE,
         }
@@ -151,6 +198,7 @@ class HeatmapService:
                 "change_pct": sector["change_pct"],
                 "market_cap_cr": sector["market_cap_cr"],
                 "volume": sector["volume"],
+                "industries": self._industry_cards(sector["name"], sector["stocks"]),
             }
             for sector in self._sectors(stocks)
         ]
@@ -181,10 +229,13 @@ class HeatmapService:
                 "slug": sector["slug"],
                 "universe": request.universe,
                 "stock_count": len(stocks),
+                "advancing": breadth["advancing"],
+                "declining": breadth["declining"],
                 "average_change_pct": sector["change_pct"],
                 "market_cap_cr": sector["market_cap_cr"],
                 "volume": sector["volume"],
             },
+            "industries": self._industry_cards(sector["name"], stocks),
             "summary": self._summary(stocks, breadth, synthetic_request, timestamp),
             "stocks": sorted(stocks, key=lambda row: row["size_value"], reverse=True),
             "gainers": sorted(stocks, key=lambda row: row["change_pct"], reverse=True)[:5],
@@ -195,15 +246,153 @@ class HeatmapService:
             "sector_performance": [{"label": row["symbol"], "value": row["change_pct"], "market_cap_cr": row["market_cap_cr"]} for row in sorted(stocks, key=lambda item: item["change_pct"], reverse=True)],
             "distributions": self._sector_distributions(stocks),
             "indices": self._indices(),
+            "insights": self._insights_for(stocks, self._sectors(stocks)),
             "timestamp": timestamp,
             "data_source_note": self.DATA_SOURCE_NOTE,
         }
 
+    def industry_detail(self, sector_slug: str, industry_slug: str, request: HeatmapSectorRequest) -> dict[str, Any] | None:
+        sector = self.sector_detail(sector_slug, request)
+        if sector is None:
+            return None
+        industry = next((row for row in sector["industries"] if row["slug"] == industry_slug), None)
+        if industry is None:
+            return None
+        stocks = [row for row in sector["stocks"] if row["industry_slug"] == industry_slug]
+        if not stocks:
+            return None
+        breadth = self._breadth(stocks)
+        market_cap = sum(float(row["market_cap_cr"]) for row in stocks)
+        volume = sum(int(row["volume"]) for row in stocks)
+        avg_change = sum(float(row["change_pct"]) * float(row["market_cap_cr"]) for row in stocks) / max(market_cap, 1)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S IST")
+        return {
+            "sector": sector["sector"],
+            "industry": {
+                "name": industry["name"],
+                "slug": industry_slug,
+                "stock_count": len(stocks),
+                "advancing": breadth["advancing"],
+                "declining": breadth["declining"],
+                "average_change_pct": round(avg_change, 2),
+                "market_cap_cr": round(market_cap, 2),
+                "volume": volume,
+            },
+            "summary": self._summary(stocks, breadth, HeatmapRunRequest(size_by=request.size_by, color_by=request.color_by, timeframe=request.timeframe, universe=request.universe), timestamp),
+            "stocks": sorted(stocks, key=lambda row: row["size_value"], reverse=True),
+            "gainers": sorted(stocks, key=lambda row: row["change_pct"], reverse=True)[:5],
+            "losers": sorted(stocks, key=lambda row: row["change_pct"])[:5],
+            "breadth": breadth,
+            "distributions": self._sector_distributions(stocks),
+            "indices": self._indices(),
+            "insights": self._insights_for(stocks, self._sectors(stocks)),
+            "timestamp": timestamp,
+            "data_source_note": self.DATA_SOURCE_NOTE,
+        }
+
+    def rotation(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+        stocks = [self._decorate_stock(row, HeatmapRunRequest()) for row in self.SAMPLE_STOCKS]
+        sectors = self._sectors(stocks)
+        total_cap = max(sum(float(row["market_cap_cr"]) for row in sectors), 1)
+        bubbles = []
+        for index, sector in enumerate(sectors):
+            relative_strength = round(sector["change_pct"] * 0.72 + ((index % 5) - 2) * 0.28, 2)
+            momentum = round(sector["change_pct"] * 0.56 + ((len(sector["name"]) % 7) - 3) * 0.22, 2)
+            quadrant = "Leading" if relative_strength >= 0 and momentum >= 0 else "Improving" if relative_strength < 0 <= momentum else "Weakening" if relative_strength >= 0 > momentum else "Lagging"
+            bubbles.append({
+                "sector": sector["name"],
+                "slug": sector["slug"],
+                "relative_strength": relative_strength,
+                "momentum": momentum,
+                "weight_pct": round(float(sector["market_cap_cr"]) / total_cap * 100, 2),
+                "change_pct": sector["change_pct"],
+                "quadrant": quadrant,
+            })
+        improving = sorted(bubbles, key=lambda row: row["momentum"], reverse=True)
+        weakest = sorted(bubbles, key=lambda row: row["relative_strength"] + row["momentum"])[0]
+        return {
+            "bubbles": bubbles,
+            "summary": {
+                "best_improving_sector": improving[0]["sector"],
+                "weakest_sector": weakest["sector"],
+                "leading_sectors": [row["sector"] for row in bubbles if row["quadrant"] == "Leading"],
+                "lagging_sectors": [row["sector"] for row in bubbles if row["quadrant"] == "Lagging"],
+                "model_note": "Sector rotation uses local sample performance fields; historical market-wide rotation model is not connected yet.",
+            },
+            "data_source_note": self.DATA_SOURCE_NOTE,
+        }
+
+    def breadth_dashboard(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+        stocks = [self._decorate_stock(row, HeatmapRunRequest()) for row in self.SAMPLE_STOCKS]
+        breadth = self._breadth(stocks)
+        up_volume = sum(int(row["volume"]) for row in stocks if row["change_pct"] > 0.05)
+        down_volume = sum(int(row["volume"]) for row in stocks if row["change_pct"] < -0.05)
+        ratio = round(breadth["advancing"] / max(breadth["declining"], 1), 2)
+        sector_table = []
+        for sector in self._sectors(stocks):
+            b = self._breadth(sector["stocks"])
+            sector_table.append({
+                "sector": sector["name"],
+                "advancers": b["advancing"],
+                "decliners": b["declining"],
+                "unchanged": b["unchanged"],
+                "breadth_pct": b["advance_pct"],
+            })
+        return {
+            "summary": {
+                **breadth,
+                "advance_decline_ratio": ratio,
+                "up_volume": up_volume,
+                "down_volume": down_volume,
+                "new_52w_highs": None,
+                "new_52w_lows": None,
+                "bullish_breadth_pct": breadth["advance_pct"],
+                "bearish_breadth_pct": breadth["decline_pct"],
+            },
+            "sector_table": sector_table,
+            "placeholder_note": "52W high/low breadth requires stored market-wide historical data. Data source not connected yet.",
+            "data_source_note": self.DATA_SOURCE_NOTE,
+        }
+
+    def factors(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+        factor = (payload or {}).get("factor", "% Change")
+        request = HeatmapRunRequest(color_by="% Change")
+        stocks = [self._decorate_stock(row, request) for row in self.SAMPLE_STOCKS]
+        for stock in stocks:
+            stock["factor_value"] = self._factor_value(stock, factor)
+            stock["color_value"] = 0 if stock["factor_value"] is None else float(stock["factor_value"])
+        return {
+            "factor": factor,
+            "stocks": stocks,
+            "sectors": self._sectors(stocks),
+            "fundamental_note": "Fundamental factor coloring requires fundamentals data source." if "placeholder" in factor.lower() else "",
+            "data_source_note": self.DATA_SOURCE_NOTE,
+        }
+
+    def insights(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+        stocks = [self._decorate_stock(row, HeatmapRunRequest()) for row in self.SAMPLE_STOCKS]
+        return {
+            "insights": self._insights_for(stocks, self._sectors(stocks)),
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S IST"),
+            "data_source_note": "Insights are deterministic rule-based summaries generated from the active local heatmap dataset.",
+        }
+
     def _decorate_stock(self, row: dict[str, Any], request: HeatmapRunRequest) -> dict[str, Any]:
         item = row.copy()
+        item["industry"] = self._industry_for_symbol(item["sector"], item["symbol"])
+        item["industry_slug"] = self._slugify(item["industry"])
         item["turnover_cr"] = round(item["price"] * item["volume"] / 10000000, 2)
         item["relative_volume"] = round(0.75 + (abs(item["change_pct"]) * 0.18) + ((len(item["symbol"]) % 4) * 0.12), 2)
         item["volume_change_pct"] = round((item["relative_volume"] - 1) * 100, 2)
+        item["volatility"] = round(1.1 + abs(item["change_pct"]) * 0.55 + (len(item["symbol"]) % 5) * 0.18, 2)
+        item["is_fno"] = item["market_cap_cr"] >= 100000 or item["volume"] >= 5000000
+        item["market_cap_bucket"] = "Large Cap" if item["market_cap_cr"] >= 200000 else "Mid Cap" if item["market_cap_cr"] >= 50000 else "Small Cap"
+        item["above_ema50"] = item["change_pct"] >= 0 or item["rsi"] >= 52
+        item["breakout_20d"] = item["change_pct"] >= 1.5 and item["relative_volume"] >= 1.05
+        item["breakdown_20d"] = item["change_pct"] <= -1.5 and item["relative_volume"] >= 1.05
+        item["pe"] = None
+        item["roe"] = None
+        item["debt_equity"] = None
         item["size_value"] = self._size_value(item, request.size_by)
         item["color_value"] = self._color_value(item, request.color_by)
         return item
@@ -226,6 +415,51 @@ class HeatmapService:
             return round((float(item["rsi"]) - 50) / 8, 2)
         return float(item["change_pct"])
 
+    def _factor_value(self, item: dict[str, Any], factor: str) -> float | None:
+        if factor == "Volume Change":
+            return float(item["volume_change_pct"])
+        if factor == "Relative Volume":
+            return float(item["relative_volume"])
+        if factor == "RSI":
+            return float(item["rsi"])
+        if factor == "Volatility":
+            return float(item["volatility"])
+        if factor == "Market Cap":
+            return float(item["market_cap_cr"])
+        if "placeholder" in str(factor).lower():
+            return None
+        return float(item["change_pct"])
+
+    def _industry_for_symbol(self, sector: str, symbol: str) -> str:
+        for industry, symbols in self.INDUSTRY_GROUPS.get(sector, {}).items():
+            if symbol in symbols:
+                return industry
+        return "Other"
+
+    def _industry_cards(self, sector_name: str, stocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        grouped: dict[str, list[dict[str, Any]]] = {name: [] for name in self.INDUSTRY_GROUPS.get(sector_name, {"Other": []})}
+        for stock in stocks:
+            grouped.setdefault(stock["industry"], []).append(stock)
+        cards = []
+        for name, rows in grouped.items():
+            market_cap = sum(float(row["market_cap_cr"]) for row in rows)
+            volume = sum(int(row["volume"]) for row in rows)
+            avg_change = sum(float(row["change_pct"]) * float(row["market_cap_cr"]) for row in rows) / max(market_cap, 1)
+            breadth = self._breadth(rows) if rows else {"advancing": 0, "declining": 0, "unchanged": 0, "total": 0, "advance_pct": 0, "decline_pct": 0}
+            cards.append({
+                "name": name,
+                "slug": self._slugify(name),
+                "stock_count": len(rows),
+                "advancing": breadth["advancing"],
+                "declining": breadth["declining"],
+                "unchanged": breadth["unchanged"],
+                "average_change_pct": round(avg_change, 2),
+                "market_cap_cr": round(market_cap, 2),
+                "volume": volume,
+                "stocks": sorted(rows, key=lambda row: row["size_value"], reverse=True),
+            })
+        return cards
+
     def _sectors(self, stocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
         grouped: dict[str, list[dict[str, Any]]] = {}
         for stock in stocks:
@@ -243,6 +477,7 @@ class HeatmapService:
                     "market_cap_cr": round(market_cap, 2),
                     "volume": volume,
                     "stocks": sorted(rows, key=lambda row: row["size_value"], reverse=True),
+                    "industries": self._industry_cards(name, rows),
                 }
             )
         return sorted(sectors, key=lambda sector: sector["market_cap_cr"], reverse=True)
@@ -283,6 +518,8 @@ class HeatmapService:
         return value.lower().replace("&", "").replace("/", " ").replace("  ", " ").strip().replace(" ", "-")
 
     def _breadth(self, stocks: list[dict[str, Any]]) -> dict[str, Any]:
+        if not stocks:
+            return {"advancing": 0, "declining": 0, "unchanged": 0, "total": 0, "advance_pct": 0, "decline_pct": 0}
         advancing = sum(1 for row in stocks if row["change_pct"] > 0.05)
         declining = sum(1 for row in stocks if row["change_pct"] < -0.05)
         unchanged = len(stocks) - advancing - declining
@@ -294,6 +531,27 @@ class HeatmapService:
             "advance_pct": round((advancing / len(stocks)) * 100, 2),
             "decline_pct": round((declining / len(stocks)) * 100, 2),
         }
+
+    def _insights_for(self, stocks: list[dict[str, Any]], sectors: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S IST")
+        breadth = self._breadth(stocks)
+        leader = max(sectors, key=lambda row: row["change_pct"]) if sectors else None
+        weakest = min(sectors, key=lambda row: row["change_pct"]) if sectors else None
+        total_volume = max(sum(int(row["volume"]) for row in stocks), 1)
+        volume_sector = max(sectors, key=lambda row: row["volume"]) if sectors else None
+        top_positive = sorted([row for row in stocks if row["change_pct"] > 0], key=lambda row: row["market_cap_cr"], reverse=True)[:5]
+        insights = []
+        if leader:
+            insights.append({"severity": "Bullish", "text": f"{leader['name']} is leading today's market breadth with {leader['change_pct']:+.2f}% weighted change.", "timestamp": now})
+        if weakest:
+            insights.append({"severity": "Bearish", "text": f"{weakest['name']} is showing broad weakness at {weakest['change_pct']:+.2f}% weighted change.", "timestamp": now})
+        insights.append({"severity": "Warning" if breadth["advance_pct"] < 45 else "Info", "text": f"Advance/decline breadth is {breadth['advancing']}:{breadth['declining']} with {breadth['advance_pct']:.1f}% advancers.", "timestamp": now})
+        if top_positive:
+            insights.append({"severity": "Info", "text": f"Top positive breadth contributors by market cap: {', '.join(row['symbol'] for row in top_positive)}.", "timestamp": now})
+        if volume_sector:
+            share = round(volume_sector["volume"] / total_volume * 100, 1)
+            insights.append({"severity": "Warning" if share > 25 else "Info", "text": f"Volume concentration is highest in {volume_sector['name']} at {share}% of sample-universe volume.", "timestamp": now})
+        return insights[:5]
 
     def _summary(self, stocks: list[dict[str, Any]], breadth: dict[str, Any], request: HeatmapRunRequest, timestamp: str) -> dict[str, Any]:
         total_cap = sum(float(row["market_cap_cr"]) for row in stocks)
