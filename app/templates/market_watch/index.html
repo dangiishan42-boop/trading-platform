@@ -1024,11 +1024,11 @@
         const quote = await postJson("/api/v1/market-watch/quote", requestPayload());
         state.quote = { ...fallbackQuote(state.symbol), ...quote };
       } catch (error) {
-        state.quote = fallbackQuote(state.symbol);
+        state.quote = { ...fallbackQuote(state.symbol), data_source_badge: "Sample", data_source_note: `Quote API unavailable: ${error.message}. Showing safe preview data.` };
       }
       renderChartHeader();
       renderRightTables();
-      setStatus(`Loaded ${state.symbol} quote`);
+      setStatus(`${state.quote.data_source_badge || "Sample"} - ${state.quote.data_source_note || `Loaded ${state.symbol} quote`}`);
     }
     async function loadCandles() {
       const message = byId("chart-message");
@@ -1037,7 +1037,7 @@
       try {
         const data = await postJson("/api/v1/market-watch/candles", candlePayload());
         state.candles = data.rows && data.rows.length ? data.rows : previewCandles(state.symbol);
-        setStatus(data.rows && data.rows.length ? `Loaded ${state.candles.length} candles` : "No API candles returned. Showing safe preview candles.");
+        setStatus(data.rows && data.rows.length ? `${data.data_source_badge || "Sample"} - ${data.data_source_note || `Loaded ${state.candles.length} candles`}` : "No API candles returned. Showing safe preview candles.");
       } catch (error) {
         state.candles = previewCandles(state.symbol);
         setStatus(`Candle API unavailable: ${error.message}. Showing safe preview candles.`, true);

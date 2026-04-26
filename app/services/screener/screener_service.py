@@ -5,6 +5,7 @@ from typing import Any
 from uuid import uuid4
 
 from app.schemas.screener_schema import ScreenerRunRequest, ScreenerSavedScreenCreate
+from app.services.market_data.engine import MarketDataEngine, get_market_data_engine
 
 
 class ScreenerService:
@@ -86,6 +87,9 @@ class ScreenerService:
         "RSI": "rsi_14",
     }
 
+    def __init__(self, market_data: MarketDataEngine | None = None) -> None:
+        self.market_data = market_data or get_market_data_engine()
+
     def capabilities(self) -> dict[str, Any]:
         return {
             "universes": self.UNIVERSES,
@@ -99,7 +103,7 @@ class ScreenerService:
         }
 
     def run(self, request: ScreenerRunRequest) -> dict[str, Any]:
-        rows = [row.copy() for row in self.SAMPLE_UNIVERSE]
+        rows, source_note = self._market_rows()
         filtered = [row for row in rows if self._matches_filters(row, request.filters)]
         sort_field = self.SORT_FIELDS.get(request.sort_by, "market_cap_cr")
         filtered.sort(key=lambda item: item.get(sort_field) or 0, reverse=request.sort_direction == "desc")
@@ -109,7 +113,7 @@ class ScreenerService:
             "distributions": self._distributions(filtered),
             "sector_breakdown": self._sector_breakdown(filtered),
             "saved_screens": self.list_saved_screens(),
-            "data_source_note": self.DATA_SOURCE_NOTE,
+            "data_source_note": source_note,
         }
 
     def list_saved_screens(self) -> list[dict[str, Any]]:
@@ -231,3 +235,21 @@ class ScreenerService:
             return float(value)
         except (TypeError, ValueError):
             return value
+
+    def _market_rows(self) -> tuple[list[dict[str, Any]], str]:
+        rows = [row.copy() for row in self.SAMPLE_UNIVERSE]
+        try:
+            quote_rows = self.market_data.get_quotes_bulk(
+                [{"symbol": row["symbol"], "exchange": row["exchange"]} for row in rows]
+            )["items"]
+        except Exception as exc:
+            return rows, f"{self.DATA_SOURCE_NOTE} Quote refresh unavailable: {exc}"
+
+        source_note = self.DATA_SOURCE_NOTE
+        for row, quote in zip(rows, quote_rows):
+            row["ltp"] = quote.get("latest_price") if quote.get("latest_price") is not None else row["ltp"]
+            row["change_pct"] = quote.get("change_pct") if quote.get("change_pct") is not None else row["change_pct"]
+            row["volume"] = quote.get("volume") if quote.get("volume") is not None else row["volume"]
+            if quote.get("data_source_note"):
+                source_note = quote["data_source_note"]
+        return rows, source_note

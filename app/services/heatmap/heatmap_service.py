@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from app.schemas.heatmap_schema import HeatmapRunRequest, HeatmapSectorRequest
+from app.services.market_data.engine import MarketDataEngine, get_market_data_engine
 
 
 class HeatmapService:
@@ -145,6 +146,9 @@ class HeatmapService:
         {"symbol": "ADANIPORTS", "name": "Adani Ports", "sector": "INDUSTRIALS", "price": 1296.8, "change_pct": -2.88, "market_cap_cr": 280000, "volume": 4020000, "rsi": 35.1},
         {"symbol": "COALINDIA", "name": "Coal India", "sector": "ENERGY", "price": 438.6, "change_pct": -2.64, "market_cap_cr": 270000, "volume": 7100000, "rsi": 36.3},
     ]
+
+    def __init__(self, market_data: MarketDataEngine | None = None) -> None:
+        self.market_data = market_data or get_market_data_engine()
 
     def capabilities(self) -> dict[str, Any]:
         return {
@@ -615,9 +619,22 @@ class HeatmapService:
         }
 
     def _indices(self) -> list[dict[str, Any]]:
-        return [
-            {"name": "NIFTY 50", "value": 22419.95, "change_pct": 0.62, "spark": [18, 15, 17, 10, 12, 4]},
-            {"name": "SENSEX", "value": 73912.18, "change_pct": 0.48, "spark": [18, 15, 17, 12, 8, 9]},
-            {"name": "NIFTY BANK", "value": 48082.35, "change_pct": -0.21, "spark": [8, 11, 9, 14, 15, 20]},
-            {"name": "INDIA VIX", "value": 13.42, "change_pct": -1.18, "spark": [6, 12, 9, 17, 14, 21]},
-        ]
+        try:
+            rows = self.market_data.get_indices()
+            return [
+                {
+                    "name": row["name"],
+                    "value": row.get("latest_price"),
+                    "change_pct": row.get("change_pct"),
+                    "spark": [18, 15, 17, 10, 12, 4],
+                    "data_source": row.get("data_source"),
+                }
+                for row in rows
+            ]
+        except Exception:
+            return [
+                {"name": "NIFTY 50", "value": 22419.95, "change_pct": 0.62, "spark": [18, 15, 17, 10, 12, 4]},
+                {"name": "SENSEX", "value": 73912.18, "change_pct": 0.48, "spark": [18, 15, 17, 12, 8, 9]},
+                {"name": "NIFTY BANK", "value": 48082.35, "change_pct": -0.21, "spark": [8, 11, 9, 14, 15, 20]},
+                {"name": "INDIA VIX", "value": 13.42, "change_pct": -1.18, "spark": [6, 12, 9, 17, 14, 21]},
+            ]

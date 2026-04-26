@@ -7,7 +7,6 @@ import pandas as pd
 from app.config.constants import ANGEL_SYMBOL_TO_TOKEN, OHLCV_COLUMNS
 from app.core.exceptions import DataValidationError, InvalidRequestError
 from app.schemas.data_schema import (
-    AngelDataFetchRequest,
     HistoricalDataRequest,
     HistoricalDataResponse,
     HistoricalDataRow,
@@ -15,6 +14,7 @@ from app.schemas.data_schema import (
 from app.services.data.angel_smartapi_service import AngelSmartApiService
 from app.services.data.data_resampler_service import DataResamplerService
 from app.services.data.instrument_master_service import InstrumentMasterService
+from app.services.market_data.engine import MarketDataEngine, get_market_data_engine
 
 
 @dataclass(frozen=True)
@@ -39,10 +39,12 @@ class HistoricalDataService:
         angel_service: AngelSmartApiService | None = None,
         resampler: DataResamplerService | None = None,
         instruments: InstrumentMasterService | None = None,
+        market_data: MarketDataEngine | None = None,
     ) -> None:
         self.angel_service = angel_service or AngelSmartApiService()
         self.resampler = resampler or DataResamplerService()
         self.instruments = instruments or InstrumentMasterService()
+        self.market_data = market_data or get_market_data_engine()
 
     def fetch(self, request: HistoricalDataRequest, session=None) -> HistoricalDataResponse:
         symbol = self._normalize_symbol(request.symbol)
@@ -56,15 +58,16 @@ class HistoricalDataService:
         response_symbol = instrument.symbol if instrument is not None else (symbol or symbol_token)
         interval_config = self.INTERVAL_CONFIG[request.interval]
 
-        frame = self.angel_service.fetch_frame(
-            AngelDataFetchRequest(
-                exchange=request.exchange,
-                symbol_token=symbol_token,
-                interval=interval_config.angel_interval,
-                fromdate=request.fromdate,
-                todate=request.todate,
-            )
+        candle_data = self.market_data.get_candles(
+            symbol=response_symbol,
+            token=symbol_token,
+            exchange=request.exchange,
+            interval=interval_config.angel_interval,
+            from_date=request.fromdate,
+            to_date=request.todate,
+            session=session,
         )
+        frame = candle_data["frame"]
         prepared_frame = self._prepare_frame(frame)
 
         if interval_config.resample_rule:
@@ -82,6 +85,12 @@ class HistoricalDataService:
             interval=request.interval,
             row_count=len(rows),
             rows=rows,
+            source=candle_data.get("source"),
+            data_source=candle_data.get("data_source"),
+            data_source_badge=candle_data.get("data_source_badge"),
+            data_source_note=candle_data.get("data_source_note"),
+            is_cached=candle_data.get("is_cached", False),
+            message=candle_data.get("message"),
         )
 
     def _normalize_symbol(self, symbol: str | None) -> str:

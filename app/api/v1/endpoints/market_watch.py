@@ -3,7 +3,6 @@ from sqlmodel import Session
 
 from app.api.dependencies import get_session
 from app.api.v1.endpoints.data_upload import _store_dataset_metadata
-from app.schemas.data_schema import AngelDataFetchRequest
 from app.schemas.market_watch_schema import (
     MarketWatchBacktestDatasetResponse,
     MarketWatchCandleRequest,
@@ -12,7 +11,7 @@ from app.schemas.market_watch_schema import (
     MarketWatchQuoteResponse,
     MarketWatchSymbolRequest,
 )
-from app.services.data.angel_smartapi_service import AngelSmartApiService
+from app.services.data.data_loader_service import DataLoaderService
 from app.services.data.market_watch_service import MarketWatchService
 
 router = APIRouter(prefix="/market-watch", tags=["market-watch"])
@@ -80,15 +79,34 @@ def detail_technical(symbol: str, exchange: str = "NSE", symbol_token: str | Non
 def use_for_backtest(payload: MarketWatchCandleRequest, session: Session = Depends(get_session)):
     service = MarketWatchService()
     resolved = service.resolve_symbol(payload.query, payload.exchange, payload.symbol_token, session=session)
-    candle_request = service._candle_request(resolved, payload.interval, payload.fromdate, payload.todate)
-    fetched = AngelSmartApiService().fetch_dataset(
-        AngelDataFetchRequest(
-            exchange=candle_request.exchange,
-            symbol_token=candle_request.symbol_token,
-            interval=candle_request.interval,
-            fromdate=candle_request.fromdate,
-            todate=candle_request.todate,
-        )
+    candle_data = service.candles(
+        payload.query,
+        payload.exchange,
+        payload.symbol_token,
+        payload.interval,
+        payload.fromdate,
+        payload.todate,
+        session=session,
+    )
+    import pandas as pd
+
+    frame = pd.DataFrame(
+        [
+            {
+                "Date": row["datetime"],
+                "Open": row["open"],
+                "High": row["high"],
+                "Low": row["low"],
+                "Close": row["close"],
+                "Volume": row["volume"],
+            }
+            for row in candle_data["rows"]
+        ]
+    )
+    fetched = DataLoaderService().save_dataframe_upload(
+        f"market_watch_{resolved.exchange}_{resolved.symbol}_{payload.interval}.csv",
+        frame,
+        message="Market watch candles saved for backtesting",
     )
     _store_dataset_metadata(session, fetched)
     return MarketWatchBacktestDatasetResponse(

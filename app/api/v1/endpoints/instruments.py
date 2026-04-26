@@ -9,6 +9,7 @@ from app.schemas.instrument_schema import (
     InstrumentSyncResponse,
 )
 from app.services.data.instrument_master_service import DEFAULT_ANGEL_SCRIP_MASTER_URL, InstrumentMasterService
+from app.services.market_data.engine import get_market_data_engine
 
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
@@ -31,7 +32,8 @@ def search_instruments(
     limit: int = Query(default=20, ge=1, le=50),
     session: Session = Depends(get_session),
 ):
-    items = InstrumentMasterService().search(session, q=q, exchange=exchange, limit=limit)
+    payload = get_market_data_engine().search_instruments(q, exchange=exchange, session=session)
+    items = payload["items"][:limit]
     return InstrumentSearchResponse(items=[InstrumentEntry.model_validate(item) for item in items])
 
 

@@ -12,6 +12,7 @@ from app.schemas.data_schema import AngelDataFetchRequest
 from app.services.data.angel_smartapi_service import AngelSmartApiService
 from app.services.data.data_resampler_service import DataResamplerService
 from app.services.data.instrument_master_service import InstrumentMasterService
+from app.services.market_data.engine import MarketDataEngine, get_market_data_engine
 
 
 @dataclass(frozen=True)
@@ -48,10 +49,12 @@ class MarketWatchService:
         angel: AngelSmartApiService | None = None,
         instruments: InstrumentMasterService | None = None,
         resampler: DataResamplerService | None = None,
+        market_data: MarketDataEngine | None = None,
     ) -> None:
         self.angel = angel or AngelSmartApiService()
         self.instruments = instruments or InstrumentMasterService()
         self.resampler = resampler or DataResamplerService()
+        self.market_data = market_data or get_market_data_engine()
 
     def resolve_symbol(
         self,
@@ -94,23 +97,12 @@ class MarketWatchService:
 
     def quote(self, query: str | None, exchange: str = "NSE", symbol_token: str | None = None, session=None) -> dict[str, Any]:
         resolved = self.resolve_symbol(query, exchange, symbol_token, session=session)
-        base = self._empty_quote(resolved)
-        if not self.angel.has_credentials():
-            base["message"] = "Angel One credentials are not configured. Showing mapped symbol only."
-            return base
-
-        try:
-            ltp_response = self.angel.fetch_ltp(
-                exchange=resolved.exchange,
-                symbol=self._angel_trading_symbol(resolved),
-                symbol_token=resolved.symbol_token,
-            )
-            ltp_data = ltp_response.get("data") or {}
-            daily_frame = self._try_daily_frame(resolved)
-            return self._quote_from_angel(resolved, ltp_data, daily_frame)
-        except Exception as exc:
-            base["message"] = str(exc)
-            return base
+        return self.market_data.get_quote(
+            symbol=resolved.symbol,
+            token=resolved.symbol_token,
+            exchange=resolved.exchange,
+            session=session,
+        )
 
     def candles(
         self,
@@ -124,7 +116,16 @@ class MarketWatchService:
     ) -> dict[str, Any]:
         resolved = self.resolve_symbol(query, exchange, symbol_token, session=session)
         request = self._candle_request(resolved, interval, fromdate, todate)
-        frame = self.angel.fetch_frame(request)
+        candle_data = self.market_data.get_candles(
+            symbol=resolved.symbol,
+            token=resolved.symbol_token,
+            exchange=resolved.exchange,
+            interval=request.interval,
+            from_date=request.fromdate,
+            to_date=request.todate,
+            session=session,
+        )
+        frame = candle_data["frame"]
         frame = self._prepare_interval_frame(frame, interval)
         return {
             "symbol": resolved.symbol,
@@ -133,49 +134,16 @@ class MarketWatchService:
             "symbol_token": resolved.symbol_token,
             "interval": interval,
             "rows": self._frame_rows(frame),
+            "source": candle_data.get("source"),
+            "data_source": candle_data.get("data_source"),
+            "data_source_badge": candle_data.get("data_source_badge"),
+            "data_source_note": candle_data.get("data_source_note"),
+            "is_cached": candle_data.get("is_cached", False),
+            "message": candle_data.get("message"),
         }
 
     def indices(self) -> list[dict[str, Any]]:
-        rows = []
-        for name, details in ANGEL_INDEX_DETAILS.items():
-            token = details.get("token")
-            if not token or not self.angel.has_credentials():
-                rows.append(
-                    {
-                        "name": name,
-                        "exchange": details["exchange"],
-                        "available": False,
-                        "message": "Index token or Angel credentials are not configured.",
-                    }
-                )
-                continue
-
-            try:
-                response = self.angel.fetch_ltp(exchange=details["exchange"], symbol=name, symbol_token=token)
-                data = response.get("data") or {}
-                latest = self._number(data.get("ltp"))
-                previous_close = self._number(data.get("close"))
-                change = latest - previous_close if latest is not None and previous_close is not None else None
-                rows.append(
-                    {
-                        "name": name,
-                        "exchange": details["exchange"],
-                        "latest_price": latest,
-                        "change": self._round(change),
-                        "change_pct": self._change_pct(change, previous_close),
-                        "available": latest is not None,
-                    }
-                )
-            except Exception as exc:
-                rows.append(
-                    {
-                        "name": name,
-                        "exchange": details["exchange"],
-                        "available": False,
-                        "message": str(exc),
-                    }
-                )
-        return rows
+        return self.market_data.get_indices()
 
     def fundamentals_placeholder(self, symbol: str) -> dict[str, Any]:
         normalized = self._normalize_query(symbol)
@@ -251,17 +219,6 @@ class MarketWatchService:
         session=None,
     ) -> dict[str, Any]:
         normalized = self._normalize_query(symbol)
-        if not self.angel.has_credentials():
-            return {
-                "symbol": normalized,
-                "available": False,
-                "message": "Candle data source not connected yet",
-                "signals": {},
-                "support": None,
-                "resistance": None,
-                "overall_rating": "Neutral",
-            }
-
         try:
             candle_data = self.candles(normalized, exchange, symbol_token, "1D", datetime.now() - timedelta(days=260), datetime.now(), session=session)
         except Exception as exc:

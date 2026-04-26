@@ -176,6 +176,12 @@ class HistoricalDataResponse(BaseModel):
     interval: HistoricalInterval
     row_count: int = Field(ge=0)
     rows: list[HistoricalDataRow]
+    source: str | None = None
+    data_source: str | None = None
+    data_source_badge: str | None = None
+    data_source_note: str | None = None
+    is_cached: bool = False
+    message: str | None = None
 
 
 class UploadedDatasetEntry(BaseModel):

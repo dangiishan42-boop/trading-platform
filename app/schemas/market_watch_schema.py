@@ -61,6 +61,11 @@ class MarketWatchQuoteResponse(BaseModel):
     value_traded: float | None = None
     available: bool = False
     message: str | None = None
+    source: str | None = None
+    data_source: str | None = None
+    data_source_badge: str | None = None
+    data_source_note: str | None = None
+    is_cached: bool = False
 
 
 class MarketWatchCandleRow(BaseModel):
@@ -79,6 +84,12 @@ class MarketWatchCandleResponse(BaseModel):
     symbol_token: str
     interval: MarketWatchInterval
     rows: list[MarketWatchCandleRow]
+    source: str | None = None
+    data_source: str | None = None
+    data_source_badge: str | None = None
+    data_source_note: str | None = None
+    is_cached: bool = False
+    message: str | None = None
 
 
 class MarketWatchIndexResponse(BaseModel):
@@ -89,6 +100,11 @@ class MarketWatchIndexResponse(BaseModel):
     change_pct: float | None = None
     available: bool = False
     message: str | None = None
+    source: str | None = None
+    data_source: str | None = None
+    data_source_badge: str | None = None
+    data_source_note: str | None = None
+    is_cached: bool = False
 
 
 class MarketWatchBacktestDatasetResponse(BaseModel):

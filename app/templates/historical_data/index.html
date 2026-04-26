@@ -903,9 +903,10 @@
         if (!res.ok) throw new Error(data.detail || "Historical data fetch failed");
 
         renderHistoricalRows(data.rows || [], data);
+        const sourceNote = data.data_source_badge ? ` ${data.data_source_badge} - ${data.data_source_note || ""}` : "";
         setNotice(
           "historical-status",
-          `Loaded ${data.row_count} row${data.row_count === 1 ? "" : "s"} for <strong>${data.symbol}</strong> on <strong>${data.interval}</strong>.`,
+          `Loaded ${data.row_count} row${data.row_count === 1 ? "" : "s"} for <strong>${data.symbol}</strong> on <strong>${data.interval}</strong>.${sourceNote}`,
           "success"
         );
       } catch (error) {
