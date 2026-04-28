@@ -137,6 +137,29 @@
     .status { min-height: 28px; display: flex; align-items: center; padding: 7px 9px; border: 1px solid rgba(44,82,125,.52); border-radius: 7px; background: #081322; color: var(--muted); font-size: 12px; font-weight: 800; }
     .status.ok { color: var(--green); border-color: rgba(0,208,132,.35); }
     .status.err { color: #ff9ba6; border-color: rgba(255,77,94,.35); }
+    .quick-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .source-badge { display: inline-grid; place-items: center; min-width: 68px; height: 22px; padding: 0 7px; border-radius: 999px; border: 1px solid rgba(44,82,125,.7); color: #b8c6d8; background: #081322; font-size: 10px; font-weight: 950; text-transform: uppercase; }
+    .source-badge.live { color: #bfffe5; border-color: rgba(0,208,132,.4); background: rgba(0,208,132,.1); }
+    .source-badge.cached { color: #d7e8ff; border-color: rgba(47,129,247,.42); background: rgba(47,129,247,.12); }
+    .source-badge.sample { color: #ffe3a3; border-color: rgba(245,184,75,.42); background: rgba(245,184,75,.12); }
+    .source-badge.unavailable { color: #ffb6bf; border-color: rgba(255,77,94,.42); background: rgba(255,77,94,.1); }
+    .rating { color: var(--muted); font-weight: 950; }
+    .rating.buy { color: var(--green); }
+    .rating.sell { color: var(--red); }
+    .rating.neutral { color: var(--amber); }
+    .pattern-chips { display: flex; gap: 4px; flex-wrap: wrap; max-width: 220px; }
+    .pattern-chip { display: inline-grid; place-items: center; min-height: 20px; padding: 0 6px; border-radius: 999px; border: 1px solid rgba(44,82,125,.62); background: #081322; color: #b8c6d8; font-size: 10px; font-weight: 900; }
+    .bias-badge { display: inline-grid; place-items: center; min-width: 76px; height: 22px; padding: 0 7px; border-radius: 999px; border: 1px solid rgba(44,82,125,.7); color: var(--muted); background: #081322; font-size: 10px; font-weight: 950; text-transform: uppercase; }
+    .bias-badge.bullish { color: #bfffe5; border-color: rgba(0,208,132,.4); background: rgba(0,208,132,.1); }
+    .bias-badge.bearish { color: #ffd0d5; border-color: rgba(255,77,94,.42); background: rgba(255,77,94,.1); }
+    .bias-badge.neutral { color: #d7e8ff; border-color: rgba(127,144,167,.42); background: rgba(127,144,167,.1); }
+    .bias-badge.unavailable { color: var(--muted); }
+    .formula-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+    .formula-textarea { width: 100%; min-height: 72px; resize: vertical; border: 1px solid var(--line-2); border-radius: 6px; background: #050b14; color: var(--text); outline: none; padding: 8px; font-size: 12px; font-weight: 800; }
+    .formula-presets { display: flex; gap: 6px; flex-wrap: wrap; }
+    .formula-status { min-height: 28px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .formula-match { color: var(--muted); font-weight: 950; }
+    .formula-match.yes { color: var(--green); }
     .modal-backdrop { position: fixed; inset: 0; display: none; place-items: center; background: rgba(0,0,0,.62); z-index: 20; padding: 16px; }
     .modal-backdrop.open { display: grid; }
     .modal { width: min(420px, 100%); border: 1px solid var(--line-2); border-radius: 8px; background: #07111f; box-shadow: 0 24px 80px rgba(0,0,0,.55); }
@@ -234,6 +257,7 @@
                   <div class="note" id="source-note">Loading screener capabilities...</div>
                   <div class="filter-grid filter-header"><span>Category</span><span>Metric</span><span>Condition</span><span>Value</span><span>Value 2 Optional</span><span>Logical</span><span></span></div>
                   <div id="filter-rows"></div>
+                  <div class="quick-filters" id="quick-filters"></div>
                   <div class="actions" style="justify-content:flex-start;">
                     <button class="btn" id="add-filter-btn">Add Filter</button>
                     <button class="btn btn-danger" id="clear-filters-btn">Clear All</button>
@@ -245,18 +269,31 @@
           </section>
 
           <section class="panel">
+            <div class="panel-head"><h2>Multi-Factor Formula</h2><div class="formula-presets" id="formula-presets"></div></div>
+            <div class="panel-body">
+              <div class="formula-grid">
+                <div class="field"><label for="formula-name">Formula Name</label><input id="formula-name" placeholder="e.g. Momentum Breakout" /></div>
+                <div class="field"><label for="formula-expression">Formula Expression</label><textarea class="formula-textarea" id="formula-expression" placeholder='RSI14 < 30 AND (Hammer == true OR BullishEngulfing == true)'></textarea></div>
+                <div class="actions"><button class="btn" id="validate-formula-btn">Validate Formula</button><button class="btn btn-primary" id="run-formula-btn">Run Formula</button><button class="btn" id="save-formula-btn">Save Formula Screen</button></div>
+              </div>
+              <div class="note" style="margin-top:8px;">Use metrics like RSI14, EMA20, EMA50, MACD_Bullish, Hammer, RelativeVolume, PercentChange, TrendScore.</div>
+              <div class="formula-status" id="formula-status">Formula disabled until an expression is run.</div>
+            </div>
+          </section>
+
+          <section class="panel">
             <div class="panel-head table-toolbar">
               <div class="toolbar-left"><h2 id="results-title">RESULTS (0)</h2><span class="status" id="scan-status">Ready</span></div>
               <div class="toolbar-right">
                 <button class="btn" title="View">View</button><button class="btn">Columns</button><button class="btn" id="export-btn">Export</button><button class="btn">Add to Watchlist</button><button class="btn" id="save-screen-table-btn">Save Screen</button>
-                <select id="sort-by"><option>Market Cap</option><option>% Change</option><option>Volume</option><option>P/E</option><option>ROE</option><option>RSI</option></select>
+                <select id="sort-by"><option>Market Cap</option><option>% Change</option><option>Volume</option><option>Relative Volume</option><option>Turnover</option><option>Composite Score</option><option>P/E</option><option>ROE</option><option>RSI</option></select>
                 <select id="sort-direction"><option value="desc">Desc</option><option value="asc">Asc</option></select>
                 <button class="btn" id="refresh-btn">Refresh</button>
               </div>
             </div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th><input class="checkbox" type="checkbox" /></th><th>#</th><th>Symbol</th><th>Name</th><th>Sector</th><th>LTP (₹)</th><th>% Change</th><th>Volume</th><th>Market Cap (₹ Cr)</th><th>P/E (TTM)</th><th>ROE (%)</th><th>EPS Growth YoY (%)</th><th>RSI (14)</th><th>Debt / Equity</th></tr></thead>
+                <thead><tr><th><input class="checkbox" type="checkbox" /></th><th>#</th><th>Symbol</th><th>Name</th><th>Sector</th><th>LTP</th><th>% Change</th><th>Volume</th><th>Rel Vol</th><th>52W High Dist</th><th>52W Low Dist</th><th>Gap %</th><th>Turnover</th><th>RSI</th><th>Trend Score</th><th>Rating</th><th>Patterns</th><th>Candle Bias</th><th>Composite</th><th>Formula</th><th>Source</th><th>Market Cap (₹ Cr)</th><th>P/E</th><th>ROE</th></tr></thead>
                 <tbody id="results-body"></tbody>
               </table>
             </div>
@@ -290,7 +327,7 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
-    const state = { capabilities: null, results: [], summary: {}, distributions: {}, sectors: [], saved: [] };
+    const state = { capabilities: null, results: [], summary: {}, distributions: {}, sectors: [], saved: [], formulaActive: false, formulaValidation: null, formulaMatchedCount: null };
     const defaultFilters = [
       ["Overview", "Market Cap (₹ Cr)", "Greater Than", 5000, "", "AND"],
       ["Valuation", "P/E Ratio (TTM)", "Less Than", 25, "", "AND"],
@@ -298,21 +335,75 @@
       ["Growth", "EPS Growth YoY (%)", "Greater Than", 10, "", "AND"],
       ["Technical Indicators", "Price Above 200 EMA", "Is True", true, "", "AND"],
       ["Technical Indicators", "RSI (14)", "Less Than", 70, "", "AND"],
-      ["Price & Volume", "Volume (20D Avg)", "Greater Than", 1000000, "", "AND"],
+      ["Price & Volume", "Avg Volume 20D", "Greater Than", 1000000, "", "AND"],
       ["Fundamentals", "Debt to Equity", "Less Than", 1, "", "AND"],
     ];
-    const metricOptions = ["LTP", "% Change", "Volume", "Relative Volume", "Market Cap", "Market Cap (₹ Cr)", "52W High Distance", "52W Low Distance", "P/E Ratio", "P/E Ratio (TTM)", "P/B Ratio", "ROE", "ROE (%)", "ROCE", "EPS Growth", "EPS Growth YoY (%)", "Sales Growth", "Debt to Equity", "Dividend Yield", "RSI", "RSI (14)", "MACD Signal", "Price Above EMA20", "Price Above EMA50", "Price Above EMA200", "Price Above 200 EMA", "Volume Spike", "Breakout 20D", "Breakout 52W", "Volume (20D Avg)"];
+    const metricOptions = ["LTP", "% Change", "Volume", "Avg Volume 20D", "Relative Volume", "Volume Spike", "52W High Distance %", "52W Low Distance %", "Gap Up %", "Gap Down %", "Day Range %", "Turnover", "Market Cap", "Market Cap (₹ Cr)", "P/E Ratio", "P/E Ratio (TTM)", "P/B Ratio", "ROE", "ROE (%)", "ROCE", "EPS Growth", "EPS Growth YoY (%)", "Sales Growth", "Debt to Equity", "Dividend Yield", "RSI", "RSI (14)", "RSI Oversold", "RSI Overbought", "Price Above EMA20", "Price Above EMA50", "Price Above EMA200", "Price Above 200 EMA", "EMA20 Above EMA50", "EMA50 Above EMA200", "MACD Signal", "MACD Bullish", "MACD Bearish", "Breakout 20D", "Breakdown 20D", "52W Breakout", "52W Breakdown", "Volume Confirmed Breakout", "Trend Score", "Technical Rating", "Breakout 52W", "Volume (20D Avg)", "Doji", "Hammer", "Shooting Star", "Bullish Engulfing", "Bearish Engulfing", "Inside Bar", "Outside Bar", "Bullish Marubozu", "Bearish Marubozu", "Gap Up", "Gap Down", "Strong Bullish Candle", "Strong Bearish Candle", "Candlestick Bias"];
     const conditions = ["Greater Than", "Less Than", "Between", "Equal To", "Is True", "Is False"];
-    const categories = ["Overview", "Price & Volume", "Fundamentals", "Technical Indicators", "Performance", "Valuation", "Profitability", "Growth", "Dividend", "Liquidity", "Analyst Estimates", "Custom Formulas"];
+    const categories = ["Overview", "Price & Volume", "Fundamentals", "Technical Indicators", "Candlestick Patterns", "Performance", "Valuation", "Profitability", "Growth", "Dividend", "Liquidity", "Analyst Estimates", "Custom Formulas"];
     const colors = ["#8b5cf6", "#2f81f7", "#00d084", "#f5b84b", "#ff4d5e", "#7dd3fc"];
 
     function optionHtml(options, selected) { return options.map((item) => `<option ${String(item) === String(selected) ? "selected" : ""}>${item}</option>`).join(""); }
-    function fmt(value, digits = 2) { return Number(value ?? 0).toLocaleString("en-IN", { maximumFractionDigits: digits }); }
-    function pct(value) { return `${Number(value ?? 0).toFixed(2)}%`; }
-    function cls(value) { return Number(value) >= 0 ? "positive" : "negative"; }
+    function fmt(value, digits = 2) { return value === null || value === undefined || value === "" ? "--" : Number(value).toLocaleString("en-IN", { maximumFractionDigits: digits }); }
+    function pct(value) { return value === null || value === undefined || value === "" ? "--" : `${Number(value).toFixed(2)}%`; }
+    function cls(value) { return value === null || value === undefined || value === "" ? "muted" : Number(value) >= 0 ? "positive" : "negative"; }
+    function compact(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "--";
+      if (Math.abs(number) >= 10000000) return `${fmt(number / 10000000, 2)} Cr`;
+      if (Math.abs(number) >= 100000) return `${fmt(number / 100000, 2)} L`;
+      return fmt(number, 0);
+    }
+    function sourceBadge(source) {
+      const label = source || "Unavailable";
+      return `<span class="source-badge ${String(label).toLowerCase()}">${label}</span>`;
+    }
+    function ratingClass(value) {
+      const rating = String(value || "").toLowerCase();
+      if (rating.includes("buy")) return "buy";
+      if (rating.includes("sell")) return "sell";
+      if (rating.includes("neutral")) return "neutral";
+      return "";
+    }
+    function patternChips(patterns) {
+      const items = Array.isArray(patterns) ? patterns : [];
+      if (!items.length) return `<span class="muted">--</span>`;
+      return `<div class="pattern-chips">${items.slice(0, 3).map((item) => `<span class="pattern-chip">${item}</span>`).join("")}${items.length > 3 ? `<span class="pattern-chip">+${items.length - 3}</span>` : ""}</div>`;
+    }
+    function biasBadge(value) {
+      const label = value || "Unavailable";
+      return `<span class="bias-badge ${String(label).toLowerCase()}">${label}</span>`;
+    }
 
     function renderCategories() {
       $("category-list").innerHTML = categories.map((item, index) => `<div class="cat ${index === 0 ? "active" : ""}">${item}</div>`).join("");
+    }
+
+    function renderQuickFilters() {
+      const filters = state.capabilities?.quick_filters || [];
+      $("quick-filters").innerHTML = filters.map((item) => `<button class="btn" type="button" data-quick-filter="${item.name}">${item.name}</button>`).join("");
+      document.querySelectorAll("[data-quick-filter]").forEach((button) => button.addEventListener("click", () => applyQuickFilter(button.dataset.quickFilter)));
+    }
+
+    function renderFormulaPresets() {
+      const presets = state.capabilities?.formula_presets || [];
+      $("formula-presets").innerHTML = presets.map((item) => `<button class="btn" type="button" data-formula-preset="${item.name}">${item.name}</button>`).join("");
+      document.querySelectorAll("[data-formula-preset]").forEach((button) => button.addEventListener("click", () => {
+        const preset = presets.find((item) => item.name === button.dataset.formulaPreset);
+        if (!preset) return;
+        $("formula-name").value = preset.name;
+        $("formula-expression").value = preset.expression;
+        state.formulaActive = true;
+        validateFormula();
+      }));
+    }
+
+    function applyQuickFilter(name) {
+      const preset = (state.capabilities?.quick_filters || []).find((item) => item.name === name);
+      if (!preset) return;
+      $("filter-rows").innerHTML = "";
+      preset.filters.forEach((item) => addFilterRow([item.category, item.metric, item.condition, item.value, item.value_2 || "", item.logical || "AND"]));
+      runScan();
     }
 
     function addFilterRow(data = ["Overview", "LTP", "Greater Than", "", "", "AND"]) {
@@ -348,12 +439,16 @@
     }
 
     function requestPayload() {
+      const expression = $("formula-expression").value.trim();
       return {
         universe: $("universe-select").value,
         exchange: $("exchange-select").value,
         filters: collectFilters(),
         sort_by: $("sort-by").value,
         sort_direction: $("sort-direction").value,
+        custom_formula_name: $("formula-name").value.trim(),
+        custom_formula_expression: expression,
+        custom_formula_enabled: Boolean(state.formulaActive && expression),
       };
     }
 
@@ -366,6 +461,30 @@
       const res = await fetch("/api/v1/screener/capabilities");
       state.capabilities = await res.json();
       $("source-note").textContent = state.capabilities.data_source_note;
+      renderQuickFilters();
+      renderFormulaPresets();
+    }
+
+    async function validateFormula() {
+      const expression = $("formula-expression").value.trim();
+      if (!expression) {
+        state.formulaValidation = null;
+        $("formula-status").textContent = "Formula disabled until an expression is run.";
+        return false;
+      }
+      const res = await fetch("/api/v1/screener/formula/validate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ expression }) });
+      const data = await res.json();
+      state.formulaValidation = data;
+      $("formula-status").innerHTML = data.valid
+        ? `<span class="positive">Valid</span><span>Metrics: ${(data.referenced_metrics || []).join(", ") || "--"}</span>`
+        : `<span class="negative">Invalid</span><span>${(data.errors || []).join("; ")}</span>`;
+      return Boolean(data.valid);
+    }
+
+    async function runFormula() {
+      state.formulaActive = true;
+      const valid = await validateFormula();
+      if (valid) await runScan();
     }
 
     async function runScan() {
@@ -381,6 +500,14 @@
         state.distributions = data.distributions || {};
         state.sectors = data.sector_breakdown || [];
         state.saved = mergeSaved(data.saved_screens || []);
+        state.formulaValidation = data.formula_validation || null;
+        state.formulaMatchedCount = data.formula_matched_count;
+        if (data.data_source_note) $("source-note").textContent = data.data_source_note;
+        if (state.formulaValidation) {
+          $("formula-status").innerHTML = state.formulaValidation.valid
+            ? `<span class="positive">Valid</span><span>Matched ${state.formulaMatchedCount ?? 0} rows</span><span>Metrics: ${(state.formulaValidation.referenced_metrics || []).join(", ") || "--"}</span>`
+            : `<span class="negative">Invalid</span><span>${(state.formulaValidation.errors || []).join("; ")}</span>`;
+        }
         renderAll();
         setStatus("Completed", "ok");
       } catch (error) {
@@ -405,6 +532,7 @@
 
     function renderResults() {
       $("results-title").textContent = `RESULTS (${state.results.length})`;
+      if (state.formulaActive && $("formula-name").value.trim()) $("results-title").textContent += ` - ${$("formula-name").value.trim()}`;
       $("filtered-stocks").textContent = String(state.summary.matches ?? state.results.length);
       $("total-stocks").textContent = String(state.summary.total_stocks ?? 10);
       const pctOfUniverse = state.summary.total_stocks ? (state.results.length / state.summary.total_stocks) * 100 : 0;
@@ -413,10 +541,17 @@
         <tr>
           <td><input class="checkbox" type="checkbox" /></td><td class="mono">${index + 1}</td>
           <td><a href="/market-watch/stock/${row.symbol}">${row.symbol}</a></td><td>${row.name}</td><td>${row.sector}</td>
-          <td class="mono">${fmt(row.ltp)}</td><td class="mono ${cls(row.change_pct)}">${pct(row.change_pct)}</td>
-          <td class="mono">${fmt(row.volume, 0)}</td><td class="mono">${fmt(row.market_cap_cr, 0)}</td>
-          <td class="mono">${fmt(row.pe_ttm)}</td><td class="mono">${fmt(row.roe_pct)}</td><td class="mono">${fmt(row.eps_growth_yoy_pct)}</td>
-          <td class="mono">${fmt(row.rsi_14)}</td><td class="mono">${fmt(row.debt_equity)}</td>
+          <td class="mono">${fmt(row.ltp)}</td><td class="mono ${cls(row.percent_change ?? row.change_pct)}">${pct(row.percent_change ?? row.change_pct)}</td>
+          <td class="mono">${compact(row.volume)}</td><td class="mono">${fmt(row.relative_volume, 2)}</td>
+          <td class="mono ${cls(row.distance_from_52w_high_pct)}">${pct(row.distance_from_52w_high_pct)}</td><td class="mono ${cls(row.distance_from_52w_low_pct)}">${pct(row.distance_from_52w_low_pct)}</td>
+          <td class="mono ${cls(row.gap_up_pct ?? row.gap_down_pct)}">${pct(row.gap_up_pct ?? row.gap_down_pct)}</td><td class="mono">${compact(row.turnover)}</td>
+          <td class="mono ${row.rsi_status === "Overbought" ? "negative" : row.rsi_status === "Oversold" ? "positive" : "muted"}">${fmt(row.rsi_14, 2)}</td>
+          <td class="mono ${row.trend_score === null || row.trend_score === undefined ? "muted" : Number(row.trend_score) >= 60 ? "positive" : Number(row.trend_score) < 40 ? "negative" : "muted"}">${fmt(row.trend_score, 0)}</td>
+          <td class="rating ${ratingClass(row.technical_rating)}">${row.technical_rating || "--"}</td>
+          <td>${patternChips(row.detected_patterns)}</td><td>${biasBadge(row.candlestick_bias)}</td>
+          <td class="mono">${fmt(row.composite_score, 0)}</td><td class="formula-match ${row.formula_match ? "yes" : ""}">${state.formulaActive ? (row.formula_match ? "Yes" : "--") : "--"}</td>
+          <td>${sourceBadge(row.data_source)}</td><td class="mono">${fmt(row.market_cap_cr, 0)}</td>
+          <td class="mono">${fmt(row.pe_ttm)}</td><td class="mono">${fmt(row.roe_pct)}</td>
         </tr>`).join("");
     }
 
@@ -430,6 +565,7 @@
         ["Duration", `${state.summary.duration_ms ?? "--"} ms`],
         ["Status", state.summary.status || "--"],
         ["Universe", state.summary.universe || $("universe-select").value],
+        ["Formula Matches", state.formulaMatchedCount ?? "--"],
       ];
       $("scan-summary").innerHTML = items.map(([label, value]) => `<div class="mini-metric"><div class="mini-label">${label}</div><div class="mini-value mono">${value}</div></div>`).join("");
     }
@@ -496,17 +632,20 @@
 
     function loadSavedScreen(id) {
       const saved = state.saved.find((item) => item.id === id);
-      if (!saved || !saved.config || !saved.config.filters) return;
+      if (!saved || !saved.config) return;
       $("universe-select").value = saved.config.universe || "Indian Equities";
       $("exchange-select").value = saved.config.exchange || "NSE";
+      $("formula-name").value = saved.config.custom_formula_name || "";
+      $("formula-expression").value = saved.config.custom_formula_expression || "";
+      state.formulaActive = Boolean(saved.config.custom_formula_enabled);
       $("filter-rows").innerHTML = "";
-      saved.config.filters.forEach((item) => addFilterRow([item.category, item.metric, item.condition, item.value, item.value_2, item.logical]));
+      (saved.config.filters || []).forEach((item) => addFilterRow([item.category, item.metric, item.condition, item.value, item.value_2, item.logical]));
       runScan();
     }
 
     function exportCsv() {
-      const header = ["Symbol","Name","Sector","LTP","% Change","Volume","Market Cap Cr","P/E","ROE","EPS Growth","RSI","Debt Equity"];
-      const rows = state.results.map((r) => [r.symbol, r.name, r.sector, r.ltp, r.change_pct, r.volume, r.market_cap_cr, r.pe_ttm, r.roe_pct, r.eps_growth_yoy_pct, r.rsi_14, r.debt_equity]);
+      const header = ["Symbol","Name","Sector","LTP","% Change","Point Change","Volume","Avg Volume 20D","Relative Volume","Volume Spike","52W High","52W Low","52W High Distance %","52W Low Distance %","Gap Up %","Gap Down %","Day Range %","Turnover","RSI","Trend Score","Technical Rating","Patterns","Candlestick Bias","Composite Score","Formula Match","Data Source"];
+      const rows = state.results.map((r) => [r.symbol, r.name, r.sector, r.ltp, r.percent_change ?? r.change_pct, r.point_change, r.volume, r.avg_volume_20d, r.relative_volume, r.volume_spike, r.high_52w, r.low_52w, r.distance_from_52w_high_pct, r.distance_from_52w_low_pct, r.gap_up_pct, r.gap_down_pct, r.day_range_pct, r.turnover, r.rsi_14, r.trend_score, r.technical_rating, (r.detected_patterns || []).join("; "), r.candlestick_bias, r.composite_score, r.formula_match, r.data_source]);
       const csv = [header, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
@@ -529,9 +668,12 @@
       setInterval(updateClock, 30000);
       $("add-filter-btn").addEventListener("click", () => addFilterRow());
       $("clear-filters-btn").addEventListener("click", () => { $("filter-rows").innerHTML = ""; });
-      $("reset-all-btn").addEventListener("click", () => { resetFilters(); $("universe-select").value = "Indian Equities"; $("exchange-select").value = "NSE"; runScan(); });
+      $("reset-all-btn").addEventListener("click", () => { resetFilters(); $("universe-select").value = "Indian Equities"; $("exchange-select").value = "NSE"; $("formula-name").value = ""; $("formula-expression").value = ""; state.formulaActive = false; runScan(); });
       ["run-scan-btn", "run-scan-builder-btn", "refresh-btn"].forEach((id) => $(id).addEventListener("click", runScan));
       ["save-screen-btn", "save-screen-table-btn"].forEach((id) => $(id).addEventListener("click", openSaveModal));
+      $("validate-formula-btn").addEventListener("click", validateFormula);
+      $("run-formula-btn").addEventListener("click", runFormula);
+      $("save-formula-btn").addEventListener("click", () => { state.formulaActive = Boolean($("formula-expression").value.trim()); openSaveModal(); });
       $("cancel-save-btn").addEventListener("click", closeSaveModal);
       $("confirm-save-btn").addEventListener("click", saveScreen);
       $("export-btn").addEventListener("click", exportCsv);
