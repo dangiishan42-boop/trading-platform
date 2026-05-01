@@ -110,6 +110,8 @@ class ScreenerResultRow(BaseModel):
     day_range_pct: float | None = None
     turnover: float | None = None
     data_source: str = "Unavailable"
+    data_source_badge: str | None = None
+    last_updated: str | None = None
     market_cap_cr: float
     pe_ttm: float
     roe_pct: float

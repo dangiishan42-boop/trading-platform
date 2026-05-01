@@ -9,6 +9,7 @@ import pandas as pd
 from app.schemas.screener_schema import ScreenerRunRequest, ScreenerSavedScreenCreate
 from app.services.data.instrument_master_service import InstrumentMasterService
 from app.services.market_data.engine import MarketDataEngine, get_market_data_engine
+from app.services.market_data.fno_live_data_service import get_fno_live_data_service
 from app.services.screener.formula_engine import evaluate_formula, validate_formula
 
 
@@ -438,31 +439,69 @@ class ScreenerService:
         if payload["source"] != "Angel Instrument Master":
             return [self._with_sample_price_volume(row.copy()) for row in self.SAMPLE_UNIVERSE if row.get("is_fno", True)], f"{payload.get('message') or note} Source: {payload['source']}. Sample fallback is active."
 
+        cached_quotes = get_fno_live_data_service().cached_snapshot(session, limit=5000)
+        cached_by_symbol = {row["symbol"]: row for row in cached_quotes}
         sample_by_symbol = {row["symbol"]: row for row in self.SAMPLE_UNIVERSE}
         rows: list[dict[str, Any]] = []
         for item in underlyings:
             sample = sample_by_symbol.get(item.symbol, {})
+            quote = cached_by_symbol.get(item.symbol, {})
+            ltp = self._number(quote.get("ltp"), sample.get("ltp"), 0)
+            previous_close = self._number(quote.get("previous_close"))
+            point_change = self._number(quote.get("point_change"))
+            percent_change = self._number(quote.get("percent_change"), sample.get("change_pct"), 0)
+            volume = self._number(quote.get("volume"), sample.get("volume"), 0)
+            open_price = self._number(quote.get("open"), ltp)
+            high = self._number(quote.get("high"), ltp)
+            low = self._number(quote.get("low"), ltp)
+            turnover = self._product(ltp, volume)
             rows.append(
                 {
                     "symbol": item.symbol,
                     "name": item.name,
                     "sector": sample.get("sector", "Unknown"),
-                    "ltp": float(sample.get("ltp", 0)),
-                    "change_pct": float(sample.get("change_pct", 0)),
-                    "volume": int(sample.get("volume", 0)),
+                    "ltp": ltp,
+                    "change_pct": percent_change,
+                    "percent_change": percent_change,
+                    "point_change": point_change,
+                    "previous_close": previous_close,
+                    "open": open_price,
+                    "high": high,
+                    "low": low,
+                    "volume": volume,
+                    "avg_volume_20d": None,
+                    "relative_volume": None,
+                    "volume_spike": None,
+                    "high_52w": None,
+                    "low_52w": None,
+                    "distance_from_52w_high_pct": None,
+                    "distance_from_52w_low_pct": None,
+                    "gap_up_pct": None,
+                    "gap_down_pct": None,
+                    "day_range_pct": self._pct(self._diff(high, low), ltp),
+                    "turnover": turnover,
                     "market_cap_cr": float(sample.get("market_cap_cr", 0)),
                     "pe_ttm": float(sample.get("pe_ttm", 0)),
                     "roe_pct": float(sample.get("roe_pct", 0)),
                     "eps_growth_yoy_pct": float(sample.get("eps_growth_yoy_pct", 0)),
-                    "rsi_14": float(sample.get("rsi_14", 50)),
                     "debt_equity": float(sample.get("debt_equity", 0)),
-                    "exchange": item.exchange,
-                    "price_above_ema200": bool(sample.get("price_above_ema200", False)),
+                    "exchange": quote.get("exchange") or item.exchange,
                     "is_fno": True,
+                    "data_source": quote.get("source") or "Cached",
+                    "data_source_badge": quote.get("data_source_badge") or "Cached",
+                    "last_updated": quote.get("last_updated"),
+                    **self._empty_technical_metrics(),
+                    **self._empty_candlestick_metrics(),
+                    "rsi_14": float(sample.get("rsi_14", 50)),
+                    "price_above_ema200": bool(sample.get("price_above_ema200", False)),
                 }
             )
-        rows, source_note = self._refresh_price_volume_rows(rows, session=session)
-        return rows, f"{note} {source_note}" if source_note else note
+        source_note = "Using cached F&O live quote snapshot. Run /api/v1/market-data/fno-live-refresh to refresh."
+        if any(row.get("data_source_badge") == "Cached/Stale" for row in rows):
+            source_note = f"{source_note} Cached/Stale quotes are present."
+        if not cached_by_symbol:
+            source_note = f"{source_note} No cached snapshot found; sample fundamentals remain, live quote fields may be empty."
+        return rows, f"{note} {source_note}"
 
     def _refresh_price_volume_rows(self, rows: list[dict[str, Any]], session=None) -> tuple[list[dict[str, Any]], str]:
         try:

@@ -53,6 +53,15 @@ class AngelSmartApiService:
             self._terminate_session(client, credentials.client_id)
         return response
 
+    def fetch_ltp_batch(self, instruments: list[dict[str, str]], mode: str = "FULL") -> dict:
+        credentials = self._get_credentials()
+        client = self._build_client(credentials.api_key)
+        try:
+            self._authenticate(client, credentials)
+            return self._fetch_ltp_batch(client, instruments, mode=mode)
+        finally:
+            self._terminate_session(client, credentials.client_id)
+
     def fetch_frame(self, request: AngelDataFetchRequest) -> pd.DataFrame:
         credentials = self._get_credentials()
         client = self._build_client(credentials.api_key)
@@ -157,6 +166,44 @@ class AngelSmartApiService:
             message = response.get("message") or "Angel One quote fetch failed"
             raise InvalidRequestError(message)
         return response
+
+    def _fetch_ltp_batch(self, client, instruments: list[dict[str, str]], mode: str = "FULL") -> dict:
+        exchange_tokens: dict[str, list[str]] = {}
+        by_key: dict[tuple[str, str], dict[str, str]] = {}
+        for item in instruments:
+            exchange = str(item.get("exchange") or "").strip().upper()
+            token = str(item.get("symbol_token") or item.get("token") or "").strip()
+            if not exchange or not token:
+                continue
+            exchange_tokens.setdefault(exchange, []).append(token)
+            by_key[(exchange, token)] = item
+
+        if not exchange_tokens:
+            return {"status": True, "data": {"fetched": [], "unfetched": []}}
+
+        if hasattr(client, "getMarketData"):
+            params = {"mode": mode, "exchangeTokens": exchange_tokens}
+            try:
+                response = client.getMarketData(params)
+            except Exception as exc:
+                raise InvalidRequestError(f"Angel One quote fetch failed: {exc}") from exc
+            if not isinstance(response, dict):
+                raise DataValidationError("Angel One quote response was not in the expected format")
+            if response.get("status") is False:
+                message = response.get("message") or "Angel One quote fetch failed"
+                raise InvalidRequestError(message)
+            return response
+
+        fetched = []
+        unfetched = []
+        for (exchange, token), item in by_key.items():
+            try:
+                response = self._fetch_ltp(client, exchange, item.get("trading_symbol") or item.get("symbol") or token, token)
+                data = response.get("data") or {}
+                fetched.append({**data, "exchange": exchange, "symbolToken": token})
+            except Exception as exc:
+                unfetched.append({"exchange": exchange, "symbolToken": token, "message": str(exc)})
+        return {"status": True, "data": {"fetched": fetched, "unfetched": unfetched}}
 
     def _normalize_candles(self, response: dict) -> pd.DataFrame:
         rows = response.get("data")

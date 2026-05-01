@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     angel_client_id: str | None = None
     angel_mpin: str | None = None
     angel_totp_secret: str | None = None
+    enable_fno_live_refresh: bool = False
+    fno_live_refresh_interval_seconds: int = Field(default=180, ge=60, le=300)
+    fno_live_batch_size: int = Field(default=25, ge=1, le=50)
+    fno_live_batch_delay_seconds: float = Field(default=1.0, ge=0.0, le=10.0)
+    fno_live_batch_timeout_seconds: float = Field(default=12.0, ge=1.0, le=60.0)
+    fno_live_retry_count: int = Field(default=1, ge=0, le=1)
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",

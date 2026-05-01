@@ -14,6 +14,7 @@ from app.services.data.angel_smartapi_service import AngelSmartApiService
 from app.services.data.data_resampler_service import DataResamplerService
 from app.services.data.instrument_master_service import InstrumentMasterService
 from app.services.market_data.engine import MarketDataEngine, get_market_data_engine
+from app.services.market_data.fno_live_data_service import get_fno_live_data_service
 
 
 @dataclass(frozen=True)
@@ -151,8 +152,11 @@ class MarketWatchService:
 
     def summary(self, session=None, universe: str = "nifty50", fast: bool = False) -> dict[str, Any]:
         indices = self._summary_indices(fast=fast)
-        universe_symbols = self._summary_universe(universe)
-        universe_quotes = self._universe_quotes(symbols=universe_symbols, fast=fast)
+        if self._is_fno_universe(universe) and session is not None:
+            universe_quotes = self._fno_cached_universe_quotes(session)
+        else:
+            universe_symbols = self._summary_universe(universe)
+            universe_quotes = self._universe_quotes(symbols=universe_symbols, fast=fast)
         rankable = [row for row in universe_quotes if self._is_rankable(row)]
         top_gainers = sorted([row for row in rankable if row["change_pct"] > 0], key=lambda row: row["change_pct"], reverse=True)[:10]
         top_losers = sorted([row for row in rankable if row["change_pct"] < 0], key=lambda row: row["change_pct"])[:10]
@@ -390,6 +394,14 @@ class MarketWatchService:
             "fo": compact,
         }
         return universes.get(normalized, compact)[:20]
+
+    def _is_fno_universe(self, universe: str | None) -> bool:
+        normalized = str(universe or "").strip().lower().replace(" ", "").replace("_", "").replace("&", "and")
+        return normalized in {"fo", "fno", "fandostocks", "fostocks"}
+
+    def _fno_cached_universe_quotes(self, session) -> list[dict[str, Any]]:
+        rows = get_fno_live_data_service().cached_snapshot(session, limit=5000)
+        return [self._normalize_quote_row(row) for row in rows]
 
     def _universe_quotes(self, symbols: list[str] | None = None, fast: bool = False) -> list[dict[str, Any]]:
         symbols = symbols or self.SUMMARY_UNIVERSE

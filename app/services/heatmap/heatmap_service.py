@@ -6,6 +6,7 @@ from typing import Any
 from app.schemas.heatmap_schema import HeatmapRunRequest, HeatmapSectorRequest
 from app.services.data.instrument_master_service import InstrumentMasterService
 from app.services.market_data.engine import MarketDataEngine, get_market_data_engine
+from app.services.market_data.fno_live_data_service import get_fno_live_data_service
 
 
 class HeatmapService:
@@ -414,24 +415,35 @@ class HeatmapService:
             fallback = [row for row in [self._decorate_stock(item, request) for item in self.SAMPLE_STOCKS] if row.get("is_fno")]
             return fallback, f"{payload.get('message') or note} Source: {payload['source']}."
 
+        cached_quotes = get_fno_live_data_service().cached_snapshot(session, limit=5000)
+        cached_by_symbol = {row["symbol"]: row for row in cached_quotes}
         sample_by_symbol = {row["symbol"]: row for row in self.SAMPLE_STOCKS}
         stocks = []
         for item in payload["items"]:
             sample = sample_by_symbol.get(item.symbol, {})
+            quote = cached_by_symbol.get(item.symbol, {})
             row = {
                 "symbol": item.symbol,
                 "name": item.name,
                 "sector": sample.get("sector", "UNKNOWN"),
-                "price": float(sample.get("price", 0)),
-                "change_pct": float(sample.get("change_pct", 0)),
+                "price": float(quote.get("ltp") or sample.get("price") or 0),
+                "change_pct": float(quote.get("percent_change") if quote.get("percent_change") is not None else sample.get("change_pct", 0)),
                 "market_cap_cr": float(sample.get("market_cap_cr", 1)),
-                "volume": int(sample.get("volume", 0)),
+                "volume": int(quote.get("volume") or sample.get("volume") or 0),
                 "rsi": float(sample.get("rsi", 50)),
             }
             decorated = self._decorate_stock(row, request)
             decorated["is_fno"] = True
+            decorated["data_source"] = quote.get("source") or "Cached"
+            decorated["data_source_badge"] = quote.get("data_source_badge") or "Cached"
+            decorated["last_updated"] = quote.get("last_updated")
             stocks.append(decorated)
-        return stocks, note
+        source_note = "Using cached F&O live quote snapshot grouped by sector where available."
+        if any(row.get("data_source_badge") == "Cached/Stale" for row in stocks):
+            source_note = f"{source_note} Cached/Stale quotes are present."
+        if not cached_by_symbol:
+            source_note = f"{source_note} No cached snapshot found; sample values remain visible until refresh runs."
+        return stocks, f"{note} {source_note}"
 
     def _size_value(self, item: dict[str, Any], size_by: str) -> float:
         if size_by == "Volume":

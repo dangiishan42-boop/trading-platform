@@ -12,6 +12,7 @@ from app.models.algo_strategy_model import SavedAlgoStrategy
 from app.models.backtest_model import BacktestRun
 from app.models.dataset_model import UploadedDataset
 from app.models.instrument_master_model import FnoUnderlying, InstrumentMaster
+from app.models.market_data_model import FnoQuoteCache
 from app.models.result_model import BacktestResultRecord
 from app.models.watchlist_model import Watchlist, WatchlistItem
 
@@ -84,6 +85,42 @@ def _ensure_instrument_master_columns() -> None:
                 connection.execute(text(f"ALTER TABLE instrumentmaster ADD COLUMN {column_name} {definition}"))
 
 
+def _ensure_fno_quote_cache_columns() -> None:
+    if engine.url.get_backend_name() != "sqlite":
+        return
+
+    with engine.begin() as connection:
+        table_exists = connection.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table' AND name='fnoquotecache'")
+        ).scalar()
+        if not table_exists:
+            return
+
+        existing_columns = {
+            row[1]
+            for row in connection.execute(text("PRAGMA table_info('fnoquotecache')")).fetchall()
+        }
+        column_definitions = {
+            "name": "VARCHAR(200)",
+            "exchange": "VARCHAR(20) NOT NULL DEFAULT 'NSE'",
+            "token": "VARCHAR(64)",
+            "ltp": "REAL",
+            "open": "REAL",
+            "high": "REAL",
+            "low": "REAL",
+            "previous_close": "REAL",
+            "point_change": "REAL",
+            "percent_change": "REAL",
+            "volume": "REAL",
+            "last_updated": "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "source": "VARCHAR(40) NOT NULL DEFAULT 'Cached'",
+            "failure_message": "VARCHAR(500)",
+        }
+        for column_name, definition in column_definitions.items():
+            if column_name not in existing_columns:
+                connection.execute(text(f"ALTER TABLE fnoquotecache ADD COLUMN {column_name} {definition}"))
+
+
 def initialize_database() -> None:
     for directory in (DATA_DIR, RAW_DATA_DIR, PROCESSED_DATA_DIR, SAMPLE_DATA_DIR, LOG_DIR):
         directory.mkdir(parents=True, exist_ok=True)
@@ -95,4 +132,5 @@ def initialize_database() -> None:
     SQLModel.metadata.create_all(engine)
     _ensure_backtest_run_history_columns()
     _ensure_instrument_master_columns()
+    _ensure_fno_quote_cache_columns()
     seed_builtin_strategies()
