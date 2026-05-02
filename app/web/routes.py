@@ -83,6 +83,18 @@ def screener_page(request: Request):
     )
 
 
+@router.get("/stocks")
+def stocks_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="stocks/index.html",
+        context={
+            "request": request,
+            "title": f"{settings.app_name} - Stocks",
+        },
+    )
+
+
 @router.get("/heatmap")
 def heatmap_page(request: Request):
     return templates.TemplateResponse(
